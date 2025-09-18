@@ -1,16 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Menu, User, LogIn } from "lucide-react";
+import logoCD from "@/assets/logo-cd.png";
 
 const Header = () => {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
-        <div className="flex items-center space-x-2">
-          <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center">
-            <span className="text-white font-bold text-sm">CD</span>
-          </div>
+        <div className="flex items-center space-x-3">
+          <img src={logoCD} alt="CiênciaDeDados.org" className="w-8 h-8" />
           <span className="font-heading font-bold text-xl text-foreground">
             CiênciaDeDados.org
           </span>

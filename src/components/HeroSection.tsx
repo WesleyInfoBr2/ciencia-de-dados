@@ -7,10 +7,10 @@ const HeroSection = () => {
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <div 
-        className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+        className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-30"
         style={{ backgroundImage: `url(${heroImage})` }}
       >
-        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/40 to-background/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/60 via-background/80 to-background/95" />
       </div>
       
       {/* Content */}
@@ -25,15 +25,15 @@ const HeroSection = () => {
           </div>
 
           {/* Main Heading */}
-          <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight">
+          <h1 className="font-heading text-4xl md:text-6xl lg:text-7xl font-bold text-foreground mb-6 leading-tight drop-shadow-sm">
             Transforme Dados em{" "}
-            <span className="bg-gradient-primary bg-clip-text text-transparent">
+            <span className="bg-gradient-primary bg-clip-text text-transparent drop-shadow-none">
               Conhecimento
             </span>
           </h1>
 
           {/* Subtitle */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-foreground/80 mb-12 max-w-3xl mx-auto leading-relaxed drop-shadow-sm">
             Sua jornada na ciência de dados começa aqui. Conecte-se com uma comunidade vibrante, 
             aprenda com especialistas e acesse ferramentas que impulsionam sua carreira em dados.
           </p>
