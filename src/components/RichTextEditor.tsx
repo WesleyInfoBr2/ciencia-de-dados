@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.snow.css";
 import "katex/dist/katex.min.css";
+import katex from "katex";
+import { supabase } from "@/integrations/supabase/client";
 import { Card } from "@/components/ui/card";
 
 interface RichTextEditorProps {
@@ -16,6 +18,8 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
   const quillRef = useRef<ReactQuill>(null);
 
   useEffect(() => {
+    // Torna o KaTeX disponível globalmente para o módulo de fórmulas do Quill
+    (window as any).katex = katex;
     setIsClient(true);
   }, []);
 
@@ -33,26 +37,65 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
     }
   };
 
+  // Handler para upload de imagem no Supabase e inserção por URL pública
+  const handleImageUpload = async () => {
+    const quill = quillRef.current?.getEditor?.();
+    if (!quill) return;
+
+    // Permite escolher arquivo de imagem
+    const input = document.createElement('input');
+    input.setAttribute('type', 'file');
+    input.setAttribute('accept', 'image/*');
+    input.onchange = async () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      try {
+        const ext = file.name.split('.').pop()?.toLowerCase() || 'png';
+        const path = `wiki/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from('wiki-images').upload(path, file, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: file.type
+        });
+        if (error) throw error;
+        const { data: pub } = supabase.storage.from('wiki-images').getPublicUrl(path);
+        const range = quill.getSelection(true);
+        const index = range ? range.index : quill.getLength();
+        quill.insertEmbed(index, 'image', pub.publicUrl, 'user');
+        quill.setSelection(index + 1, 0);
+      } catch (err) {
+        console.error('Erro ao enviar imagem:', err);
+        alert('Falha ao enviar imagem. Tente novamente.');
+      }
+    };
+
+    input.click();
+  };
+
   const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      [{ 'size': ['small', false, 'large', 'huge'] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'color': [] }, { 'background': [] }],
-      [{ 'script': 'sub'}, { 'script': 'super' }],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'align': [] }],
-      ['blockquote', 'code-block'],
-      ['link'], // Removido 'image' e 'video' para evitar uploads que corrompem o conteúdo
-      ['formula'],
-      ['clean']
-    ],
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        [{ 'size': ['small', false, 'large', 'huge'] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'color': [] }, { 'background': [] }],
+        [{ 'script': 'sub'}, { 'script': 'super' }],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['blockquote', 'code-block'],
+        ['link', 'image'],
+        ['formula'],
+        ['clean']
+      ],
+      handlers: {
+        image: handleImageUpload,
+      }
+    },
     clipboard: {
       matchVisual: false,
     }
   };
-
   const formats = [
     'header', 'size',
     'bold', 'italic', 'underline', 'strike',
@@ -61,7 +104,7 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
     'list', 'bullet', 'indent',
     'align',
     'blockquote', 'code-block',
-    'link', // Removido 'image' e 'video' para evitar uploads que corrompem o conteúdo
+    'link', 'image',
     'formula'
   ];
 
