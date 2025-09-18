@@ -46,12 +46,6 @@ const Header = () => {
             Bibliotecas
           </Link>
           <a
-            href="#comunidade"
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
-          >
-            Comunidade
-          </a>
-          <a
             href="#produtos"
             className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
           >

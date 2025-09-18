@@ -135,13 +135,16 @@ serve(async (req) => {
         )
     }
 
-    // For now, let's use the public CSV files we copied
-    const publicUrl = `${req.url.split('/functions/')[0]}/data/${library_type === 'tools' ? 'ferramentas' : 
-                                                          library_type === 'courses' ? 'formacoes' :
-                                                          library_type === 'code_python' ? 'codigos-python' :
-                                                          library_type === 'code_r' ? 'codigos-r' :
-                                                          library_type === 'data_sources' ? 'fontes-dados' :
-                                                          library_type === 'datasets' ? 'bases-dados' : 'unknown'}.csv`
+    // Use the public CSV files we copied - get them from the origin server
+    const originUrl = req.url.replace('/functions/import-library-data', '')
+    const csvPath = library_type === 'tools' ? 'ferramentas' : 
+                   library_type === 'courses' ? 'formacoes' :
+                   library_type === 'code_python' ? 'codigos-python' :
+                   library_type === 'code_r' ? 'codigos-r' :
+                   library_type === 'data_sources' ? 'fontes-dados' :
+                   library_type === 'datasets' ? 'bases-dados' : 'unknown'
+    
+    const publicUrl = `${originUrl}/data/${csvPath}.csv`
 
     // Fetch CSV content
     const response = await fetch(publicUrl)
