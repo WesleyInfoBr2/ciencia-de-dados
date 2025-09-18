@@ -19,6 +19,20 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
     setIsClient(true);
   }, []);
 
+  // Função para processar e limpar o conteúdo antes de salvar
+  const handleContentChange = (content: string) => {
+    // Remove imagens em base64 que podem corromper o conteúdo
+    const cleanContent = content.replace(/<img[^>]*src="data:image\/[^"]*"[^>]*>/gi, '[Imagem removida - use URLs de imagem ao invés de upload direto]');
+    
+    // Limita o tamanho do conteúdo para evitar problemas no banco
+    if (cleanContent.length > 500000) { // 500KB limit
+      console.warn('Conteúdo muito longo, será truncado');
+      onChange(cleanContent.substring(0, 500000) + '...');
+    } else {
+      onChange(cleanContent);
+    }
+  };
+
   const modules = {
     toolbar: [
       [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
@@ -30,7 +44,7 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
       [{ 'indent': '-1'}, { 'indent': '+1' }],
       [{ 'align': [] }],
       ['blockquote', 'code-block'],
-      ['link', 'image', 'video'],
+      ['link'], // Removido 'image' e 'video' para evitar uploads que corrompem o conteúdo
       ['formula'],
       ['clean']
     ],
@@ -47,7 +61,7 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
     'list', 'bullet', 'indent',
     'align',
     'blockquote', 'code-block',
-    'link', 'image', 'video',
+    'link', // Removido 'image' e 'video' para evitar uploads que corrompem o conteúdo
     'formula'
   ];
 
@@ -66,7 +80,7 @@ const RichTextEditor = ({ value, onChange, placeholder, className }: RichTextEdi
           ref={quillRef}
           theme="snow"
           value={value}
-          onChange={onChange}
+          onChange={handleContentChange}
           placeholder={placeholder}
           modules={modules}
           formats={formats}

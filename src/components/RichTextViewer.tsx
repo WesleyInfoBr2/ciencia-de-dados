@@ -11,8 +11,37 @@ const RichTextViewer = ({ content, className }: RichTextViewerProps) => {
   const [processedContent, setProcessedContent] = useState("");
 
   useEffect(() => {
+    if (!content) {
+      setProcessedContent('');
+      return;
+    }
+
+    // Limpar e validar conteúdo antes de processar
+    let cleanContent = content;
+    
+    // Remove imagens corrompidas em base64 que são muito longas
+    cleanContent = cleanContent.replace(/<img[^>]*src="data:image\/[^"]*"[^>]*>/gi, 
+      '<p><em>[Imagem removida - conteúdo corrompido]</em></p>');
+    
+    // Se o conteúdo ainda está muito longo, pode estar corrompido
+    if (cleanContent.length > 100000) {
+      // Tenta extrair apenas texto legível
+      const tempDiv = document.createElement('div');
+      tempDiv.innerHTML = cleanContent.substring(0, 10000); // Limita para evitar travamento
+      const textContent = tempDiv.textContent || tempDiv.innerText || '';
+      
+      if (textContent.length < 100) {
+        // Muito pouco texto legível, provavelmente corrompido
+        setProcessedContent('<p><em>Conteúdo corrompido. Por favor, edite o artigo para corrigir.</em></p>');
+        return;
+      } else {
+        // Trunca conteúdo excessivo
+        cleanContent = cleanContent.substring(0, 50000) + '<p><em>... conteúdo truncado devido ao tamanho</em></p>';
+      }
+    }
+
     // Process LaTeX formulas in the content
-    let processed = content;
+    let processed = cleanContent;
 
     // Replace Quill formula spans with KaTeX rendering
     processed = processed.replace(

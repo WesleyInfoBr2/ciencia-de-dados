@@ -10,6 +10,7 @@ import Wiki from "./pages/Wiki";
 import Libraries from "./pages/Libraries";
 import WikiPost from "./pages/WikiPost";
 import WikiNew from "./pages/WikiNew";
+import WikiEdit from "./pages/WikiEdit";
 import WikiImport from "./pages/WikiImport";
 import NotFound from "./pages/NotFound";
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="/wiki" element={<Wiki />} />
             <Route path="/libraries" element={<Libraries />} />
             <Route path="/wiki/new" element={<WikiNew />} />
+            <Route path="/wiki/edit/:slug" element={<WikiEdit />} />
             <Route path="/wiki/import" element={<WikiImport />} />
             <Route path="/wiki/:slug" element={<WikiPost />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

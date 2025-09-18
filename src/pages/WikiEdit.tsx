@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Eye } from "lucide-react";
+import { ArrowLeft, Save, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import RichTextEditor from "@/components/RichTextEditor";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface WikiCategory {
   id: string;
@@ -20,19 +21,35 @@ interface WikiCategory {
   icon: string;
 }
 
-const WikiNew = () => {
+interface WikiPost {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  author_id: string;
+  post_type: 'conteudo' | 'como_fazer' | 'aplicacao_pratica';
+  category_id: string;
+  is_published: boolean;
+  published_at?: string;
+}
+
+const WikiEdit = () => {
+  const { slug } = useParams<{ slug: string }>();
   const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   
   const [categories, setCategories] = useState<WikiCategory[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [post, setPost] = useState<WikiPost | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
     excerpt: '',
     content: '',
-    post_type: 'conteudo' as const,
+    post_type: 'conteudo' as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
     category_id: '',
     is_published: false
   });
@@ -42,8 +59,55 @@ const WikiNew = () => {
       navigate('/auth');
       return;
     }
-    fetchCategories();
-  }, [user, authLoading, navigate]);
+    if (slug) {
+      fetchPost();
+      fetchCategories();
+    }
+  }, [user, authLoading, navigate, slug]);
+
+  const fetchPost = async () => {
+    if (!slug) return;
+
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('wiki_posts')
+      .select('*')
+      .eq('slug', slug)
+      .single();
+
+    if (error || !data) {
+      toast({
+        title: "Erro",
+        description: "Post não encontrado.",
+        variant: "destructive",
+      });
+      navigate('/wiki');
+      return;
+    }
+
+    // Verificar se o usuário é o autor
+    if (data.author_id !== user?.id) {
+      toast({
+        title: "Acesso negado",
+        description: "Você só pode editar seus próprios artigos.",
+        variant: "destructive",
+      });
+      navigate(`/wiki/${slug}`);
+      return;
+    }
+
+    setPost(data);
+    setFormData({
+      title: data.title,
+      slug: data.slug,
+      excerpt: data.excerpt || '',
+      content: data.content,
+      post_type: data.post_type,
+      category_id: data.category_id || '',
+      is_published: data.is_published
+    });
+    setLoading(false);
+  };
 
   const fetchCategories = async () => {
     const { data } = await supabase
@@ -60,10 +124,10 @@ const WikiNew = () => {
     return title
       .toLowerCase()
       .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-      .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
-      .replace(/\s+/g, '-') // Substitui espaços por hífens
-      .replace(/-+/g, '-') // Remove hífens duplicados
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s-]/g, '')
+      .replace(/\s+/g, '-')
+      .replace(/-+/g, '-')
       .trim();
   };
 
@@ -77,40 +141,41 @@ const WikiNew = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user) return;
+    if (!user || !post) return;
 
-    setLoading(true);
+    setSaving(true);
 
     try {
-      // Verifica se o slug já existe
-      const { data: existingPost } = await supabase
-        .from('wiki_posts')
-        .select('id')
-        .eq('slug', formData.slug)
-        .single();
+      // Verifica se o slug já existe (exceto o post atual)
+      if (formData.slug !== post.slug) {
+        const { data: existingPost } = await supabase
+          .from('wiki_posts')
+          .select('id')
+          .eq('slug', formData.slug)
+          .neq('id', post.id)
+          .single();
 
-      if (existingPost) {
-        toast({
-          title: "Erro",
-          description: "Já existe um post com este título. Tente um título diferente.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
+        if (existingPost) {
+          toast({
+            title: "Erro",
+            description: "Já existe um post com este título. Tente um título diferente.",
+            variant: "destructive",
+          });
+          setSaving(false);
+          return;
+        }
       }
 
-      const postData = {
+      const updateData = {
         ...formData,
-        author_id: user.id,
-        published_at: formData.is_published ? new Date().toISOString() : null,
+        published_at: formData.is_published && !post.is_published ? new Date().toISOString() : (post.published_at || null),
         category_id: formData.category_id || null
       };
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('wiki_posts')
-        .insert([postData])
-        .select()
-        .single();
+        .update(updateData)
+        .eq('id', post.id);
 
       if (error) {
         throw error;
@@ -118,25 +183,52 @@ const WikiNew = () => {
 
       toast({
         title: "Sucesso!",
-        description: formData.is_published 
-          ? "Artigo publicado com sucesso!" 
-          : "Rascunho salvo com sucesso!",
+        description: "Artigo atualizado com sucesso!",
       });
 
-      navigate(`/wiki/${data.slug}`);
+      navigate(`/wiki/${formData.slug}`);
     } catch (error) {
-      console.error('Error creating post:', error);
+      console.error('Error updating post:', error);
       toast({
         title: "Erro",
-        description: "Erro ao salvar o artigo. Tente novamente.",
+        description: "Erro ao atualizar o artigo. Tente novamente.",
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setSaving(false);
     }
   };
 
-  if (authLoading) {
+  const handleDelete = async () => {
+    if (!post) return;
+
+    try {
+      const { error } = await supabase
+        .from('wiki_posts')
+        .delete()
+        .eq('id', post.id);
+
+      if (error) {
+        throw error;
+      }
+
+      toast({
+        title: "Sucesso!",
+        description: "Artigo excluído com sucesso!",
+      });
+
+      navigate('/wiki');
+    } catch (error) {
+      console.error('Error deleting post:', error);
+      toast({
+        title: "Erro",
+        description: "Erro ao excluir o artigo. Tente novamente.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  if (authLoading || loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -144,7 +236,7 @@ const WikiNew = () => {
     );
   }
 
-  if (!user) {
+  if (!user || !post) {
     return null;
   }
 
@@ -153,14 +245,14 @@ const WikiNew = () => {
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
-          <Link to="/wiki">
+          <Link to={`/wiki/${post.slug}`}>
             <Button variant="ghost" className="gap-2">
               <ArrowLeft className="h-4 w-4" />
-              Voltar para Wiki
+              Voltar ao Artigo
             </Button>
           </Link>
           
-          <h1 className="text-2xl font-bold">Novo Artigo</h1>
+          <h1 className="text-2xl font-bold">Editar Artigo</h1>
         </div>
 
         <form onSubmit={handleSubmit}>
@@ -211,7 +303,7 @@ const WikiNew = () => {
                     <RichTextEditor
                       value={formData.content}
                       onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                      placeholder="Escreva o conteúdo do artigo aqui. Use a barra de ferramentas para formatação rica, incluindo fórmulas matemáticas, imagens e links."
+                      placeholder="Escreva o conteúdo do artigo aqui..."
                       className="mt-2"
                     />
                     <p className="text-sm text-muted-foreground mt-2">
@@ -287,15 +379,10 @@ const WikiNew = () => {
                     <Button 
                       type="submit" 
                       className="w-full gap-2" 
-                      disabled={loading}
+                      disabled={saving}
                     >
                       <Save className="h-4 w-4" />
-                      {loading 
-                        ? "Salvando..." 
-                        : formData.is_published 
-                          ? "Publicar Artigo" 
-                          : "Salvar Rascunho"
-                      }
+                      {saving ? "Salvando..." : "Salvar Alterações"}
                     </Button>
                     
                     {formData.title && formData.content && (
@@ -343,6 +430,29 @@ const WikiNew = () => {
                         Visualizar
                       </Button>
                     )}
+
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button variant="destructive" className="w-full gap-2">
+                          <Trash2 className="h-4 w-4" />
+                          Excluir Artigo
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Tem certeza?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            Esta ação não pode ser desfeita. O artigo será permanentemente excluído.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                            Excluir
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                   </div>
                 </CardContent>
               </Card>
@@ -354,4 +464,4 @@ const WikiNew = () => {
   );
 };
 
-export default WikiNew;
+export default WikiEdit;
