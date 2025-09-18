@@ -1,9 +1,19 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Menu, User, LogIn } from "lucide-react";
+import { Menu, User, LogIn, LogOut } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 import logoCD from "@/assets/logo-cd.png";
 
 const Header = () => {
+  const { user, signOut } = useAuth();
+
+  const handleAuthAction = async () => {
+    if (user) {
+      await signOut();
+    }
+  };
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -45,13 +55,46 @@ const Header = () => {
 
         {/* Actions */}
         <div className="flex items-center space-x-4">
-          <Button variant="ghost" size="sm" className="hidden md:flex">
-            <User className="w-4 h-4 mr-2" />
-            Entrar
-          </Button>
-          <Button variant="cta" size="sm" className="hidden md:flex">
-            Começar Grátis
-          </Button>
+          {user ? (
+            <>
+              <span className="hidden md:block text-sm text-muted-foreground">
+                Olá, {user.email}
+              </span>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hidden md:flex"
+                onClick={handleAuthAction}
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sair
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="hidden md:flex"
+                asChild
+              >
+                <Link to="/auth">
+                  <User className="w-4 h-4 mr-2" />
+                  Entrar
+                </Link>
+              </Button>
+              <Button 
+                variant="cta" 
+                size="sm" 
+                className="hidden md:flex"
+                asChild
+              >
+                <Link to="/auth">
+                  Começar Grátis
+                </Link>
+              </Button>
+            </>
+          )}
           
           {/* Mobile menu button */}
           <Button variant="ghost" size="icon" className="md:hidden">
