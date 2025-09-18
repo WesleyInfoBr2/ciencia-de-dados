@@ -73,22 +73,25 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Mapping Notion pages to categories
-    const notionPages = [
-      { 
+    // Mapping Notion sources to categories/post types
+    const notionSources = [
+      {
         url: 'https://cienciadedados.notion.site/conceitos',
+        query: 'conceitos',
         category_slug: 'conteudos',
         post_type: 'conteudo'
       },
-      { 
+      {
         url: 'https://cienciadedados.notion.site/como-fazer',
-        category_slug: 'como-fazer', 
+        query: 'como fazer',
+        category_slug: 'como-fazer',
         post_type: 'como_fazer'
       },
-      { 
+      {
         url: 'https://cienciadedados.notion.site/aplicacoes',
+        query: 'aplicacoes',
         category_slug: 'aplicacao-pratica',
-        post_type: 'aplicacao_pratica' 
+        post_type: 'aplicacao_pratica'
       }
     ];
 
@@ -97,184 +100,101 @@ Deno.serve(async (req) => {
       throw new Error('NOTION_API_KEY not configured');
     }
 
-    // Function to extract page ID from Notion URL
-    function extractPageId(url: string): string {
-      const match = url.match(/([a-f0-9]{32})|([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/);
-      if (match) {
-        return match[0].replace(/-/g, '');
+    // Search in Notion workspace to resolve the public site URL to actual page/database IDs
+    async function notionSearch(query: string) {
+      const resp = await fetch('https://api.notion.com/v1/search', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${NOTION_API_KEY}`,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          query,
+          page_size: 25
+        })
+      });
+      if (!resp.ok) {
+        console.log(`Notion search failed for "${query}": ${resp.status}`);
+        return [] as any[];
       }
-      
-      // Try to extract from the end of URL
-      const parts = url.split('/');
-      const lastPart = parts[parts.length - 1];
-      const cleanPart = lastPart.split('?')[0].split('#')[0];
-      
-      // If it contains a dash, it might be a page ID
-      const dashMatch = cleanPart.match(/([a-f0-9]{32})/);
-      return dashMatch ? dashMatch[0] : cleanPart;
+      const data = await resp.json();
+      return data.results || [];
     }
 
-    // Function to fetch Notion page content
-    async function searchNotionDatabase(pageId: string) {
-      try {
-        console.log(`Searching for database in Notion page: ${pageId}`);
-        
-        // First, try to get the page as a database
-        const dbResponse = await fetch(`https://api.notion.com/v1/databases/${pageId}/query`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${NOTION_API_KEY}`,
-            'Notion-Version': '2022-06-28',
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({})
-        });
-
-        if (dbResponse.ok) {
-          const dbData = await dbResponse.json();
-          console.log(`Found database with ${dbData.results?.length || 0} pages`);
-          return { type: 'database', data: dbData.results };
-        }
-
-        // If it's not a database, try to get it as a page and search for child pages
-        const pageResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`, {
-          headers: {
-            'Authorization': `Bearer ${NOTION_API_KEY}`,
-            'Notion-Version': '2022-06-28',
-          },
-        });
-
-        if (pageResponse.ok) {
-          const pageData = await pageResponse.json();
-          console.log(`Found page with ${pageData.results?.length || 0} blocks`);
-          
-          // Look for child pages in the blocks
-          const childPages = pageData.results?.filter((block: any) => 
-            block.type === 'child_page' || block.type === 'child_database'
-          ) || [];
-          
-          console.log(`Found ${childPages.length} child pages`);
-          return { type: 'page', data: childPages };
-        }
-
-        console.log(`Failed to fetch page/database ${pageId}: ${pageResponse.status}`);
-        return null;
-
-      } catch (error) {
-        console.error(`Error fetching Notion content for ${pageId}:`, error);
-        return null;
-      }
+    // Fetch children blocks (one level)
+    async function getPageBlocks(id: string) {
+      const res = await fetch(`https://api.notion.com/v1/blocks/${id}/children?page_size=100`, {
+        headers: {
+          'Authorization': `Bearer ${NOTION_API_KEY}`,
+          'Notion-Version': '2022-06-28',
+        },
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.results || [];
     }
 
-    // Function to get page details
-    async function getPageDetails(pageId: string) {
-      try {
-        const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
-          headers: {
-            'Authorization': `Bearer ${NOTION_API_KEY}`,
-            'Notion-Version': '2022-06-28',
-          },
-        });
-
-        if (response.ok) {
-          return await response.json();
-        }
-        return null;
-      } catch (error) {
-        console.error(`Error getting page details for ${pageId}:`, error);
-        return null;
-      }
+    // Query a database to get page entries
+    async function queryDatabase(id: string) {
+      const res = await fetch(`https://api.notion.com/v1/databases/${id}/query`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${NOTION_API_KEY}`,
+          'Notion-Version': '2022-06-28',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ page_size: 100 })
+      });
+      if (!res.ok) return [];
+      const data = await res.json();
+      return data.results || [];
     }
 
-    // Function to get page content
-    async function getPageContent(pageId: string) {
-      try {
-        const response = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
-          headers: {
-            'Authorization': `Bearer ${NOTION_API_KEY}`,
-            'Notion-Version': '2022-06-28',
-          },
-        });
-
-        if (response.ok) {
-          const data = await response.json();
-          return data.results;
-        }
-        return [];
-      } catch (error) {
-        console.error(`Error getting page content for ${pageId}:`, error);
-        return [];
-      }
-    }
-
-    // Function to convert Notion blocks to HTML
+    // Convert basic blocks to HTML (simple subset)
     function blocksToHtml(blocks: any[]): string {
       let html = '';
-      
       for (const block of blocks) {
         switch (block.type) {
           case 'heading_1':
-            if (block.heading_1.rich_text?.length > 0) {
-              html += `<h1>${block.heading_1.rich_text[0].plain_text}</h1>\n`;
-            }
+            if (block.heading_1.rich_text?.length) html += `<h1>${block.heading_1.rich_text[0].plain_text}</h1>\n`;
             break;
           case 'heading_2':
-            if (block.heading_2.rich_text?.length > 0) {
-              html += `<h2>${block.heading_2.rich_text[0].plain_text}</h2>\n`;
-            }
+            if (block.heading_2.rich_text?.length) html += `<h2>${block.heading_2.rich_text[0].plain_text}</h2>\n`;
             break;
           case 'heading_3':
-            if (block.heading_3.rich_text?.length > 0) {
-              html += `<h3>${block.heading_3.rich_text[0].plain_text}</h3>\n`;
-            }
+            if (block.heading_3.rich_text?.length) html += `<h3>${block.heading_3.rich_text[0].plain_text}</h3>\n`;
             break;
-          case 'paragraph':
-            if (block.paragraph.rich_text?.length > 0) {
-              const text = block.paragraph.rich_text
-                .map((t: any) => t.plain_text)
-                .join('');
-              html += `<p>${text}</p>\n`;
-            }
+          case 'paragraph': {
+            const text = (block.paragraph.rich_text || []).map((t: any) => t.plain_text).join('');
+            if (text) html += `<p>${text}</p>\n`;
             break;
-          case 'bulleted_list_item':
-            if (block.bulleted_list_item.rich_text?.length > 0) {
-              const text = block.bulleted_list_item.rich_text
-                .map((t: any) => t.plain_text)
-                .join('');
-              html += `<li>${text}</li>\n`;
-            }
+          }
+          case 'bulleted_list_item': {
+            const text = (block.bulleted_list_item.rich_text || []).map((t: any) => t.plain_text).join('');
+            if (text) html += `<li>${text}</li>\n`;
             break;
-          case 'numbered_list_item':
-            if (block.numbered_list_item.rich_text?.length > 0) {
-              const text = block.numbered_list_item.rich_text
-                .map((t: any) => t.plain_text)
-                .join('');
-              html += `<li>${text}</li>\n`;
-            }
+          }
+          case 'numbered_list_item': {
+            const text = (block.numbered_list_item.rich_text || []).map((t: any) => t.plain_text).join('');
+            if (text) html += `<li>${text}</li>\n`;
             break;
-          case 'code':
-            if (block.code.rich_text?.length > 0) {
-              const text = block.code.rich_text
-                .map((t: any) => t.plain_text)
-                .join('');
-              html += `<pre><code>${text}</code></pre>\n`;
-            }
+          }
+          case 'quote': {
+            const text = (block.quote.rich_text || []).map((t: any) => t.plain_text).join('');
+            if (text) html += `<blockquote><p>${text}</p></blockquote>\n`;
             break;
-          case 'quote':
-            if (block.quote.rich_text?.length > 0) {
-              const text = block.quote.rich_text
-                .map((t: any) => t.plain_text)
-                .join('');
-              html += `<blockquote><p>${text}</p></blockquote>\n`;
-            }
+          }
+          case 'code': {
+            const text = (block.code.rich_text || []).map((t: any) => t.plain_text).join('');
+            html += `<pre><code>${text}</code></pre>\n`;
             break;
+          }
         }
       }
-      
       return html.trim();
     }
 
-    // Function to create slug from title
     function createSlug(title: string): string {
       return title
         .toLowerCase()
@@ -283,96 +203,93 @@ Deno.serve(async (req) => {
         .replace(/[^a-z0-9\s-]/g, '')
         .replace(/\s+/g, '-')
         .replace(/-+/g, '-')
-        .trim('-');
+        .replace(/(^-|-$)/g, '');
     }
 
-    // Function to extract title from page properties
-    function extractTitle(page: any): string {
-      if (page.properties) {
-        // Look for title property
-        const titleProp = Object.values(page.properties).find((prop: any) => prop.type === 'title');
-        if (titleProp && (titleProp as any).title?.length > 0) {
-          return (titleProp as any).title[0].plain_text;
-        }
-
-        // Look for Name property (common in databases)
-        if (page.properties.Name && page.properties.Name.title?.length > 0) {
-          return page.properties.Name.title[0].plain_text;
-        }
-      }
-
-      // Fallback to child_page title
-      if (page.child_page) {
-        return page.child_page.title;
-      }
-
+    function extractTitleFromProperties(page: any): string {
+      const p = page.properties || {};
+      const titleProp: any = Object.values(p).find((prop: any) => prop?.type === 'title');
+      if (titleProp?.title?.length) return titleProp.title[0].plain_text;
+      if (p.Name?.title?.length) return p.Name.title[0].plain_text;
+      if (page.child_page?.title) return page.child_page.title;
       return 'Artigo sem título';
     }
 
-    // Import content from Notion pages
     const wikiContents: WikiContent[] = [];
-    
-    for (const notionPage of notionPages) {
-      console.log(`Processing Notion page: ${notionPage.url}`);
-      
-      const pageId = extractPageId(notionPage.url);
-      console.log(`Extracted page ID: ${pageId}`);
-      
-      if (!pageId) {
-        console.log(`Could not extract page ID from URL: ${notionPage.url}`);
-        continue;
-      }
 
-      const searchResult = await searchNotionDatabase(pageId);
-      if (!searchResult) {
-        console.log(`Failed to fetch data for page: ${notionPage.url}`);
-        continue;
-      }
+    for (const src of notionSources) {
+      console.log(`Resolving Notion source: ${src.url} (query: ${src.query})`);
+      const results = await notionSearch(src.query);
+      const databases = results.filter((r: any) => r.object === 'database');
+      const pages = results.filter((r: any) => r.object === 'page');
 
-      if (searchResult.type === 'database' && searchResult.data) {
-        // Process database pages
-        for (const page of searchResult.data) {
-          const title = extractTitle(page);
-          const content = await getPageContent(page.id);
-          const htmlContent = blocksToHtml(content);
-          
-          if (htmlContent.length > 0) {
-            const excerpt = htmlContent.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
-            
+      console.log(`Notion search — databases: ${databases.length}, pages: ${pages.length}`);
+
+      // Prefer database if present, else a page (as a hub with child pages)
+      if (databases.length) {
+        const db = databases[0];
+        const entries = await queryDatabase(db.id);
+        console.log(`Database ${db.id} entries: ${entries.length}`);
+        for (const entry of entries) {
+          const title = extractTitleFromProperties(entry);
+          const blocks = await getPageBlocks(entry.id);
+          const html = blocksToHtml(blocks);
+          if (!html) continue;
+          const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+          wikiContents.push({
+            title,
+            slug: createSlug(title),
+            content: html,
+            excerpt,
+            post_type: src.post_type,
+            category_slug: src.category_slug
+          });
+          console.log(`Prepared from DB: ${title}`);
+        }
+      } else if (pages.length) {
+        const hub = pages[0];
+        const children = await getPageBlocks(hub.id);
+        const childPages = children.filter((b: any) => b.type === 'child_page' || b.type === 'child_database');
+        console.log(`Hub child items: ${childPages.length}`);
+
+        for (const child of childPages) {
+          if (child.type === 'child_database') {
+            const entries = await queryDatabase(child.id);
+            for (const entry of entries) {
+              const title = extractTitleFromProperties(entry);
+              const blocks = await getPageBlocks(entry.id);
+              const html = blocksToHtml(blocks);
+              if (!html) continue;
+              const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+              wikiContents.push({
+                title,
+                slug: createSlug(title),
+                content: html,
+                excerpt,
+                post_type: src.post_type,
+                category_slug: src.category_slug
+              });
+              console.log(`Prepared from child DB: ${title}`);
+            }
+          } else if (child.type === 'child_page') {
+            const title = child.child_page?.title || 'Artigo sem título';
+            const blocks = await getPageBlocks(child.id);
+            const html = blocksToHtml(blocks);
+            if (!html) continue;
+            const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
             wikiContents.push({
               title,
               slug: createSlug(title),
-              content: htmlContent,
+              content: html,
               excerpt,
-              post_type: notionPage.post_type,
-              category_slug: notionPage.category_slug
+              post_type: src.post_type,
+              category_slug: src.category_slug
             });
-
-            console.log(`✅ Processed database page: "${title}" (${htmlContent.length} chars)`);
+            console.log(`Prepared from child page: ${title}`);
           }
         }
-      } else if (searchResult.type === 'page' && searchResult.data) {
-        // Process child pages
-        for (const childPage of searchResult.data) {
-          const title = childPage.child_page?.title || 'Artigo sem título';
-          const content = await getPageContent(childPage.id);
-          const htmlContent = blocksToHtml(content);
-          
-          if (htmlContent.length > 0) {
-            const excerpt = htmlContent.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
-            
-            wikiContents.push({
-              title,
-              slug: createSlug(title),
-              content: htmlContent,
-              excerpt,
-              post_type: notionPage.post_type,
-              category_slug: notionPage.category_slug
-            });
-
-            console.log(`✅ Processed child page: "${title}" (${htmlContent.length} chars)`);
-          }
-        }
+      } else {
+        console.log(`No matching Notion resources for query: ${src.query}`);
       }
     }
 
