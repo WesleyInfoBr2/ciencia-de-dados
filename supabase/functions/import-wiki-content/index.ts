@@ -73,141 +73,310 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Sample content to import
-    const wikiContents: WikiContent[] = [
-      {
-        title: "Introdução à Ciência de Dados",
-        slug: "introducao-ciencia-dados",
-        content: `<h1>Introdução à Ciência de Dados</h1>
-<p>A ciência de dados é uma área interdisciplinar que utiliza métodos científicos, processos, algoritmos e sistemas para extrair <strong>conhecimento e insights</strong> de dados estruturados e não estruturados.</p>
-
-<h2>O que é Ciência de Dados?</h2>
-<p>Ciência de dados combina estatística, matemática, programação e conhecimento específico do domínio para:</p>
-<ul>
-<li>Coletar e limpar dados</li>
-<li>Explorar e visualizar informações</li>
-<li>Construir modelos preditivos</li>
-<li>Comunicar insights de forma clara</li>
-</ul>
-
-<blockquote>
-<p>"In God we trust. All others must bring data." - W. Edwards Deming</p>
-</blockquote>
-
-<h2>Áreas de Conhecimento</h2>
-<p>A ciência de dados é uma intersecção entre três domínios principais:</p>
-<ul>
-<li><strong>Estatística e Matemática:</strong> Fundamentos para análise e modelagem</li>
-<li><strong>Ciência da Computação:</strong> Programação e processamento de dados</li>
-<li><strong>Expertise de Domínio:</strong> Conhecimento específico do negócio ou área</li>
-</ul>
-
-<h2>Processo de Ciência de Dados (CRISP-DM)</h2>
-<ol>
-<li><strong>Entendimento do Negócio:</strong> Definir objetivos e requisitos</li>
-<li><strong>Entendimento dos Dados:</strong> Coleta e exploração inicial</li>
-<li><strong>Preparação dos Dados:</strong> Limpeza e transformação</li>
-<li><strong>Modelagem:</strong> Seleção e aplicação de técnicas</li>
-<li><strong>Avaliação:</strong> Validação dos resultados</li>
-<li><strong>Implementação:</strong> Deploy e monitoramento</li>
-</ol>`,
-        excerpt: "Uma introdução completa ao campo da ciência de dados, suas áreas de aplicação e processo metodológico.",
-        post_type: "conteudo",
-        category_slug: "conteudos"
+    // Mapping Notion pages to categories
+    const notionPages = [
+      { 
+        url: 'https://cienciadedados.notion.site/conceitos',
+        category_slug: 'conteudos',
+        post_type: 'conteudo'
       },
-      {
-        title: "Como configurar ambiente Python para Data Science",
-        slug: "configurar-ambiente-python-data-science",
-        content: `<h1>Como configurar ambiente Python para Data Science</h1>
-<p>Este guia mostra como configurar um ambiente completo Python para ciência de dados.</p>
-
-<h2>Pré-requisitos</h2>
-<ul>
-<li>Computador com Windows, macOS ou Linux</li>
-<li>Conexão com internet</li>
-<li>Conhecimentos básicos de linha de comando</li>
-</ul>
-
-<h2>Passo 1: Instalar Python</h2>
-<p>Baixe Python da página oficial: <a href="https://python.org">python.org</a></p>
-<pre><code># Verificar se Python está instalado
-python --version</code></pre>
-
-<h2>Passo 2: Instalar Anaconda</h2>
-<p>Anaconda é uma distribuição Python que inclui muitas bibliotecas úteis:</p>
-<ol>
-<li>Baixe Anaconda do site oficial</li>
-<li>Execute o instalador</li>
-<li>Siga as instruções padrão</li>
-</ol>
-
-<h2>Passo 3: Bibliotecas Essenciais</h2>
-<pre><code># Instalar bibliotecas principais
-pip install pandas numpy matplotlib seaborn scikit-learn jupyter</code></pre>
-
-<h2>Teste do Ambiente</h2>
-<p>Crie um notebook e teste:</p>
-<pre><code>import pandas as pd
-import numpy as np
-import matplotlib.pyplot as plt
-
-# Criar dados de exemplo
-data = pd.DataFrame({
-    'x': range(10),
-    'y': np.random.randn(10)
-})
-
-# Visualizar
-plt.plot(data['x'], data['y'])
-plt.show()</code></pre>`,
-        excerpt: "Guia passo a passo para configurar um ambiente Python completo para ciência de dados.",
-        post_type: "como_fazer",
-        category_slug: "como-fazer"
+      { 
+        url: 'https://cienciadedados.notion.site/como-fazer',
+        category_slug: 'como-fazer', 
+        post_type: 'como_fazer'
       },
-      {
-        title: "Análise de Vendas com Python - Estudo de Caso",
-        slug: "analise-vendas-python-estudo-caso",
-        content: `<h1>Análise de Vendas com Python - Estudo de Caso</h1>
-<p>Neste estudo de caso, vamos analisar dados de vendas de uma empresa fictícia usando Python.</p>
-
-<h2>Contexto do Problema</h2>
-<p>A empresa XYZ quer entender:</p>
-<ul>
-<li>Quais produtos vendem mais</li>
-<li>Sazonalidade nas vendas</li>
-<li>Perfil dos clientes</li>
-<li>Previsão de vendas futuras</li>
-</ul>
-
-<h2>Análise Exploratória</h2>
-<pre><code>import pandas as pd
-import matplotlib.pyplot as plt
-import seaborn as sns
-
-# Carregar dados
-df = pd.read_csv('vendas.csv')
-
-# Estatísticas básicas
-print(df.describe())
-
-# Vendas por categoria
-vendas_categoria = df.groupby('categoria')['valor'].sum()
-vendas_categoria.plot(kind='bar')
-plt.title('Vendas por Categoria')
-plt.show()</code></pre>
-
-<h2>Principais Insights</h2>
-<ul>
-<li>Eletrônicos representam 45% das vendas</li>
-<li>Pico de vendas em dezembro</li>
-<li>20% dos clientes geram 80% da receita</li>
-<li>Tendência de crescimento de 15% ao ano</li>
-</ul>`,
-        excerpt: "Estudo de caso completo de análise de vendas usando Python, pandas e scikit-learn.",
-        post_type: "aplicacao_pratica",
-        category_slug: "aplicacao-pratica"
+      { 
+        url: 'https://cienciadedados.notion.site/aplicacoes',
+        category_slug: 'aplicacao-pratica',
+        post_type: 'aplicacao_pratica' 
       }
     ];
+
+    const NOTION_API_KEY = Deno.env.get('NOTION_API_KEY');
+    if (!NOTION_API_KEY) {
+      throw new Error('NOTION_API_KEY not configured');
+    }
+
+    // Function to extract page ID from Notion URL
+    function extractPageId(url: string): string {
+      const match = url.match(/([a-f0-9]{32})|([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/);
+      if (match) {
+        return match[0].replace(/-/g, '');
+      }
+      
+      // Try to extract from the end of URL
+      const parts = url.split('/');
+      const lastPart = parts[parts.length - 1];
+      const cleanPart = lastPart.split('?')[0].split('#')[0];
+      
+      // If it contains a dash, it might be a page ID
+      const dashMatch = cleanPart.match(/([a-f0-9]{32})/);
+      return dashMatch ? dashMatch[0] : cleanPart;
+    }
+
+    // Function to fetch Notion page content
+    async function searchNotionDatabase(pageId: string) {
+      try {
+        console.log(`Searching for database in Notion page: ${pageId}`);
+        
+        // First, try to get the page as a database
+        const dbResponse = await fetch(`https://api.notion.com/v1/databases/${pageId}/query`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${NOTION_API_KEY}`,
+            'Notion-Version': '2022-06-28',
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({})
+        });
+
+        if (dbResponse.ok) {
+          const dbData = await dbResponse.json();
+          console.log(`Found database with ${dbData.results?.length || 0} pages`);
+          return { type: 'database', data: dbData.results };
+        }
+
+        // If it's not a database, try to get it as a page and search for child pages
+        const pageResponse = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children?page_size=100`, {
+          headers: {
+            'Authorization': `Bearer ${NOTION_API_KEY}`,
+            'Notion-Version': '2022-06-28',
+          },
+        });
+
+        if (pageResponse.ok) {
+          const pageData = await pageResponse.json();
+          console.log(`Found page with ${pageData.results?.length || 0} blocks`);
+          
+          // Look for child pages in the blocks
+          const childPages = pageData.results?.filter((block: any) => 
+            block.type === 'child_page' || block.type === 'child_database'
+          ) || [];
+          
+          console.log(`Found ${childPages.length} child pages`);
+          return { type: 'page', data: childPages };
+        }
+
+        console.log(`Failed to fetch page/database ${pageId}: ${pageResponse.status}`);
+        return null;
+
+      } catch (error) {
+        console.error(`Error fetching Notion content for ${pageId}:`, error);
+        return null;
+      }
+    }
+
+    // Function to get page details
+    async function getPageDetails(pageId: string) {
+      try {
+        const response = await fetch(`https://api.notion.com/v1/pages/${pageId}`, {
+          headers: {
+            'Authorization': `Bearer ${NOTION_API_KEY}`,
+            'Notion-Version': '2022-06-28',
+          },
+        });
+
+        if (response.ok) {
+          return await response.json();
+        }
+        return null;
+      } catch (error) {
+        console.error(`Error getting page details for ${pageId}:`, error);
+        return null;
+      }
+    }
+
+    // Function to get page content
+    async function getPageContent(pageId: string) {
+      try {
+        const response = await fetch(`https://api.notion.com/v1/blocks/${pageId}/children`, {
+          headers: {
+            'Authorization': `Bearer ${NOTION_API_KEY}`,
+            'Notion-Version': '2022-06-28',
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          return data.results;
+        }
+        return [];
+      } catch (error) {
+        console.error(`Error getting page content for ${pageId}:`, error);
+        return [];
+      }
+    }
+
+    // Function to convert Notion blocks to HTML
+    function blocksToHtml(blocks: any[]): string {
+      let html = '';
+      
+      for (const block of blocks) {
+        switch (block.type) {
+          case 'heading_1':
+            if (block.heading_1.rich_text?.length > 0) {
+              html += `<h1>${block.heading_1.rich_text[0].plain_text}</h1>\n`;
+            }
+            break;
+          case 'heading_2':
+            if (block.heading_2.rich_text?.length > 0) {
+              html += `<h2>${block.heading_2.rich_text[0].plain_text}</h2>\n`;
+            }
+            break;
+          case 'heading_3':
+            if (block.heading_3.rich_text?.length > 0) {
+              html += `<h3>${block.heading_3.rich_text[0].plain_text}</h3>\n`;
+            }
+            break;
+          case 'paragraph':
+            if (block.paragraph.rich_text?.length > 0) {
+              const text = block.paragraph.rich_text
+                .map((t: any) => t.plain_text)
+                .join('');
+              html += `<p>${text}</p>\n`;
+            }
+            break;
+          case 'bulleted_list_item':
+            if (block.bulleted_list_item.rich_text?.length > 0) {
+              const text = block.bulleted_list_item.rich_text
+                .map((t: any) => t.plain_text)
+                .join('');
+              html += `<li>${text}</li>\n`;
+            }
+            break;
+          case 'numbered_list_item':
+            if (block.numbered_list_item.rich_text?.length > 0) {
+              const text = block.numbered_list_item.rich_text
+                .map((t: any) => t.plain_text)
+                .join('');
+              html += `<li>${text}</li>\n`;
+            }
+            break;
+          case 'code':
+            if (block.code.rich_text?.length > 0) {
+              const text = block.code.rich_text
+                .map((t: any) => t.plain_text)
+                .join('');
+              html += `<pre><code>${text}</code></pre>\n`;
+            }
+            break;
+          case 'quote':
+            if (block.quote.rich_text?.length > 0) {
+              const text = block.quote.rich_text
+                .map((t: any) => t.plain_text)
+                .join('');
+              html += `<blockquote><p>${text}</p></blockquote>\n`;
+            }
+            break;
+        }
+      }
+      
+      return html.trim();
+    }
+
+    // Function to create slug from title
+    function createSlug(title: string): string {
+      return title
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9\s-]/g, '')
+        .replace(/\s+/g, '-')
+        .replace(/-+/g, '-')
+        .trim('-');
+    }
+
+    // Function to extract title from page properties
+    function extractTitle(page: any): string {
+      if (page.properties) {
+        // Look for title property
+        const titleProp = Object.values(page.properties).find((prop: any) => prop.type === 'title');
+        if (titleProp && (titleProp as any).title?.length > 0) {
+          return (titleProp as any).title[0].plain_text;
+        }
+
+        // Look for Name property (common in databases)
+        if (page.properties.Name && page.properties.Name.title?.length > 0) {
+          return page.properties.Name.title[0].plain_text;
+        }
+      }
+
+      // Fallback to child_page title
+      if (page.child_page) {
+        return page.child_page.title;
+      }
+
+      return 'Artigo sem título';
+    }
+
+    // Import content from Notion pages
+    const wikiContents: WikiContent[] = [];
+    
+    for (const notionPage of notionPages) {
+      console.log(`Processing Notion page: ${notionPage.url}`);
+      
+      const pageId = extractPageId(notionPage.url);
+      console.log(`Extracted page ID: ${pageId}`);
+      
+      if (!pageId) {
+        console.log(`Could not extract page ID from URL: ${notionPage.url}`);
+        continue;
+      }
+
+      const searchResult = await searchNotionDatabase(pageId);
+      if (!searchResult) {
+        console.log(`Failed to fetch data for page: ${notionPage.url}`);
+        continue;
+      }
+
+      if (searchResult.type === 'database' && searchResult.data) {
+        // Process database pages
+        for (const page of searchResult.data) {
+          const title = extractTitle(page);
+          const content = await getPageContent(page.id);
+          const htmlContent = blocksToHtml(content);
+          
+          if (htmlContent.length > 0) {
+            const excerpt = htmlContent.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
+            
+            wikiContents.push({
+              title,
+              slug: createSlug(title),
+              content: htmlContent,
+              excerpt,
+              post_type: notionPage.post_type,
+              category_slug: notionPage.category_slug
+            });
+
+            console.log(`✅ Processed database page: "${title}" (${htmlContent.length} chars)`);
+          }
+        }
+      } else if (searchResult.type === 'page' && searchResult.data) {
+        // Process child pages
+        for (const childPage of searchResult.data) {
+          const title = childPage.child_page?.title || 'Artigo sem título';
+          const content = await getPageContent(childPage.id);
+          const htmlContent = blocksToHtml(content);
+          
+          if (htmlContent.length > 0) {
+            const excerpt = htmlContent.replace(/<[^>]*>/g, '').substring(0, 150) + '...';
+            
+            wikiContents.push({
+              title,
+              slug: createSlug(title),
+              content: htmlContent,
+              excerpt,
+              post_type: notionPage.post_type,
+              category_slug: notionPage.category_slug
+            });
+
+            console.log(`✅ Processed child page: "${title}" (${htmlContent.length} chars)`);
+          }
+        }
+      }
+    }
+
+    console.log(`Total articles prepared for import: ${wikiContents.length}`);
 
     // Get existing categories
     const { data: categories, error: categoriesError } = await supabase
