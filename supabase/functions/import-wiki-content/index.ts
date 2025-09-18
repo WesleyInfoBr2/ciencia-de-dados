@@ -73,23 +73,23 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Mapping Notion sources to categories/post types
-    const notionSources = [
+    // Main Notion database ID from the provided URL
+    const MAIN_DATABASE_ID = '1b302094baca8119b391d6e586174264';
+    
+    // Mapping for different content types found in the database
+    const contentTypeMapping = [
       {
-        url: 'https://cienciadedados.notion.site/conceitos',
-        query: 'conceitos',
+        keywords: ['conceito', 'fundamento', 'teoria', 'introducao'],
         category_slug: 'conteudos',
         post_type: 'conteudo'
       },
       {
-        url: 'https://cienciadedados.notion.site/como-fazer',
-        query: 'como fazer',
+        keywords: ['como', 'tutorial', 'guia', 'passo', 'fazer'],
         category_slug: 'como-fazer',
         post_type: 'como_fazer'
       },
       {
-        url: 'https://cienciadedados.notion.site/aplicacoes',
-        query: 'aplicacoes',
+        keywords: ['aplicacao', 'pratica', 'projeto', 'caso', 'exemplo'],
         category_slug: 'aplicacao-pratica',
         post_type: 'aplicacao_pratica'
       }
@@ -216,7 +216,7 @@ Deno.serve(async (req) => {
     }
 
     // Helper: process a hub page (scan child_page, child_database, link_to_page, link_to_database)
-    async function processHub(hubId: string, src: any, wikiContents: WikiContent[]) {
+    async function processHub(hubId: string, defaultMapping: any, wikiContents: WikiContent[]) {
       const children = await getPageBlocks(hubId);
       const candidates = children.filter((b: any) =>
         b.type === 'child_page' ||
@@ -231,17 +231,20 @@ Deno.serve(async (req) => {
             const title = child.child_page?.title || 'Artigo sem título';
             const blocks = await getPageBlocks(child.id);
             const html = blocksToHtml(blocks);
-            if (!html) continue;
+            if (!html || html.length < 50) continue;
+            
             const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+            const contentType = determineContentType(title, html);
+            
             wikiContents.push({
               title,
               slug: createSlug(title),
               content: html,
               excerpt,
-              post_type: src.post_type,
-              category_slug: src.category_slug
+              post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
+              category_slug: contentType.category_slug
             });
-            console.log(`Prepared from child page: ${title}`);
+            console.log(`Prepared from child page: "${title}" -> ${contentType.category_slug}`);
           } else if (child.type === 'child_database') {
             const entries = await queryDatabase(child.id);
             console.log(`Child DB ${child.id} entries: ${entries.length}`);
@@ -249,17 +252,20 @@ Deno.serve(async (req) => {
               const title = extractTitleFromProperties(entry);
               const blocks = await getPageBlocks(entry.id);
               const html = blocksToHtml(blocks);
-              if (!html) continue;
+              if (!html || html.length < 50) continue;
+              
               const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+              const contentType = determineContentType(title, html);
+              
               wikiContents.push({
                 title,
                 slug: createSlug(title),
                 content: html,
                 excerpt,
-                post_type: src.post_type,
-                category_slug: src.category_slug
+                post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
+                category_slug: contentType.category_slug
               });
-              console.log(`Prepared from child DB entry: ${title}`);
+              console.log(`Prepared from child DB entry: "${title}" -> ${contentType.category_slug}`);
             }
           } else if (child.type === 'link_to_page') {
             const lt = child.link_to_page;
@@ -267,17 +273,20 @@ Deno.serve(async (req) => {
               const details = await getPageBlocks(lt.page_id);
               const html = blocksToHtml(details);
               const title = child.child_page?.title || 'Artigo do Notion';
-              if (!html) continue;
+              if (!html || html.length < 50) continue;
+              
               const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+              const contentType = determineContentType(title, html);
+              
               wikiContents.push({
                 title,
                 slug: createSlug(title),
                 content: html,
                 excerpt,
-                post_type: src.post_type,
-                category_slug: src.category_slug
+                post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
+                category_slug: contentType.category_slug
               });
-              console.log(`Prepared from linked page: ${title}`);
+              console.log(`Prepared from linked page: "${title}" -> ${contentType.category_slug}`);
             } else if (lt?.type === 'database_id' && lt.database_id) {
               const entries = await queryDatabase(lt.database_id);
               console.log(`Linked DB ${lt.database_id} entries: ${entries.length}`);
@@ -285,17 +294,20 @@ Deno.serve(async (req) => {
                 const title = extractTitleFromProperties(entry);
                 const blocks = await getPageBlocks(entry.id);
                 const html = blocksToHtml(blocks);
-                if (!html) continue;
+                if (!html || html.length < 50) continue;
+                
                 const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+                const contentType = determineContentType(title, html);
+                
                 wikiContents.push({
                   title,
                   slug: createSlug(title),
                   content: html,
                   excerpt,
-                  post_type: src.post_type,
-                  category_slug: src.category_slug
+                  post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
+                  category_slug: contentType.category_slug
                 });
-                console.log(`Prepared from linked DB entry: ${title}`);
+                console.log(`Prepared from linked DB entry: "${title}" -> ${contentType.category_slug}`);
               }
             }
           }
@@ -305,45 +317,84 @@ Deno.serve(async (req) => {
       }
     }
 
-    const wikiContents: WikiContent[] = [];
-
-    for (const src of notionSources) {
-      console.log(`Resolving Notion source: ${src.url} (query: ${src.query})`);
-      const results = await notionSearch(src.query);
-      const databases = results.filter((r: any) => r.object === 'database');
-      const pages = results.filter((r: any) => r.object === 'page');
-
-      console.log(`Notion search — databases: ${databases.length}, pages: ${pages.length}`);
-
-      // Process all matching databases
-      for (const db of databases) {
-        const entries = await queryDatabase(db.id);
-        console.log(`Database ${db.id} entries: ${entries.length}`);
-        for (const entry of entries) {
-          const title = extractTitleFromProperties(entry);
-          const blocks = await getPageBlocks(entry.id);
-          const html = blocksToHtml(blocks);
-          if (!html) continue;
-          const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-          wikiContents.push({
-            title,
-            slug: createSlug(title),
-            content: html,
-            excerpt,
-            post_type: src.post_type,
-            category_slug: src.category_slug
-          });
-          console.log(`Prepared from DB: ${title}`);
+    // Function to determine content type based on title and content
+    function determineContentType(title: string, content: string): { category_slug: string; post_type: string } {
+      const titleLower = title.toLowerCase();
+      const contentLower = content.toLowerCase();
+      
+      for (const mapping of contentTypeMapping) {
+        if (mapping.keywords.some(keyword => 
+          titleLower.includes(keyword) || contentLower.includes(keyword)
+        )) {
+          return {
+            category_slug: mapping.category_slug,
+            post_type: mapping.post_type
+          };
         }
       }
+      
+      // Default to conteudo if no match found
+      return {
+        category_slug: 'conteudos',
+        post_type: 'conteudo'
+      };
+    }
 
-      // Process a few matching pages as hubs
-      for (const hub of pages.slice(0, 5)) {
-        await processHub(hub.id, src, wikiContents);
+    const wikiContents: WikiContent[] = [];
+
+    console.log(`Fetching content from main database: ${MAIN_DATABASE_ID}`);
+    
+    try {
+      // First try to get the page as a database
+      const entries = await queryDatabase(MAIN_DATABASE_ID);
+      console.log(`Database entries found: ${entries.length}`);
+      
+      for (const entry of entries) {
+        const title = extractTitleFromProperties(entry);
+        const blocks = await getPageBlocks(entry.id);
+        const html = blocksToHtml(blocks);
+        
+        if (!html || html.length < 50) {
+          console.log(`Skipping "${title}" - insufficient content`);
+          continue;
+        }
+        
+        const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+        const contentType = determineContentType(title, html);
+        
+        wikiContents.push({
+          title,
+          slug: createSlug(title),
+          content: html,
+          excerpt,
+          post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
+          category_slug: contentType.category_slug
+        });
+        
+        console.log(`Prepared from database entry: "${title}" -> ${contentType.category_slug}`);
       }
-
-      if (!databases.length && !pages.length) {
-        console.log(`No matching Notion resources for query: ${src.query}`);
+      
+      // If no database entries, try as a page with children
+      if (entries.length === 0) {
+        console.log('No database entries found, trying as page with children...');
+        await processHub(MAIN_DATABASE_ID, {
+          category_slug: 'conteudos', // default, will be overridden by content analysis
+          post_type: 'conteudo'
+        }, wikiContents);
+      }
+      
+    } catch (error) {
+      console.error('Error fetching from main database:', error);
+      
+      // Fallback: try to process as a regular page
+      console.log('Fallback: trying to process as regular page...');
+      try {
+        await processHub(MAIN_DATABASE_ID, {
+          category_slug: 'conteudos',
+          post_type: 'conteudo'
+        }, wikiContents);
+      } catch (fallbackError) {
+        console.error('Fallback processing failed:', fallbackError);
       }
     }
 
