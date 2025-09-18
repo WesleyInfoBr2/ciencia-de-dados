@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
         slug: "introducao-ciencia-dados",
         content: `
           <h1>Introdução à Ciência de Dados</h1>
-          <p>A ciência de dados é uma área interdisciplinar que utiliza métodos científicos, processos, algoritmos e sistemas para extrair conhecimento e insights de dados estruturados e não estruturados.</p>
+          <p>A ciência de dados é uma área interdisciplinar que utiliza métodos científicos, processos, algoritmos e sistemas para extrair <strong>conhecimento e insights</strong> de dados estruturados e não estruturados.</p>
           
           <h2>O que é Ciência de Dados?</h2>
           <p>Ciência de dados combina estatística, matemática, programação e conhecimento específico do domínio para:</p>
@@ -51,25 +51,47 @@ Deno.serve(async (req) => {
             <li>Comunicar insights de forma clara</li>
           </ul>
 
+          <blockquote>
+            <p>"In God we trust. All others must bring data." - W. Edwards Deming</p>
+          </blockquote>
+
           <h2>Áreas de Conhecimento</h2>
-          <p>A ciência de dados é uma intersecção entre:</p>
+          <p>A ciência de dados é uma intersecção entre três domínios principais:</p>
           <ul>
-            <li><strong>Estatística:</strong> Fundamentos matemáticos para análise</li>
-            <li><strong>Computação:</strong> Programação e processamento de dados</li>
-            <li><strong>Domínio específico:</strong> Conhecimento do negócio</li>
+            <li><strong>Estatística e Matemática:</strong> Fundamentos para análise e modelagem</li>
+            <li><strong>Ciência da Computação:</strong> Programação e processamento de dados</li>
+            <li><strong>Expertise de Domínio:</strong> Conhecimento específico do negócio ou área</li>
           </ul>
 
-          <h2>Processo de Ciência de Dados</h2>
+          <h2>Processo de Ciência de Dados (CRISP-DM)</h2>
           <ol>
-            <li><strong>Definição do problema:</strong> Entender o que queremos resolver</li>
-            <li><strong>Coleta de dados:</strong> Obter dados relevantes</li>
-            <li><strong>Limpeza:</strong> Preparar os dados para análise</li>
-            <li><strong>Exploração:</strong> Entender padrões nos dados</li>
-            <li><strong>Modelagem:</strong> Criar modelos preditivos</li>
-            <li><strong>Comunicação:</strong> Apresentar resultados</li>
+            <li><strong>Entendimento do Negócio:</strong> Definir objetivos e requisitos</li>
+            <li><strong>Entendimento dos Dados:</strong> Coleta e exploração inicial</li>
+            <li><strong>Preparação dos Dados:</strong> Limpeza e transformação</li>
+            <li><strong>Modelagem:</strong> Seleção e aplicação de técnicas</li>
+            <li><strong>Avaliação:</strong> Validação dos resultados</li>
+            <li><strong>Implementação:</strong> Deploy e monitoramento</li>
           </ol>
+
+          <h2>Ferramentas Essenciais</h2>
+          <p>As principais ferramentas utilizadas em ciência de dados incluem:</p>
+          
+          <h3>Linguagens de Programação</h3>
+          <ul>
+            <li><strong>Python:</strong> Versatilidade e ecossistema rico</li>
+            <li><strong>R:</strong> Especializada em estatística</li>
+            <li><strong>SQL:</strong> Manipulação de dados relacionais</li>
+          </ul>
+
+          <h3>Bibliotecas Python</h3>
+          <pre><code># Principais bibliotecas para Data Science
+import pandas as pd          # Manipulação de dados
+import numpy as np           # Computação numérica
+import matplotlib.pyplot as plt  # Visualização
+import seaborn as sns        # Visualização estatística
+import scikit-learn         # Machine Learning</code></pre>
         `,
-        excerpt: "Uma introdução completa ao campo da ciência de dados, suas áreas de aplicação e processo.",
+        excerpt: "Uma introdução completa ao campo da ciência de dados, suas áreas de aplicação e processo metodológico.",
         post_type: "conteudo",
         category_slug: "conteudos"
       },
@@ -283,78 +305,106 @@ df = pd.read_json('arquivo.json')</code></pre>
         slug: "introducao-machine-learning",
         content: `
           <h1>Introdução ao Machine Learning</h1>
-          <p>Machine Learning é um subcampo da inteligência artificial que permite aos computadores aprender sem serem explicitamente programados.</p>
+          <p>Machine Learning (ML) é um subcampo da inteligência artificial que permite aos computadores <strong>aprender sem serem explicitamente programados</strong> para cada tarefa específica.</p>
 
           <h2>Tipos de Machine Learning</h2>
           
           <h3>1. Aprendizado Supervisionado</h3>
-          <p>O algoritmo aprende com dados rotulados:</p>
+          <p>O algoritmo aprende com dados rotulados, onde temos pares de entrada-saída:</p>
           <ul>
-            <li><strong>Classificação:</strong> Prever categorias (spam/não spam)</li>
-            <li><strong>Regressão:</strong> Prever valores contínuos (preços)</li>
+            <li><strong>Classificação:</strong> Prever categorias discretas (spam/não spam, gato/cachorro)</li>
+            <li><strong>Regressão:</strong> Prever valores contínuos (preços, temperaturas)</li>
           </ul>
 
           <h3>2. Aprendizado Não Supervisionado</h3>
           <p>O algoritmo encontra padrões em dados não rotulados:</p>
           <ul>
-            <li><strong>Clustering:</strong> Agrupar dados similares</li>
-            <li><strong>Redução de dimensionalidade:</strong> Simplificar dados</li>
+            <li><strong>Clustering:</strong> Agrupar dados similares (segmentação de clientes)</li>
+            <li><strong>Redução de dimensionalidade:</strong> Simplificar dados mantendo informações importantes</li>
+            <li><strong>Detecção de anomalias:</strong> Identificar padrões incomuns</li>
           </ul>
 
           <h3>3. Aprendizado por Reforço</h3>
-          <p>O algoritmo aprende através de tentativa e erro:</p>
+          <p>O algoritmo aprende através de tentativa e erro, recebendo recompensas ou penalidades:</p>
           <ul>
-            <li>Jogos</li>
-            <li>Robótica</li>
+            <li>Jogos (AlphaGo, xadrez)</li>
+            <li>Robótica e navegação</li>
             <li>Sistemas de recomendação</li>
           </ul>
 
-          <h2>Processo de ML</h2>
-          <ol>
-            <li><strong>Coleta de dados:</strong> Obter dados relevantes</li>
-            <li><strong>Preparação:</strong> Limpar e processar dados</li>
-            <li><strong>Escolha do modelo:</strong> Selecionar algoritmo</li>
-            <li><strong>Treinamento:</strong> Ensinar o modelo</li>
-            <li><strong>Avaliação:</strong> Testar performance</li>
-            <li><strong>Implementação:</strong> Colocar em produção</li>
-          </ol>
+          <h2>Conceitos Fundamentais</h2>
+
+          <h3>Função de Custo</h3>
+          <p>Em regressão linear, minimizamos o erro quadrático médio:</p>
+          <p><span class="ql-formula" data-value="J(\\theta) = \\frac{1}{2m} \\sum_{i=1}^{m} (h_\\theta(x^{(i)}) - y^{(i)})^2">J(θ) = ½m Σ(hθ(x⁽ⁱ⁾) - y⁽ⁱ⁾)²</span></p>
+          
+          <h3>Gradiente Descendente</h3>
+          <p>Algoritmo de otimização para encontrar o mínimo da função de custo:</p>
+          <p><span class="ql-formula" data-value="\\theta_j := \\theta_j - \\alpha \\frac{\\partial}{\\partial \\theta_j} J(\\theta)">θⱼ := θⱼ - α ∂J(θ)/∂θⱼ</span></p>
+          
+          <p>Onde <span class="ql-formula" data-value="\\alpha">α</span> é a taxa de aprendizado (learning rate).</p>
 
           <h2>Algoritmos Populares</h2>
           
-          <h3>Classificação</h3>
+          <h3>Para Classificação</h3>
           <ul>
-            <li><strong>Logistic Regression:</strong> Simples e interpretável</li>
-            <li><strong>Random Forest:</strong> Robusto e preciso</li>
-            <li><strong>SVM:</strong> Eficaz para alta dimensionalidade</li>
+            <li><strong>Regressão Logística:</strong> Simples e interpretável</li>
+            <li><strong>Random Forest:</strong> Ensemble de árvores de decisão</li>
+            <li><strong>SVM (Support Vector Machine):</strong> Eficaz para alta dimensionalidade</li>
+            <li><strong>Redes Neurais:</strong> Modelos não-lineares complexos</li>
           </ul>
 
-          <h3>Regressão</h3>
+          <h3>Para Regressão</h3>
           <ul>
-            <li><strong>Linear Regression:</strong> Base para outros modelos</li>
-            <li><strong>Ridge/Lasso:</strong> Previne overfitting</li>
-            <li><strong>Gradient Boosting:</strong> Alta performance</li>
+            <li><strong>Regressão Linear:</strong> Base para outros modelos</li>
+            <li><strong>Ridge/Lasso:</strong> Regularização para prevenir overfitting</li>
+            <li><strong>Gradient Boosting:</strong> Ensemble sequencial para alta performance</li>
+          </ul>
+
+          <h2>Métricas de Avaliação</h2>
+          
+          <h3>Para Classificação</h3>
+          <ul>
+            <li><strong>Acurácia:</strong> <span class="ql-formula" data-value="\\frac{VP + VN}{VP + VN + FP + FN}">Acurácia = (VP + VN)/(VP + VN + FP + FN)</span></li>
+            <li><strong>Precisão:</strong> <span class="ql-formula" data-value="\\frac{VP}{VP + FP}">Precisão = VP/(VP + FP)</span></li>
+            <li><strong>Recall:</strong> <span class="ql-formula" data-value="\\frac{VP}{VP + FN}">Recall = VP/(VP + FN)</span></li>
+          </ul>
+
+          <h3>Para Regressão</h3>
+          <ul>
+            <li><strong>MSE:</strong> <span class="ql-formula" data-value="\\frac{1}{n} \\sum_{i=1}^{n} (y_i - \\hat{y}_i)^2">MSE = (1/n) Σ(yᵢ - ŷᵢ)²</span></li>
+            <li><strong>MAE:</strong> <span class="ql-formula" data-value="\\frac{1}{n} \\sum_{i=1}^{n} |y_i - \\hat{y}_i|">MAE = (1/n) Σ|yᵢ - ŷᵢ|</span></li>
+            <li><strong>R²:</strong> <span class="ql-formula" data-value="1 - \\frac{\\sum (y_i - \\hat{y}_i)^2}{\\sum (y_i - \\bar{y})^2}">R² = 1 - Σ(yᵢ - ŷᵢ)²/Σ(yᵢ - ȳ)²</span></li>
           </ul>
 
           <h2>Exemplo Prático</h2>
           <pre><code>from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 
-# Dividir dados
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+# Dividir dados em treino e teste
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.2, random_state=42
+)
 
 # Treinar modelo
-model = LogisticRegression()
+model = LogisticRegression(random_state=42)
 model.fit(X_train, y_train)
 
 # Fazer previsões
-predictions = model.predict(X_test)
+y_pred = model.predict(X_test)
 
-# Avaliar
-accuracy = accuracy_score(y_test, predictions)
-print(f'Acurácia: {accuracy:.2f}')</code></pre>
+# Avaliar performance
+accuracy = accuracy_score(y_test, y_pred)
+print(f'Acurácia: {accuracy:.3f}')
+print('\\nRelatório detalhado:')
+print(classification_report(y_test, y_pred))</code></pre>
+
+          <blockquote>
+            <p><strong>Dica:</strong> Sempre valide seus modelos com dados não vistos durante o treinamento para evitar overfitting!</p>
+          </blockquote>
         `,
-        excerpt: "Introdução completa ao Machine Learning: tipos, processos e algoritmos principais.",
+        excerpt: "Introdução completa ao Machine Learning: tipos, algoritmos, métricas e fórmulas matemáticas fundamentais.",
         post_type: "conteudo",
         category_slug: "conteudos"
       }

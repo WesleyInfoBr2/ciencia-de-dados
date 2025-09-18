@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, User, Edit, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import RichTextViewer from "@/components/RichTextViewer";
 
 interface WikiPostData {
   id: string;
@@ -223,19 +224,9 @@ const WikiPost = () => {
 
           {/* Article Content */}
           <div className="p-8">
-            <div 
-              className="prose prose-lg max-w-none dark:prose-invert
-                prose-headings:text-foreground 
-                prose-p:text-foreground/90
-                prose-strong:text-foreground
-                prose-code:text-foreground
-                prose-pre:bg-muted
-                prose-blockquote:border-primary
-                prose-blockquote:text-foreground/80
-                prose-a:text-primary
-                prose-a:no-underline
-                hover:prose-a:underline"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+            <RichTextViewer 
+              content={post.content}
+              className="max-w-none"
             />
           </div>
         </article>

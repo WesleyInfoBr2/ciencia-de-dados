@@ -6,12 +6,12 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Eye } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
+import RichTextEditor from "@/components/RichTextEditor";
 
 interface WikiCategory {
   id: string;
@@ -198,27 +198,28 @@ const WikiNew = () => {
 
                   <div>
                     <Label htmlFor="excerpt">Resumo</Label>
-                    <Textarea
+                    <Input
                       id="excerpt"
                       value={formData.excerpt}
                       onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
                       placeholder="Breve descrição do artigo..."
-                      rows={3}
                     />
                   </div>
 
                   <div>
                     <Label htmlFor="content">Conteúdo *</Label>
-                    <Textarea
-                      id="content"
+                    <RichTextEditor
                       value={formData.content}
-                      onChange={(e) => setFormData(prev => ({ ...prev, content: e.target.value }))}
-                      placeholder="Escreva o conteúdo do artigo aqui. Você pode usar HTML para formatação."
-                      rows={15}
-                      required
+                      onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                      placeholder="Escreva o conteúdo do artigo aqui. Use a barra de ferramentas para formatação rica, incluindo fórmulas matemáticas, imagens e links."
+                      className="mt-2"
                     />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Suporte para HTML básico: &lt;h2&gt;, &lt;p&gt;, &lt;strong&gt;, &lt;em&gt;, &lt;ul&gt;, &lt;ol&gt;, &lt;li&gt;, &lt;a&gt;, &lt;code&gt;, &lt;pre&gt;
+                    <p className="text-sm text-muted-foreground mt-2">
+                      <strong>Dicas:</strong>
+                      <br />• Use o botão de fórmula (∑) para adicionar equações matemáticas
+                      <br />• Clique no ícone de imagem para inserir imagens via URL
+                      <br />• Use Ctrl+K para adicionar links rapidamente
+                      <br />• Suporte completo para formatação rica: títulos, listas, citações, código
                     </p>
                   </div>
                 </CardContent>
@@ -296,26 +297,45 @@ const WikiNew = () => {
                       }
                     </Button>
                     
-                    {formData.title && formData.slug && (
+                    {formData.title && formData.content && (
                       <Button 
                         type="button" 
                         variant="outline" 
                         className="w-full gap-2"
                         onClick={() => {
-                          const previewContent = `
-                            <h1>${formData.title}</h1>
-                            ${formData.excerpt ? `<p><strong>Resumo:</strong> ${formData.excerpt}</p>` : ''}
-                            <div>${formData.content}</div>
-                          `;
                           const previewWindow = window.open('', '_blank');
-                          previewWindow?.document.write(`
-                            <html>
-                              <head><title>Preview: ${formData.title}</title></head>
-                              <body style="max-width: 800px; margin: 0 auto; padding: 20px; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;">
-                                ${previewContent}
-                              </body>
-                            </html>
-                          `);
+                          if (previewWindow) {
+                            previewWindow.document.write(`
+                              <!DOCTYPE html>
+                              <html>
+                                <head>
+                                  <title>Preview: ${formData.title}</title>
+                                  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
+                                  <style>
+                                    body { 
+                                      max-width: 800px; 
+                                      margin: 0 auto; 
+                                      padding: 20px; 
+                                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                                      line-height: 1.6;
+                                    }
+                                    h1, h2, h3, h4, h5, h6 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
+                                    p { margin-bottom: 1rem; }
+                                    pre { background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; }
+                                    blockquote { border-left: 4px solid #007bff; padding-left: 1rem; margin: 1rem 0; color: #6c757d; }
+                                    img { max-width: 100%; height: auto; margin: 1rem 0; }
+                                    .math-formula, .katex { margin: 0.2rem; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <h1>${formData.title}</h1>
+                                  ${formData.excerpt ? `<p><em>${formData.excerpt}</em></p><hr>` : ''}
+                                  <div>${formData.content}</div>
+                                </body>
+                              </html>
+                            `);
+                            previewWindow.document.close();
+                          }
                         }}
                       >
                         <Eye className="h-4 w-4" />
