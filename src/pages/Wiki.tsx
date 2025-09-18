@@ -6,8 +6,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Search, Plus, BookOpen, Users, TrendingUp } from "lucide-react";
+import { Search, Plus, BookOpen, Users, TrendingUp, PlayCircle, Target } from "lucide-react";
 import { Link } from "react-router-dom";
+import Header from "@/components/Header";
 
 interface WikiPost {
   id: string;
@@ -140,8 +141,23 @@ const Wiki = () => {
     return colors[type] || 'bg-gray-100 text-gray-800';
   };
 
+  const getCategoryIcon = (iconName: string) => {
+    switch (iconName) {
+      case 'BookOpen':
+        return <BookOpen className="h-5 w-5" />;
+      case 'PlayCircle':
+        return <PlayCircle className="h-5 w-5" />;
+      case 'Target':
+        return <Target className="h-5 w-5" />;
+      default:
+        return <BookOpen className="h-5 w-5" />;
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
+    <>
+      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
       {/* Hero Section */}
       <section className="py-16 px-4 text-center bg-gradient-to-r from-primary/10 to-primary/5">
         <div className="max-w-4xl mx-auto">
@@ -210,7 +226,10 @@ const Wiki = () => {
                 <SelectItem value="all">Todas as categorias</SelectItem>
                 {categories.map((category) => (
                   <SelectItem key={category.id} value={category.id}>
-                    {category.icon} {category.name}
+                    <div className="flex items-center gap-2">
+                      {getCategoryIcon(category.icon)}
+                      {category.name}
+                    </div>
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -245,7 +264,7 @@ const Wiki = () => {
                 >
                   <CardHeader className="pb-3">
                     <CardTitle className="flex items-center gap-2 text-lg">
-                      <span className="text-2xl">{category.icon}</span>
+                      {getCategoryIcon(category.icon)}
                       {category.name}
                     </CardTitle>
                     <CardDescription>{category.description}</CardDescription>
@@ -350,6 +369,7 @@ const Wiki = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

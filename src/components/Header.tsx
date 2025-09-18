@@ -27,12 +27,24 @@ const Header = () => {
 
         {/* Navigation - Desktop */}
         <nav className="hidden md:flex items-center space-x-8">
-          <a
-            href="#inicio"
+          <Link
+            to="/"
             className="text-sm font-medium text-foreground hover:text-primary transition-smooth"
           >
             Início
-          </a>
+          </Link>
+          <Link
+            to="/wiki"
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
+          >
+            Wiki
+          </Link>
+          <Link
+            to="/libraries"
+            className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
+          >
+            Bibliotecas
+          </Link>
           <a
             href="#comunidade"
             className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"

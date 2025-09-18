@@ -1,0 +1,57 @@
+﻿Fonte,Documentação,Exemplos de dados,Forma de acesso,Observações,Área
+IPEADATA,https://www.luanborelli.net/ipeadatapy/docs/,"Dados econômicos, financeiros, demográficos e sociais",Download CSV ou XLS ou pacote ipeadatapy,,Geral
+B3,https://developers.b3.com.br/apis,"Cotações, histórico de preços, dados de mercado, entre outros",API REST (com endpoint e documentação em JSON para cada api),"Exige certificação B3 e pode ser implementado em Python usando pacote requests. Também pode ser consumido pelo pacote yfinance. ",Financeiro e Contábil
+CEPEA,https://www.cepea.esalq.usp.br/br/consultas-ao-banco-de-dados-do-site.aspx,Histórico de preços agropecuária,Download arquivo XLS,Seleção de produto e período de tempo no site. Utilização de pacote pandas para upload no Python,Natureza e Agro
+Central de Balanços (BACEN),https://www.bcb.gov.br/estabilidadefinanceira/balancetesbalancospatrimoniais,Dados de Balancete/Balanco Geral (Documentos: 4010 - 4016 - 4020 - 4026) de instituições financeiras,Download arquivo CSV,Seleção de período e tipo de instituição. Utilização de pacote pandas para upload no Python,Financeiro e Contábil
+SEC EDGAR Database,https://www.sec.gov/edgar/search/efts-faq.html,"Relatórios anuais (10-K), relatórios trimestrais (10-Q), e outras divulgações financeiras para avaliar a saúde financeira e práticas contábeis das empresas norte-americanas",Webscraping (usando requests) ou pacotes sec-edgar-downloader ou edgar,,Financeiro e Contábil
+Bloomberg Terminal,https://www.bloomberg.com/professional/support/customer-support/,"Dados financeiros em tempo real, avaliação de ações, e monitoramento de tendências de mercado",API e interface específicas,Acesso somente com licença e autorização,Financeiro e Contábil
+Morningstar,https://www.morningstar.com/,"Fundos mútuos, ações e ETFs, além de avaliação de métricas financeiras como P/E ratio, dividend yield e histórico de desempenho",API REST,Exige assinatura premium para acesso a dados,Financeiro e Contábil
+Banco Mundial,https://wbdata.readthedocs.io/en/stable/,Dados econômicos e financeiros globais,Download arquivo CSV ou XLS ou pacote wbdata,,Financeiro e Contábil
+Alpha Vantage,https://www.alphavantage.co/documentation/,"Dados financeiros, como cotações de ações, moedas, criptomoedas, indicadores técnicos, entre outros",Pacote alpha_vantage,"O uso é gratuito, mas exige cadastro e geração de chave de acesso",Financeiro e Contábil
+CVM,https://github.com/glourencoffee/pycvm/,"Dados financeiros e operacionais sobre empresas listadas, fundos de investimento, relatórios de auditoria, comunicados ao mercado, entre outros",Download TXT ou CSV ou pacote cvm,O pacote cvm não é oficial e está em desenvolvimento,Financeiro e Contábil
+Federal Reserve Board,https://fred.stlouisfed.org/docs/api/fred/,Relatórios e Índices Econômicos dos EUA,Pacote fredapi,Para usar o pacote é necessário cadastro gratuito para geração de key,Financeiro e Contábil
+Ministério da Agricultura e Pecuária (MAPA),https://siga.agricultura.gov.br,Preços de commodities agrícolas e produção de diferentes culturas,Download TXT ou CSV,Aparentemente recurso foi descontinuado,Financeiro e Contábil
+IBGE,https://servicodados.ibge.gov.br/api/docs/,Dados econômicos e sociais,"Download CSV, API REST ou pacote pyIBGE",Pode obter acesso a dados por meio do pacote requests ou utilização o pacto pyIBGE (não oficial),Geral
+Economática,https://quickguide.economatica.com/PTB/Economatica+-+DataFeed.html,Demonstrações financeiras e indicadores,Exportação de consulta em formato CSV ou TXT,"Análise de investimentos sobre mercados de capitais das principais economias da América Latina e dos EUA. Balanços, cotações, composição acionária de empresas, IBOVESPA, IGP-M, FGV 100, Dow Jones, entre outros. Conta com séries históricas desde 1986. Acesso restrito e limitado",Financeiro e Contábil
+Anbima,https://data.anbima.com.br/,Dados de debentures emitidas pelas empresas de capital aberto e de fundos de investimento,Webscraping (usando requests e BeautifulSoup),"Uma alternativa para alguns dados é o pacote pyettj, que acessa base da B3",Financeiro e Contábil
+Kaggle,https://www.kaggle.com/datasets,Comunidade de compartilhamento de dados de diversos assuntos,"Download TXT, CSV ou JSON",,Geral
+Registradores,,Matrícula de imóveis,,,Móveis e Imóveis
+Detran e tabela FIPE,,Dados de móveis para alienações,,,Móveis e Imóveis
+Sites de prefeituras,,Consulta de dados de imóveis (IPTU),,,Móveis e Imóveis
+Receita Federal,,"Certidões Negativas de Débitos ",,,Legal e Jurídico
+PROJUDI,,Pesquisa de processos,,,Legal e Jurídico
+BDIA IBGE,https://bdiaweb.ibge.gov.br/,Banco de informações ambientais,,,Natureza e Agro
+FGV IBRE,https://portalibre.fgv.br/,Dados econômicos e sociais,,,Geral
+Academic Torrents,https://academictorrents.com/browse.php?cat=6,Repositório de bases de assuntos variados e compartilhados usando Torrent,,,Geral
+Flora do Brasil,http://floradobrasil.jbrj.gov.br/,Lista de Espécies da Flora do Brasil,,"No ano de 2010, o Brasil conseguiu cumprir a Meta 1 estabelecida pela Estratégia Global para a Conservação de Plantas (GSPC-CDB), com a publicação do Catálogo de Plantas e Fungos do Brasil e com o lançamento da primeira versão online da Lista de Espécies da Flora do Brasil.",Natureza e Agro
+AWS Amazon Datasets,http://aws.amazon.com/datasets,,,,Geral
+Awesome Public Datasets,https://github.com/caesar0301/awesome-public-datasets,Catálogo de bases criado no GitHub (usuário caesar0301),,,Geral
+Data Planet,http://www.data-planet.com/,Repositório de dados estatísticos padronizados e estruturados,," Atualmente com mais de 13,5 bilhões de bases, de mais de 550 fontes, agrupados em 16 categorias",Geral
+Brasil.io,https://brasil.io/home/,Repositório de dados públicos,,,Público
+FiveThirtyEight,https://data.fivethirtyeight.com/,Repositório de bases de assuntos super variados,,,Geral
+Google Public Data,https://www.google.com/publicdata/directory,,,,Geral
+UCI Machine Learning Repository,https://archive.ics.uci.edu/ml/datasets.php,"Repositório de bases agrupadas por área, tipo de dado e aplicação",,,Geral
+Reddit,https://www.reddit.com/r/datasets/,Repositório de bases de assuntos super variados,,,Geral
+Banco Central,https://dadosabertos.bcb.gov.br/,,,,Público
+Banco Mundial,https://data.worldbank.org/,,,,Público
+Câmara dos Deputados,https://dadosabertos.camara.leg.br/,,,,Público
+Conselho Nacional da Justiça,https://paineis.cnj.jus.br,,,"Visa liberar ao pleno conhecimento da sociedade informações pormenorizadas sobre a execução orçamentária e financeira dos Órgãos do Poder Judiciário integrantes do Orçamento Geral da União, sujeitos ao controle da atuação administrativa e financeira pelo Conselho Nacional de Justiça.",Público
+Data.gov,https://www.data.gov/,Banco de dados do Governo Estado-unidense,,,Público
+Governo Federal,http://transparencia.gov.br/,,,,Público
+Ministério do Turismo,http://dados.turismo.gov.br/,,,,Público
+INPE,http://www.inpe.br/dados_abertos/,,,,Público
+Ministério da Educação,http://dadosabertos.mec.gov.br/,Dados abertos dos programas vinculados ao Ministério da Educação,,,Público
+Portal Brasileiro de Dados Abertos,http://dados.gov.br/,,,O Portal Brasileiro de Dados Abertos é a ferramenta disponibilizada pelo governo para que todos possam encontrar e utilizar os dados e as informações públicas.,Público
+Ministério Público Federal,http://www.transparencia.mpf.mp.br/,,,"Permite acessar de forma rápida e descomplicada as informações administrativas e da atuação finalística de todas as 32 unidades do Ministério Público Federal, além da Procuradoria Geral da República.",Público
+Prefeitura de Curitiba,https://www.curitiba.pr.gov.br/dadosabertos/busca/,Dados abertos da cidade de Curitiba,,,Público
+Portal SBE,http://psbe.ufrn.br/,,,"Portal do Ministério da Saúde em parceria com a Organização Pan-Americana de de Saúde, disponibiliza acesso a Base de Dados Científicas, categorizadas por: Evidências Clínicas, Artigos Científicos e Ferramentas.",Público
+Quandl,https://www.quandl.com/,Plataforma da Nasdaq para compartilhamento de bases da área financeira,,,Financeiro e Contábil
+União Europeia,https://data.europa.eu/euodp/pt/home,,,O Portal de Dados Abertos da União Europeia dá acesso aos dados abertos publicados pelas instituições e outros organismos da UE,Público
+AggData,http://www.aggdata.com/data,Agrega dados de mais de 15 categorias para locação/compra,,,Geral
+Dataset Search Google,https://datasetsearch.research.google.com/,,,"A Pesquisa de Datasets é um mecanismo de pesquisa para conjuntos de dados. Com uma pesquisa simples por palavra-chave, os usuários podem descobrir conjuntos de dados hospedados em milhares de repositórios na Web.",Geral
+Quadrant,https://www.quadrant.io/,Oferta de dados para uso comercial,,,Geral
+AuditaSUS,https://auditasus.com.br/,,,"Esta plataforma tem a finalidade de fornecer informações estratégicas capazes de dar apoio ao controle e monitoramento, por parte dos tomadores de decisões, no âmbito do SUS",Público
+Inside Airbnb,http://insideairbnb.com/get-the-data.html,Registros da rede Airbnb por região,,,Transporte e Mobilidade
+DATASUS,http://www2.datasus.gov.br/,,,"O DATASUS disponibiliza informações que podem servir para subsidiar  análises objetivas da situação sanitária, tomadas de decisão baseadas em evidências e elaboração de programas de ações de saúde.",Público
+Mobilidados,https://plataforma.mobilidados.org.br/database,indicadores e dados abertos para elaboração e monitoramento de políticas públicas de mobilidade urbana no país,,,Transporte e Mobilidade
+Ministério do Planejamento e Orçamento,https://cran.r-project.org/web/packages/orcamentoBR/index.html,"Orçamento no Brasil, incluindo alocações e despesas do governo federal",pacote R,,Público

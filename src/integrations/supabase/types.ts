@@ -14,6 +14,42 @@ export type Database = {
   }
   public: {
     Tables: {
+      code_packages: {
+        Row: {
+          added_date: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          language: string
+          name: string
+          status: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          added_date?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          language: string
+          name: string
+          status?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          added_date?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          language?: string
+          name?: string
+          status?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       course_enrollments: {
         Row: {
           completed_at: string | null
@@ -133,6 +169,42 @@ export type Database = {
           },
         ]
       }
+      data_sources: {
+        Row: {
+          access_method: string | null
+          category: string | null
+          created_at: string | null
+          documentation_url: string | null
+          example_data: string | null
+          id: string
+          name: string
+          observations: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_method?: string | null
+          category?: string | null
+          created_at?: string | null
+          documentation_url?: string | null
+          example_data?: string | null
+          id?: string
+          name: string
+          observations?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_method?: string | null
+          category?: string | null
+          created_at?: string | null
+          documentation_url?: string | null
+          example_data?: string | null
+          id?: string
+          name?: string
+          observations?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       datasets: {
         Row: {
           category: string | null
@@ -206,6 +278,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      educational_courses: {
+        Row: {
+          access_url: string | null
+          added_date: string | null
+          created_at: string | null
+          duration: string | null
+          id: string
+          institution: string | null
+          name: string
+          price: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          access_url?: string | null
+          added_date?: string | null
+          created_at?: string | null
+          duration?: string | null
+          id?: string
+          institution?: string | null
+          name: string
+          price?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          access_url?: string | null
+          added_date?: string | null
+          created_at?: string | null
+          duration?: string | null
+          id?: string
+          institution?: string | null
+          name?: string
+          price?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       entitlements: {
         Row: {
@@ -721,6 +832,48 @@ export type Database = {
           popularity_score?: number | null
           slug?: string
           tags?: string[] | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
+      tools: {
+        Row: {
+          added_date: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_free: boolean | null
+          is_online: boolean | null
+          name: string
+          status: string | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          added_date?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_free?: boolean | null
+          is_online?: boolean | null
+          name: string
+          status?: string | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          added_date?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_free?: boolean | null
+          is_online?: boolean | null
+          name?: string
+          status?: string | null
           updated_at?: string | null
           website_url?: string | null
         }

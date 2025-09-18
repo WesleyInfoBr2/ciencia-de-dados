@@ -1,0 +1,4 @@
+﻿Codigo,Breve descrição,Data cadastro,Endereço,Status
+PyCaret (PyCaret),PyCaret é uma biblioteca de aprendizado de máquina de código aberto e baixo código em Python que automatiza fluxos de trabalho de aprendizado de máquina.,14/04/2022   (BRT),https://github.com/pycaret/pycaret,Ativo
+geobr (IPEA),É um pacote computacional para download de conjuntos de dados espaciais oficiais do Brasil. Inclui uma ampla gama de dados geoespaciais em formato de geopacote.,14/04/2022   (BRT),https://ipeagit.github.io/geobr/index.html,Ativo
+XGBoost (XGBoost),"É uma implementação da estrutura de aumento de gradiente. Ele suporta várias funções de objetivo, incluindo regressão e classificação. O pacote é feito para ser extensível, de modo que os usuários também possam definir facilmente suas próprias funções objetivo.",14/04/2022   (BRT),https://xgboost.readthedocs.io/en/latest/python/,Ativo
