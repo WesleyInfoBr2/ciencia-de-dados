@@ -33,6 +33,46 @@ Deno.serve(async (req) => {
 
     console.log('Importing content for author:', author_id);
 
+    // Ensure author profile exists (required by FK wiki_posts.author_id -> profiles.id)
+    const { data: existingProfile, error: profileCheckError } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('id', author_id)
+      .maybeSingle();
+
+    if (profileCheckError) {
+      console.error('Error checking profile:', profileCheckError);
+    }
+
+    if (!existingProfile) {
+      console.log('Profile not found. Fetching user and creating profile for:', author_id);
+      const { data: userResult, error: getUserError } = await supabase.auth.admin.getUserById(author_id);
+      if (getUserError) {
+        console.error('Failed to fetch auth user:', getUserError);
+      } else if (userResult?.user) {
+        const u = userResult.user;
+        const profilePayload: any = {
+          id: author_id,
+          email: u.email,
+          full_name: u.user_metadata?.full_name || u.user_metadata?.name || u.email,
+          username: (u.user_metadata?.username || null),
+          bio: (u.user_metadata?.bio || null),
+          social_networks: (u.user_metadata?.social_networks || {})
+        };
+        const { error: createProfileError } = await supabase
+          .from('profiles')
+          .insert(profilePayload)
+          .select('id')
+          .single();
+
+        if (createProfileError) {
+          console.error('Failed to create profile:', createProfileError);
+        } else {
+          console.log('Profile created for author:', author_id);
+        }
+      }
+    }
+
     // Sample content to import
     const wikiContents: WikiContent[] = [
       {
