@@ -28,7 +28,7 @@ export const AuthForm = () => {
       linkedin: "",
       github: "",
       website: "",
-      outro: "",
+      outra: "",
     },
   });
 
@@ -84,6 +84,20 @@ export const AuthForm = () => {
       toast({
         title: "Cadastro realizado!",
         description: "Verifique seu email para confirmar a conta.",
+      });
+      // Clear form after successful signup
+      setSignupData({
+        email: "",
+        password: "",
+        fullName: "",
+        username: "",
+        bio: "",
+        socialNetworks: {
+          linkedin: "",
+          github: "",
+          website: "",
+          outra: "",
+        },
       });
     }
     setIsLoading(false);
@@ -143,7 +157,7 @@ export const AuthForm = () => {
             <CardHeader>
               <CardTitle>Criar Conta</CardTitle>
               <CardDescription>
-                Preencha os dados para criar sua conta
+                Preencha os dados para criar sua conta gratuita:
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -236,14 +250,14 @@ export const AuthForm = () => {
                       }
                     />
                     <Input
-                      placeholder="Twitter"
-                      value={signupData.socialNetworks.twitter}
+                      placeholder="Outra"
+                      value={signupData.socialNetworks.outra}
                       onChange={(e) =>
                         setSignupData({
                           ...signupData,
                           socialNetworks: {
                             ...signupData.socialNetworks,
-                            twitter: e.target.value,
+                            outra: e.target.value,
                           },
                         })
                       }
