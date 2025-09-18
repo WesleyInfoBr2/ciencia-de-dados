@@ -1,1 +1,4 @@
 project_id = "cdniklunhzcbwcxlsxfl"
+
+[functions.import-wiki-content]
+verify_jwt = true

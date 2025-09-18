@@ -170,12 +170,20 @@ const Wiki = () => {
           </div>
 
           {user && (
-            <Link to="/wiki/new">
-              <Button size="lg" className="gap-2">
-                <Plus className="h-4 w-4" />
-                Criar Artigo
-              </Button>
-            </Link>
+            <div className="flex gap-2">
+              <Link to="/wiki/import">
+                <Button variant="outline" size="lg" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Importar Conteúdo
+                </Button>
+              </Link>
+              <Link to="/wiki/new">
+                <Button size="lg" className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Criar Artigo
+                </Button>
+              </Link>
+            </div>
           )}
         </div>
       </section>
