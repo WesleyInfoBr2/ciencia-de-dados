@@ -100,8 +100,8 @@ Deno.serve(async (req) => {
       throw new Error('NOTION_API_KEY not configured');
     }
 
-    // Search in Notion workspace to resolve the public site URL to actual page/database IDs
-    async function notionSearch(query: string) {
+    // Search in Notion workspace
+    async function notionSearch(query: string, pageSize = 50) {
       const resp = await fetch('https://api.notion.com/v1/search', {
         method: 'POST',
         headers: {
@@ -111,7 +111,7 @@ Deno.serve(async (req) => {
         },
         body: JSON.stringify({
           query,
-          page_size: 25
+          page_size: pageSize
         })
       });
       if (!resp.ok) {
@@ -215,6 +215,96 @@ Deno.serve(async (req) => {
       return 'Artigo sem título';
     }
 
+    // Helper: process a hub page (scan child_page, child_database, link_to_page, link_to_database)
+    async function processHub(hubId: string, src: any, wikiContents: WikiContent[]) {
+      const children = await getPageBlocks(hubId);
+      const candidates = children.filter((b: any) =>
+        b.type === 'child_page' ||
+        b.type === 'child_database' ||
+        b.type === 'link_to_page'
+      );
+      console.log(`Hub ${hubId} candidates: ${candidates.length}`);
+
+      for (const child of candidates) {
+        try {
+          if (child.type === 'child_page') {
+            const title = child.child_page?.title || 'Artigo sem título';
+            const blocks = await getPageBlocks(child.id);
+            const html = blocksToHtml(blocks);
+            if (!html) continue;
+            const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+            wikiContents.push({
+              title,
+              slug: createSlug(title),
+              content: html,
+              excerpt,
+              post_type: src.post_type,
+              category_slug: src.category_slug
+            });
+            console.log(`Prepared from child page: ${title}`);
+          } else if (child.type === 'child_database') {
+            const entries = await queryDatabase(child.id);
+            console.log(`Child DB ${child.id} entries: ${entries.length}`);
+            for (const entry of entries) {
+              const title = extractTitleFromProperties(entry);
+              const blocks = await getPageBlocks(entry.id);
+              const html = blocksToHtml(blocks);
+              if (!html) continue;
+              const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+              wikiContents.push({
+                title,
+                slug: createSlug(title),
+                content: html,
+                excerpt,
+                post_type: src.post_type,
+                category_slug: src.category_slug
+              });
+              console.log(`Prepared from child DB entry: ${title}`);
+            }
+          } else if (child.type === 'link_to_page') {
+            const lt = child.link_to_page;
+            if (lt?.type === 'page_id' && lt.page_id) {
+              const details = await getPageBlocks(lt.page_id);
+              const html = blocksToHtml(details);
+              const title = child.child_page?.title || 'Artigo do Notion';
+              if (!html) continue;
+              const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+              wikiContents.push({
+                title,
+                slug: createSlug(title),
+                content: html,
+                excerpt,
+                post_type: src.post_type,
+                category_slug: src.category_slug
+              });
+              console.log(`Prepared from linked page: ${title}`);
+            } else if (lt?.type === 'database_id' && lt.database_id) {
+              const entries = await queryDatabase(lt.database_id);
+              console.log(`Linked DB ${lt.database_id} entries: ${entries.length}`);
+              for (const entry of entries) {
+                const title = extractTitleFromProperties(entry);
+                const blocks = await getPageBlocks(entry.id);
+                const html = blocksToHtml(blocks);
+                if (!html) continue;
+                const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
+                wikiContents.push({
+                  title,
+                  slug: createSlug(title),
+                  content: html,
+                  excerpt,
+                  post_type: src.post_type,
+                  category_slug: src.category_slug
+                });
+                console.log(`Prepared from linked DB entry: ${title}`);
+              }
+            }
+          }
+        } catch (err) {
+          console.log('Error processing hub child:', err);
+        }
+      }
+    }
+
     const wikiContents: WikiContent[] = [];
 
     for (const src of notionSources) {
@@ -225,9 +315,8 @@ Deno.serve(async (req) => {
 
       console.log(`Notion search — databases: ${databases.length}, pages: ${pages.length}`);
 
-      // Prefer database if present, else a page (as a hub with child pages)
-      if (databases.length) {
-        const db = databases[0];
+      // Process all matching databases
+      for (const db of databases) {
         const entries = await queryDatabase(db.id);
         console.log(`Database ${db.id} entries: ${entries.length}`);
         for (const entry of entries) {
@@ -246,49 +335,14 @@ Deno.serve(async (req) => {
           });
           console.log(`Prepared from DB: ${title}`);
         }
-      } else if (pages.length) {
-        const hub = pages[0];
-        const children = await getPageBlocks(hub.id);
-        const childPages = children.filter((b: any) => b.type === 'child_page' || b.type === 'child_database');
-        console.log(`Hub child items: ${childPages.length}`);
+      }
 
-        for (const child of childPages) {
-          if (child.type === 'child_database') {
-            const entries = await queryDatabase(child.id);
-            for (const entry of entries) {
-              const title = extractTitleFromProperties(entry);
-              const blocks = await getPageBlocks(entry.id);
-              const html = blocksToHtml(blocks);
-              if (!html) continue;
-              const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-              wikiContents.push({
-                title,
-                slug: createSlug(title),
-                content: html,
-                excerpt,
-                post_type: src.post_type,
-                category_slug: src.category_slug
-              });
-              console.log(`Prepared from child DB: ${title}`);
-            }
-          } else if (child.type === 'child_page') {
-            const title = child.child_page?.title || 'Artigo sem título';
-            const blocks = await getPageBlocks(child.id);
-            const html = blocksToHtml(blocks);
-            if (!html) continue;
-            const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-            wikiContents.push({
-              title,
-              slug: createSlug(title),
-              content: html,
-              excerpt,
-              post_type: src.post_type,
-              category_slug: src.category_slug
-            });
-            console.log(`Prepared from child page: ${title}`);
-          }
-        }
-      } else {
+      // Process a few matching pages as hubs
+      for (const hub of pages.slice(0, 5)) {
+        await processHub(hub.id, src, wikiContents);
+      }
+
+      if (!databases.length && !pages.length) {
         console.log(`No matching Notion resources for query: ${src.query}`);
       }
     }
