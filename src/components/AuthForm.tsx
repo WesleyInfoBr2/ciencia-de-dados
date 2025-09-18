@@ -27,8 +27,8 @@ export const AuthForm = () => {
     socialNetworks: {
       linkedin: "",
       github: "",
-      twitter: "",
       website: "",
+      outro: "",
     },
   });
 
