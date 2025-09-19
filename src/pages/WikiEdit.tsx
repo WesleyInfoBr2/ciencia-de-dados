@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import RichTextEditor from "@/components/RichTextEditor";
+import { TiptapEditor } from "@/components/TiptapEditor";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface WikiCategory {
@@ -25,7 +25,7 @@ interface WikiPost {
   id: string;
   title: string;
   slug: string;
-  content: string;
+  content: any;
   excerpt: string;
   author_id: string;
   post_type: 'conteudo' | 'como_fazer' | 'aplicacao_pratica';
@@ -48,7 +48,7 @@ const WikiEdit = () => {
     title: '',
     slug: '',
     excerpt: '',
-    content: '',
+    content: { type: 'doc', content: [] },
     post_type: 'conteudo' as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
     category_id: '',
     is_published: false
@@ -97,11 +97,17 @@ const WikiEdit = () => {
     }
 
     setPost(data);
+    
+    // Ensure content is properly structured for Tiptap
+    const content = typeof data.content === 'object' && data.content !== null
+      ? data.content as any
+      : { type: 'doc', content: [] };
+    
     setFormData({
       title: data.title,
       slug: data.slug,
       excerpt: data.excerpt || '',
-      content: data.content,
+      content: content,
       post_type: data.post_type,
       category_id: data.category_id || '',
       is_published: data.is_published
@@ -300,10 +306,9 @@ const WikiEdit = () => {
 
                   <div>
                     <Label htmlFor="content">Conteúdo *</Label>
-                    <RichTextEditor
-                      value={formData.content}
+                    <TiptapEditor
+                      content={formData.content}
                       onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                      placeholder="Escreva o conteúdo do artigo aqui..."
                       className="mt-2"
                     />
                     <p className="text-sm text-muted-foreground mt-2">

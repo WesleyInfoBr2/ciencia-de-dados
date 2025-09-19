@@ -913,7 +913,7 @@ export type Database = {
         Row: {
           author_id: string
           category_id: string | null
-          content: string
+          content: Json
           created_at: string | null
           excerpt: string | null
           id: string
@@ -927,7 +927,7 @@ export type Database = {
         Insert: {
           author_id: string
           category_id?: string | null
-          content: string
+          content: Json
           created_at?: string | null
           excerpt?: string | null
           id?: string
@@ -941,7 +941,7 @@ export type Database = {
         Update: {
           author_id?: string
           category_id?: string | null
-          content?: string
+          content?: Json
           created_at?: string | null
           excerpt?: string | null
           id?: string

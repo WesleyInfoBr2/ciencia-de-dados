@@ -7,13 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, User, Edit, BookOpen } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import RichTextViewer from "@/components/RichTextViewer";
+import { TiptapViewer } from "@/components/TiptapViewer";
 
 interface WikiPostData {
   id: string;
   title: string;
   slug: string;
-  content: string;
+  content: any;
   excerpt: string;
   author_id: string;
   is_published: boolean;
@@ -224,7 +224,7 @@ const WikiPost = () => {
 
           {/* Article Content */}
           <div className="p-8">
-            <RichTextViewer 
+            <TiptapViewer 
               content={post.content}
               className="max-w-none"
             />

@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
+import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { ArrowLeft, Save, Eye } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { Link } from "react-router-dom";
-import RichTextEditor from "@/components/RichTextEditor";
+import { Textarea } from "@/components/ui/textarea";
+import { TiptapEditor } from "@/components/TiptapEditor";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
+import { toast } from "sonner";
+import { Save, Eye, FileText } from "lucide-react";
+import { wikiPostSchema, generateSlug, type WikiPostFormData } from "@/lib/validations";
 
 interface WikiCategory {
   id: string;
@@ -21,208 +23,181 @@ interface WikiCategory {
 }
 
 const WikiNew = () => {
-  const { user, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
-  
+  const { user, loading: authLoading } = useAuth();
   const [categories, setCategories] = useState<WikiCategory[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    slug: '',
-    excerpt: '',
-    content: '',
-    post_type: 'conteudo' as const,
-    category_id: '',
-    is_published: false
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  
+  const [formData, setFormData] = useState<WikiPostFormData>({
+    title: "",
+    slug: "",
+    content: { type: 'doc', content: [] },
+    excerpt: "",
+    post_type: "conteudo",
+    category_id: undefined,
+    is_published: false,
   });
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate("/auth");
       return;
     }
+    
     fetchCategories();
   }, [user, authLoading, navigate]);
 
   const fetchCategories = async () => {
-    const { data } = await supabase
-      .from('wiki_categories')
-      .select('id, name, slug, icon')
-      .order('sort_order');
-    
-    if (data) {
-      setCategories(data);
-    }
-  };
-
-  const generateSlug = (title: string) => {
-    return title
-      .toLowerCase()
-      .normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '') // Remove acentos
-      .replace(/[^a-z0-9\s-]/g, '') // Remove caracteres especiais
-      .replace(/\s+/g, '-') // Substitui espaços por hífens
-      .replace(/-+/g, '-') // Remove hífens duplicados
-      .trim();
-  };
-
-  const handleTitleChange = (title: string) => {
-    setFormData(prev => ({
-      ...prev,
-      title,
-      slug: generateSlug(title)
-    }));
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!user) return;
-
-    setLoading(true);
-
     try {
-      // Verifica se o slug já existe
-      const { data: existingPost } = await supabase
-        .from('wiki_posts')
-        .select('id')
-        .eq('slug', formData.slug)
-        .single();
-
-      if (existingPost) {
-        toast({
-          title: "Erro",
-          description: "Já existe um post com este título. Tente um título diferente.",
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
-
-      const postData = {
-        ...formData,
-        author_id: user.id,
-        published_at: formData.is_published ? new Date().toISOString() : null,
-        category_id: formData.category_id || null
-      };
-
       const { data, error } = await supabase
-        .from('wiki_posts')
-        .insert([postData])
-        .select()
-        .single();
+        .from("wiki_categories")
+        .select("*")
+        .order("sort_order", { ascending: true });
 
-      if (error) {
-        throw error;
-      }
-
-      toast({
-        title: "Sucesso!",
-        description: formData.is_published 
-          ? "Artigo publicado com sucesso!" 
-          : "Rascunho salvo com sucesso!",
-      });
-
-      navigate(`/wiki/${data.slug}`);
+      if (error) throw error;
+      setCategories(data || []);
     } catch (error) {
-      console.error('Error creating post:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao salvar o artigo. Tente novamente.",
-        variant: "destructive",
-      });
+      console.error("Erro ao buscar categorias:", error);
+      toast.error("Erro ao carregar categorias");
     } finally {
       setLoading(false);
     }
   };
 
-  if (authLoading) {
+  const handleTitleChange = (title: string) => {
+    const slug = generateSlug(title);
+    setFormData(prev => ({ ...prev, title, slug }));
+  };
+
+  const handleSubmit = async (isDraft = false) => {
+    if (!user) return;
+    
+    setSaving(true);
+    
+    try {
+      const submitData = {
+        ...formData,
+        is_published: !isDraft,
+      };
+
+      // Validate form data
+      const validatedData = wikiPostSchema.parse(submitData);
+      
+      // Check if slug already exists
+      const { data: existingPost } = await supabase
+        .from("wiki_posts")
+        .select("id")
+        .eq("slug", validatedData.slug)
+        .single();
+
+      if (existingPost) {
+        toast.error("Já existe um artigo com este slug. Altere o título ou slug.");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("wiki_posts")
+        .insert({
+          title: validatedData.title,
+          slug: validatedData.slug,
+          content: validatedData.content,
+          excerpt: validatedData.excerpt,
+          post_type: validatedData.post_type,
+          category_id: validatedData.category_id,
+          author_id: user.id,
+          is_published: validatedData.is_published,
+          published_at: validatedData.is_published ? new Date().toISOString() : null,
+        });
+
+      if (error) throw error;
+
+      toast.success(isDraft ? "Rascunho salvo com sucesso!" : "Artigo publicado com sucesso!");
+      navigate(`/wiki/${validatedData.slug}`);
+    } catch (error: any) {
+      console.error("Erro ao salvar artigo:", error);
+      if (error.name === 'ZodError') {
+        toast.error("Dados inválidos: " + error.errors.map((e: any) => e.message).join(', '));
+      } else {
+        toast.error("Erro ao salvar artigo. Tente novamente.");
+      }
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (authLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="min-h-screen bg-background">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="animate-pulse">Carregando...</div>
+        </div>
       </div>
     );
   }
 
-  if (!user) {
-    return null;
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary p-4">
-      <div className="max-w-4xl mx-auto">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <Link to="/wiki">
-            <Button variant="ghost" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para Wiki
-            </Button>
-          </Link>
+    <div className="min-h-screen bg-background">
+      <Header />
+      
+      <div className="container mx-auto px-4 py-8">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
+            <FileText className="h-8 w-8" />
+            Novo Artigo
+          </h1>
           
-          <h1 className="text-2xl font-bold">Novo Artigo</h1>
-        </div>
-
-        <form onSubmit={handleSubmit}>
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Main Content */}
-            <div className="lg:col-span-2 space-y-6">
+            <div className="lg:col-span-3 space-y-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Conteúdo do Artigo</CardTitle>
+                  <CardTitle>Informações Básicas</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="title">Título *</Label>
+                    <Label htmlFor="title">Título</Label>
                     <Input
                       id="title"
                       value={formData.title}
                       onChange={(e) => handleTitleChange(e.target.value)}
-                      placeholder="Digite o título do artigo..."
-                      required
+                      placeholder="Digite o título do artigo"
                     />
                   </div>
-
+                  
                   <div>
-                    <Label htmlFor="slug">URL (Slug)</Label>
+                    <Label htmlFor="slug">Slug (URL)</Label>
                     <Input
                       id="slug"
                       value={formData.slug}
                       onChange={(e) => setFormData(prev => ({ ...prev, slug: e.target.value }))}
-                      placeholder="url-amigavel-do-artigo"
+                      placeholder="url-do-artigo"
                     />
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Gerado automaticamente a partir do título
-                    </p>
                   </div>
-
+                  
                   <div>
-                    <Label htmlFor="excerpt">Resumo</Label>
-                    <Input
+                    <Label htmlFor="excerpt">Resumo (opcional)</Label>
+                    <Textarea
                       id="excerpt"
                       value={formData.excerpt}
                       onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
-                      placeholder="Breve descrição do artigo..."
+                      placeholder="Breve descrição do artigo"
+                      rows={3}
                     />
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div>
-                    <Label htmlFor="content">Conteúdo *</Label>
-                    <RichTextEditor
-                      value={formData.content}
-                      onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                      placeholder="Escreva o conteúdo do artigo aqui. Use a barra de ferramentas para formatação rica, incluindo fórmulas matemáticas, imagens e links."
-                      className="mt-2"
-                    />
-                    <p className="text-sm text-muted-foreground mt-2">
-                      <strong>Dicas:</strong>
-                      <br />• Use o botão de fórmula (∑) para adicionar equações matemáticas
-                      <br />• Para imagens, use URLs de imagens hospedadas online
-                      <br />• Use Ctrl+K para adicionar links rapidamente
-                      <br />• Suporte completo para formatação rica: títulos, listas, citações, código
-                      <br />• Evite fazer upload direto de imagens (pode corromper o conteúdo)
-                    </p>
-                  </div>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Conteúdo</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <TiptapEditor
+                    content={formData.content}
+                    onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                  />
                 </CardContent>
               </Card>
             </div>
@@ -235,7 +210,7 @@ const WikiNew = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="post_type">Tipo de Post</Label>
+                    <Label htmlFor="post_type">Tipo</Label>
                     <Select
                       value={formData.post_type}
                       onValueChange={(value: any) => setFormData(prev => ({ ...prev, post_type: value }))}
@@ -263,92 +238,52 @@ const WikiNew = () => {
                       <SelectContent>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
-                            {category.icon} {category.name}
+                            {category.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
                   </div>
 
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="is_published">Publicar agora</Label>
+                  <div className="flex items-center space-x-2">
                     <Switch
                       id="is_published"
                       checked={formData.is_published}
                       onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_published: checked }))}
                     />
+                    <Label htmlFor="is_published">Publicar imediatamente</Label>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    <Button 
-                      type="submit" 
-                      className="w-full gap-2" 
-                      disabled={loading}
-                    >
-                      <Save className="h-4 w-4" />
-                      {loading 
-                        ? "Salvando..." 
-                        : formData.is_published 
-                          ? "Publicar Artigo" 
-                          : "Salvar Rascunho"
-                      }
-                    </Button>
-                    
-                    {formData.title && formData.content && (
-                      <Button 
-                        type="button" 
-                        variant="outline" 
-                        className="w-full gap-2"
-                        onClick={() => {
-                          const previewWindow = window.open('', '_blank');
-                          if (previewWindow) {
-                            previewWindow.document.write(`
-                              <!DOCTYPE html>
-                              <html>
-                                <head>
-                                  <title>Preview: ${formData.title}</title>
-                                  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.8/dist/katex.min.css">
-                                  <style>
-                                    body { 
-                                      max-width: 800px; 
-                                      margin: 0 auto; 
-                                      padding: 20px; 
-                                      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-                                      line-height: 1.6;
-                                    }
-                                    h1, h2, h3, h4, h5, h6 { margin-top: 1.5rem; margin-bottom: 0.5rem; }
-                                    p { margin-bottom: 1rem; }
-                                    pre { background: #f8f9fa; padding: 1rem; border-radius: 4px; overflow-x: auto; }
-                                    blockquote { border-left: 4px solid #007bff; padding-left: 1rem; margin: 1rem 0; color: #6c757d; }
-                                    img { max-width: 100%; height: auto; margin: 1rem 0; }
-                                    .math-formula, .katex { margin: 0.2rem; }
-                                  </style>
-                                </head>
-                                <body>
-                                  <h1>${formData.title}</h1>
-                                  ${formData.excerpt ? `<p><em>${formData.excerpt}</em></p><hr>` : ''}
-                                  <div>${formData.content}</div>
-                                </body>
-                              </html>
-                            `);
-                            previewWindow.document.close();
-                          }
-                        }}
-                      >
-                        <Eye className="h-4 w-4" />
-                        Visualizar
-                      </Button>
-                    )}
-                  </div>
+                <CardHeader>
+                  <CardTitle>Ações</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2">
+                  <Button
+                    onClick={() => handleSubmit(true)}
+                    disabled={saving || !formData.title}
+                    variant="outline"
+                    className="w-full"
+                  >
+                    <Save className="h-4 w-4 mr-2" />
+                    Salvar Rascunho
+                  </Button>
+                  
+                  <Button
+                    onClick={() => handleSubmit(false)}
+                    disabled={saving || !formData.title}
+                    className="w-full"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    {formData.is_published ? 'Publicar' : 'Salvar'}
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   );
