@@ -1,402 +1,276 @@
 import { useState, useEffect } from "react";
-import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, ExternalLink, Download, Code, GraduationCap, Database, Wrench, FileText, Globe } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { useSearchParams } from "react-router-dom";
 import Header from "@/components/Header";
+import { LibraryCard } from "@/components/LibraryCard";
+import { LibraryFilters } from "@/components/LibraryFilters";
+import { LibraryImport } from "@/components/LibraryImport";
+import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
+import { Search, Upload, Filter } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "@/hooks/use-toast";
+import { useAuth } from "@/hooks/useAuth";
+import type { Database } from "@/integrations/supabase/types";
 
-interface LibraryItem {
-  id: string;
-  name: string;
-  description?: string;
-  category?: string;
-  website_url?: string;
-  access_url?: string;
-  institution?: string;
-  duration?: string;
-  price?: string;
-  language?: string;
-  documentation_url?: string;
-  access_method?: string;
-  observations?: string;
-  status?: string;
-  is_free?: boolean;
-  is_online?: boolean;
-}
+type LibraryItem = Database['public']['Tables']['library_items']['Row'];
+type LibraryCategory = Database['public']['Enums']['library_category'];
+
+const CATEGORIES = {
+  tools: { label: "Ferramentas Digitais", icon: "🛠️" },
+  courses: { label: "Formações Digitais", icon: "🎓" },
+  codes: { label: "Códigos e Pacotes", icon: "💻" },
+  sources: { label: "Fontes de Dados", icon: "📊" },
+  datasets: { label: "Bases de Dados", icon: "📈" }
+} as const;
+
+const SORT_OPTIONS = [
+  { value: "relevance", label: "Relevância" },
+  { value: "recent", label: "Mais Recentes" },
+  { value: "name", label: "Nome A-Z" }
+];
 
 export default function Libraries() {
   const { user } = useAuth();
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("all");
-  const [loading, setLoading] = useState(false);
-  const [importing, setImporting] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   
-  // Library data states
-  const [tools, setTools] = useState<LibraryItem[]>([]);
-  const [courses, setCourses] = useState<LibraryItem[]>([]);
-  const [codePackages, setCodePackages] = useState<LibraryItem[]>([]);
-  const [dataSources, setDataSources] = useState<LibraryItem[]>([]);
-  const [datasets, setDatasets] = useState<LibraryItem[]>([]);
+  const [items, setItems] = useState<LibraryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState(searchParams.get("search") || "");
+  const [activeCategory, setActiveCategory] = useState<LibraryCategory>(
+    (searchParams.get("category") as LibraryCategory) || "tools"
+  );
+  const [sortBy, setSortBy] = useState(searchParams.get("sort") || "relevance");
+  const [filters, setFilters] = useState<Record<string, string[]>>({});
+  const [showImport, setShowImport] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
-    fetchLibraryData();
-  }, []);
+    fetchItems();
+  }, [activeCategory, searchTerm, sortBy, filters]);
 
-  const fetchLibraryData = async () => {
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("search", searchTerm);
+    if (activeCategory !== "tools") params.set("category", activeCategory);
+    if (sortBy !== "relevance") params.set("sort", sortBy);
+    setSearchParams(params);
+  }, [searchTerm, activeCategory, sortBy, setSearchParams]);
+
+  const fetchItems = async () => {
     setLoading(true);
-    
     try {
-      // Fetch all library types
-      const [toolsRes, coursesRes, codeRes, sourcesRes, datasetsRes] = await Promise.all([
-        supabase.from('tools').select('*').order('name'),
-        supabase.from('educational_courses').select('*').order('name'),
-        supabase.from('code_packages').select('*').order('name'),
-        supabase.from('data_sources').select('*').order('name'),
-        supabase.from('datasets').select('*').order('title').limit(20)
-      ]);
+      let query = supabase
+        .from("library_items")
+        .select("*")
+        .eq("category", activeCategory);
 
-      if (toolsRes.data) setTools(toolsRes.data);
-      if (coursesRes.data) setCourses(coursesRes.data);
-      if (codeRes.data) setCodePackages(codeRes.data);
-      if (sourcesRes.data) setDataSources(sourcesRes.data);
-      if (datasetsRes.data) {
-        const formattedDatasets = datasetsRes.data.map(dataset => ({
-          ...dataset,
-          name: dataset.title, // Map title to name for consistency
-        }));
-        setDatasets(formattedDatasets);
-      }
-      
-    } catch (error) {
-      console.error('Error fetching library data:', error);
-      toast({
-        title: "Erro",
-        description: "Falha ao carregar dados das bibliotecas",
-        variant: "destructive"
-      });
-    }
-    
-    setLoading(false);
-  };
-
-  const importLibraryData = async (libraryType: string) => {
-    setImporting(true);
-    
-    try {
-      const response = await supabase.functions.invoke('import-library-data', {
-        body: { library_type: libraryType }
-      });
-
-      if (response.error) {
-        throw new Error(response.error.message);
+      if (searchTerm.trim()) {
+        query = query.or(`name.ilike.%${searchTerm}%,short_description.ilike.%${searchTerm}%`);
       }
 
-      toast({
-        title: "Sucesso",
-        description: `${response.data.imported} registros importados para ${libraryType}`,
+      Object.entries(filters).forEach(([key, values]) => {
+        if (values.length > 0) {
+          if (key === "tags") {
+            query = query.overlaps("tags", values);
+          } else if (key === "price" || key === "language") {
+            query = query.in(key, values);
+          } else if (key === "is_open_source") {
+            query = query.eq("is_open_source", values[0] === "true");
+          } else {
+            values.forEach(value => {
+              query = query.contains("attributes", { [key]: value });
+            });
+          }
+        }
       });
 
-      // Refresh data
-      await fetchLibraryData();
-      
+      switch (sortBy) {
+        case "recent":
+          query = query.order("created_at", { ascending: false });
+          break;
+        case "name":
+          query = query.order("name", { ascending: true });
+          break;
+        default:
+          query = query.order("created_at", { ascending: false });
+      }
+
+      const { data, error } = await query.limit(50);
+      if (error) throw error;
+      setItems(data || []);
     } catch (error) {
-      console.error('Import error:', error);
+      console.error("Error fetching library items:", error);
       toast({
-        title: "Erro",
-        description: `Falha ao importar dados: ${error.message}`,
+        title: "Erro ao carregar itens",
+        description: "Tente novamente mais tarde",
         variant: "destructive"
       });
+    } finally {
+      setLoading(false);
     }
-    
-    setImporting(false);
   };
 
-  const filterItems = (items: LibraryItem[], categoryField?: string) => {
-    return items.filter(item => {
-      const matchesSearch = !searchTerm || 
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesCategory = selectedCategory === "all" || 
-        (categoryField && item[categoryField as keyof LibraryItem] === selectedCategory);
-      
-      return matchesSearch && matchesCategory;
-    });
+  const handleFilterChange = (filterType: string, values: string[]) => {
+    setFilters(prev => ({
+      ...prev,
+      [filterType]: values
+    }));
   };
 
-  const LibraryCard = ({ item, type }: { item: LibraryItem; type: string }) => (
-    <Card className="h-full hover:shadow-lg transition-shadow">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-start justify-between gap-2">
-          <span className="text-lg leading-tight">{item.name}</span>
-          <div className="flex items-center gap-1 flex-shrink-0">
-            {item.is_free && <Badge variant="secondary" className="text-xs">Gratuito</Badge>}
-            {item.is_online && <Badge variant="outline" className="text-xs">Online</Badge>}
-          </div>
-        </CardTitle>
-        {item.description && (
-          <CardDescription className="line-clamp-3">
-            {item.description}
-          </CardDescription>
-        )}
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-2">
-          {item.category && (
-            <Badge variant="outline" className="text-xs">
-              {item.category}
-            </Badge>
-          )}
-          {item.institution && (
-            <p className="text-sm text-muted-foreground">
-              <strong>Instituição:</strong> {item.institution}
-            </p>
-          )}
-          {item.duration && (
-            <p className="text-sm text-muted-foreground">
-              <strong>Duração:</strong> {item.duration}
-            </p>
-          )}
-          {item.price && (
-            <p className="text-sm text-muted-foreground">
-              <strong>Valor:</strong> {item.price}
-            </p>
-          )}
-          {item.language && (
-            <Badge variant="secondary" className="text-xs">
-              {item.language.toUpperCase()}
-            </Badge>
-          )}
-          {item.access_method && (
-            <p className="text-sm text-muted-foreground">
-              <strong>Acesso:</strong> {item.access_method}
-            </p>
-          )}
-          
-          <div className="flex gap-2 pt-2">
-            {(item.website_url || item.access_url) && (
-              <Button
-                size="sm"
-                variant="outline"
-                asChild
-                className="text-xs"
-              >
-                <a
-                  href={item.website_url || item.access_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Acessar
-                </a>
-              </Button>
-            )}
-            {item.documentation_url && (
-              <Button
-                size="sm"
-                variant="outline"
-                asChild
-                className="text-xs"
-              >
-                <a
-                  href={item.documentation_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-1"
-                >
-                  <FileText className="h-3 w-3" />
-                  Docs
-                </a>
-              </Button>
-            )}
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
+  const clearFilters = () => setFilters({});
+  const activeFiltersCount = Object.values(filters).flat().length;
 
   return (
     <>
       <Header />
-      <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
-      {/* Hero Section */}
-      <section className="py-16 px-4 text-center bg-gradient-to-r from-primary/10 to-primary/5">
-        <div className="max-w-4xl mx-auto">
-          <div className="flex items-center justify-center gap-3 mb-6">
-            <Database className="h-12 w-12 text-primary" />
-            <h1 className="text-4xl font-bold">Bibliotecas de Recursos</h1>
+      
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20">
+        <div className="container mx-auto px-4 py-8">
+          <div className="text-center mb-12">
+            <h1 className="text-4xl font-bold tracking-tight mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+              Hub de Bibliotecas
+            </h1>
+            <p className="text-xl text-muted-foreground mb-8">
+              Descubra ferramentas, cursos, códigos, fontes de dados e datasets para ciência de dados
+            </p>
+            
+            {user && (
+              <Button onClick={() => setShowImport(true)} className="mb-6" variant="outline">
+                <Upload className="h-4 w-4 mr-2" />
+                Importar Dados
+              </Button>
+            )}
           </div>
-          <p className="text-xl text-muted-foreground mb-8">
-            Ferramentas, cursos, códigos e bases de dados para ciência de dados
-          </p>
-          
-          {user && (
-            <div className="flex gap-2 justify-center flex-wrap">
-              <Button
-                onClick={() => importLibraryData('tools')}
-                disabled={importing}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Importar Ferramentas
-              </Button>
-              <Button
-                onClick={() => importLibraryData('courses')}
-                disabled={importing}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Importar Cursos
-              </Button>
-              <Button
-                onClick={() => importLibraryData('code_python')}
-                disabled={importing}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Importar Códigos Python
-              </Button>
-              <Button
-                onClick={() => importLibraryData('code_r')}
-                disabled={importing}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Importar Códigos R
-              </Button>
-              <Button
-                onClick={() => importLibraryData('data_sources')}
-                disabled={importing}
-                variant="outline"
-              >
-                <Download className="h-4 w-4 mr-2" />
-                Importar Fontes de Dados
-              </Button>
-            </div>
-          )}
-        </div>
-      </section>
 
-      {/* Search and Filters */}
-      <section className="py-6 px-4 bg-background/50 backdrop-blur-sm border-b">
-        <div className="max-w-6xl mx-auto">
-          <div className="flex flex-col md:flex-row gap-4 items-center">
-            <div className="relative flex-1 max-w-lg">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-              <Input
-                placeholder="Buscar recursos..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
+          <div className="mb-8">
+            <div className="flex flex-col sm:flex-row gap-4 mb-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar em todas as categorias..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={() => setShowFilters(!showFilters)} className="relative">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Filtros
+                  {activeFiltersCount > 0 && (
+                    <Badge className="ml-2 h-5 w-5 rounded-full p-0 text-xs">
+                      {activeFiltersCount}
+                    </Badge>
+                  )}
+                </Button>
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {SORT_OPTIONS.map(option => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {activeFiltersCount > 0 && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-sm text-muted-foreground">Filtros ativos:</span>
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(filters).map(([key, values]) =>
+                    values.map(value => (
+                      <Badge
+                        key={`${key}-${value}`}
+                        variant="secondary"
+                        className="cursor-pointer"
+                        onClick={() => {
+                          const newValues = filters[key].filter(v => v !== value);
+                          handleFilterChange(key, newValues);
+                        }}
+                      >
+                        {value} ×
+                      </Badge>
+                    ))
+                  )}
+                </div>
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-muted-foreground hover:text-foreground">
+                  Limpar todos
+                </Button>
+              </div>
+            )}
+          </div>
+
+          <div className="flex gap-8">
+            {showFilters && (
+              <div className="w-80 shrink-0">
+                <LibraryFilters
+                  category={activeCategory}
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                />
+              </div>
+            )}
+
+            <div className="flex-1">
+              <Tabs value={activeCategory} onValueChange={(value) => setActiveCategory(value as LibraryCategory)}>
+                <TabsList className="grid w-full grid-cols-5 mb-8">
+                  {Object.entries(CATEGORIES).map(([key, { label, icon }]) => (
+                    <TabsTrigger key={key} value={key} className="text-xs sm:text-sm">
+                      <span className="mr-1">{icon}</span>
+                      <span className="hidden sm:inline">{label}</span>
+                      <span className="sm:hidden">{label.split(' ')[0]}</span>
+                    </TabsTrigger>
+                  ))}
+                </TabsList>
+
+                {Object.keys(CATEGORIES).map(category => (
+                  <TabsContent key={category} value={category}>
+                    {loading ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {Array.from({ length: 6 }).map((_, i) => (
+                          <div key={i} className="h-64 bg-card rounded-2xl animate-pulse" />
+                        ))}
+                      </div>
+                    ) : items.length > 0 ? (
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {items.map(item => (
+                          <LibraryCard key={item.id} item={item} />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="text-center py-12">
+                        <div className="text-4xl mb-4">🔍</div>
+                        <h3 className="text-lg font-semibold mb-2">Nenhum item encontrado</h3>
+                        <p className="text-muted-foreground">
+                          Tente ajustar os filtros ou termo de busca
+                        </p>
+                      </div>
+                    )}
+                  </TabsContent>
+                ))}
+              </Tabs>
             </div>
           </div>
         </div>
-      </section>
+      </div>
 
-      {/* Libraries Tabs */}
-      <section className="py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <Tabs defaultValue="tools" className="w-full">
-            <TabsList className="grid w-full grid-cols-6">
-              <TabsTrigger value="tools" className="flex items-center gap-2">
-                <Wrench className="h-4 w-4" />
-                Ferramentas
-              </TabsTrigger>
-              <TabsTrigger value="courses" className="flex items-center gap-2">
-                <GraduationCap className="h-4 w-4" />
-                Cursos
-              </TabsTrigger>
-              <TabsTrigger value="code" className="flex items-center gap-2">
-                <Code className="h-4 w-4" />
-                Códigos
-              </TabsTrigger>
-              <TabsTrigger value="sources" className="flex items-center gap-2">
-                <Globe className="h-4 w-4" />
-                Fontes
-              </TabsTrigger>
-              <TabsTrigger value="datasets" className="flex items-center gap-2">
-                <Database className="h-4 w-4" />
-                Bases
-              </TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="tools" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterItems(tools).map((tool) => (
-                  <LibraryCard key={tool.id} item={tool} type="tool" />
-                ))}
-              </div>
-              {filterItems(tools).length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Nenhuma ferramenta encontrada.</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="courses" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterItems(courses).map((course) => (
-                  <LibraryCard key={course.id} item={course} type="course" />
-                ))}
-              </div>
-              {filterItems(courses).length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Nenhum curso encontrado.</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="code" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterItems(codePackages).map((pkg) => (
-                  <LibraryCard key={pkg.id} item={pkg} type="code" />
-                ))}
-              </div>
-              {filterItems(codePackages).length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Nenhum pacote de código encontrado.</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="sources" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterItems(dataSources).map((source) => (
-                  <LibraryCard key={source.id} item={source} type="source" />
-                ))}
-              </div>
-              {filterItems(dataSources).length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Nenhuma fonte de dados encontrada.</p>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="datasets" className="mt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filterItems(datasets).map((dataset) => (
-                  <LibraryCard key={dataset.id} item={dataset} type="dataset" />
-                ))}
-              </div>
-              {filterItems(datasets).length === 0 && (
-                <div className="text-center py-12">
-                  <p className="text-muted-foreground">Nenhuma base de dados encontrada.</p>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </div>
-      </section>
-    </div>
+      {showImport && (
+        <LibraryImport
+          onClose={() => setShowImport(false)}
+          onImportComplete={() => {
+            setShowImport(false);
+            fetchItems();
+          }}
+        />
+      )}
     </>
   );
 }

@@ -8,6 +8,7 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Wiki from "./pages/Wiki";
 import Libraries from "./pages/Libraries";
+import { LibraryDetail } from "./pages/LibraryDetail";
 import WikiPost from "./pages/WikiPost";
 import WikiNew from "./pages/WikiNew";
 import WikiEdit from "./pages/WikiEdit";
@@ -28,6 +29,8 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/wiki" element={<Wiki />} />
             <Route path="/libraries" element={<Libraries />} />
+            <Route path="/bibliotecas" element={<Libraries />} />
+            <Route path="/bibliotecas/:slug" element={<LibraryDetail />} />
             <Route path="/wiki/new" element={<WikiNew />} />
             <Route path="/wiki/edit/:slug" element={<WikiEdit />} />
             <Route path="/wiki/import" element={<WikiImport />} />

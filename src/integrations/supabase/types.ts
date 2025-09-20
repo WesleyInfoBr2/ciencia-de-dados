@@ -521,6 +521,92 @@ export type Database = {
         }
         Relationships: []
       }
+      library_files: {
+        Row: {
+          created_at: string | null
+          file_size: number | null
+          file_url: string
+          filename: string
+          id: string
+          library_item_id: string | null
+          mime_type: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          file_size?: number | null
+          file_url: string
+          filename: string
+          id?: string
+          library_item_id?: string | null
+          mime_type?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          file_size?: number | null
+          file_url?: string
+          filename?: string
+          id?: string
+          library_item_id?: string | null
+          mime_type?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "library_files_library_item_id_fkey"
+            columns: ["library_item_id"]
+            isOneToOne: false
+            referencedRelation: "library_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      library_items: {
+        Row: {
+          attributes: Json | null
+          category: Database["public"]["Enums"]["library_category"]
+          created_at: string | null
+          id: string
+          is_open_source: boolean | null
+          language: string | null
+          name: string
+          price: Database["public"]["Enums"]["library_price"] | null
+          short_description: string | null
+          slug: string
+          tags: string[] | null
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          attributes?: Json | null
+          category: Database["public"]["Enums"]["library_category"]
+          created_at?: string | null
+          id?: string
+          is_open_source?: boolean | null
+          language?: string | null
+          name: string
+          price?: Database["public"]["Enums"]["library_price"] | null
+          short_description?: string | null
+          slug: string
+          tags?: string[] | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          attributes?: Json | null
+          category?: Database["public"]["Enums"]["library_category"]
+          created_at?: string | null
+          id?: string
+          is_open_source?: boolean | null
+          language?: string | null
+          name?: string
+          price?: Database["public"]["Enums"]["library_price"] | null
+          short_description?: string | null
+          slug?: string
+          tags?: string[] | null
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       memberships: {
         Row: {
           created_at: string | null
@@ -978,9 +1064,41 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      gtrgm_compress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_decompress: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_in: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
+      gtrgm_options: {
+        Args: { "": unknown }
+        Returns: undefined
+      }
+      gtrgm_out: {
+        Args: { "": unknown }
+        Returns: unknown
+      }
       is_org_member: {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
+      }
+      set_limit: {
+        Args: { "": number }
+        Returns: number
+      }
+      show_limit: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      show_trgm: {
+        Args: { "": string }
+        Returns: string[]
       }
     }
     Enums: {
@@ -991,6 +1109,8 @@ export type Database = {
       enrollment_status: "enrolled" | "completed" | "dropped" | "in_progress"
       entitlement_status: "active" | "inactive" | "trial" | "expired"
       event_type: "workshop" | "webinar" | "meetup" | "conference" | "hackathon"
+      library_category: "tools" | "courses" | "codes" | "sources" | "datasets"
+      library_price: "free" | "paid" | "freemium" | "subscription"
       library_type:
         | "ferramentas"
         | "formacoes"
@@ -1134,6 +1254,8 @@ export const Constants = {
       enrollment_status: ["enrolled", "completed", "dropped", "in_progress"],
       entitlement_status: ["active", "inactive", "trial", "expired"],
       event_type: ["workshop", "webinar", "meetup", "conference", "hackathon"],
+      library_category: ["tools", "courses", "codes", "sources", "datasets"],
+      library_price: ["free", "paid", "freemium", "subscription"],
       library_type: [
         "ferramentas",
         "formacoes",
