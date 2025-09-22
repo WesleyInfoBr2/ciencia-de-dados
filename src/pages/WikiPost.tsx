@@ -5,9 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Calendar, User, Edit, BookOpen } from "lucide-react";
+import { ArrowLeft, Calendar, User, Edit, BookOpen, Clock, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { TiptapViewer } from "@/components/TiptapViewer";
+import { TableOfContents } from "@/components/TableOfContents";
+import { updatePageMetadata, generateStructuredData, calculateReadingTime } from "@/utils/seo";
+import Header from "@/components/Header";
 
 interface WikiPostData {
   id: string;
@@ -19,6 +22,7 @@ interface WikiPostData {
   is_published: boolean;
   published_at: string;
   created_at: string;
+  updated_at: string;
   post_type: string;
   profiles: {
     full_name: string;
@@ -39,12 +43,22 @@ const WikiPost = () => {
   const { toast } = useToast();
   const [post, setPost] = useState<WikiPostData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [readingTime, setReadingTime] = useState(0);
+  const [relatedPosts, setRelatedPosts] = useState<WikiPostData[]>([]);
 
   useEffect(() => {
     if (slug) {
       fetchPost();
     }
   }, [slug]);
+
+  useEffect(() => {
+    if (post) {
+      updateSEOMetadata();
+      calculateReadingTimeFromContent();
+      fetchRelatedPosts();
+    }
+  }, [post]);
 
   const fetchPost = async () => {
     if (!slug) return;
@@ -62,6 +76,7 @@ const WikiPost = () => {
         is_published,
         published_at,
         created_at,
+        updated_at,
         post_type,
         profiles!wiki_posts_author_id_fkey (
           full_name,
@@ -90,6 +105,81 @@ const WikiPost = () => {
       setPost(data);
     }
     setLoading(false);
+  };
+
+  const updateSEOMetadata = () => {
+    if (!post) return;
+
+    const url = `https://cienciadedados.org/wiki/${post.slug}`;
+    const authorName = post.profiles?.full_name || post.profiles?.username || 'CiênciaDeDados.org';
+    
+    updatePageMetadata({
+      title: `${post.title} | CiênciaDeDados.org`,
+      description: post.excerpt || `Artigo sobre ${post.title} na plataforma brasileira de ciência de dados.`,
+      canonical: url,
+      ogTitle: post.title,
+      ogDescription: post.excerpt || `Artigo sobre ${post.title}`,
+      ogType: 'article',
+      ogImage: `https://cienciadedados.org/og-image.jpg`,
+      articlePublishedTime: post.published_at,
+      articleModifiedTime: post.updated_at,
+      articleTags: [],
+      author: authorName
+    });
+
+    generateStructuredData('Article', {
+      title: post.title,
+      excerpt: post.excerpt,
+      author: authorName,
+      publishedAt: post.published_at,
+      updatedAt: post.updated_at,
+      tags: [],
+      category: post.wiki_categories?.name,
+      url
+    });
+  };
+
+  const calculateReadingTimeFromContent = () => {
+    if (!post?.content) return;
+    
+    // Extract text from Tiptap content
+    const extractText = (node: any): string => {
+      if (node.type === 'text') return node.text || '';
+      if (node.content) {
+        return node.content.map(extractText).join(' ');
+      }
+      return '';
+    };
+
+    const contentText = extractText(post.content);
+    setReadingTime(calculateReadingTime(contentText));
+  };
+
+  const fetchRelatedPosts = async () => {
+    if (!post) return;
+
+    try {
+      const { data } = await supabase
+        .from('wiki_posts')
+        .select(`
+          id,
+          title,
+          slug,
+          excerpt,
+          published_at,
+          wiki_categories(name, icon)
+        `)
+        .eq('is_published', true)
+        .neq('id', post.id)
+        .or('category_id.is.not.null')
+        .limit(3);
+
+      if (data) {
+        setRelatedPosts(data as any);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar posts relacionados:', error);
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -161,95 +251,164 @@ const WikiPost = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
-      <div className="max-w-4xl mx-auto p-4">
-        {/* Navigation */}
-        <div className="flex items-center justify-between mb-8">
-          <Link to="/wiki">
-            <Button variant="ghost" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              Voltar para Wiki
-            </Button>
-          </Link>
-
-          {user && user.id === post.author_id && (
-            <Link to={`/wiki/edit/${post.slug}`}>
-              <Button variant="outline" className="gap-2">
-                <Edit className="h-4 w-4" />
-                Editar
-              </Button>
-            </Link>
-          )}
-        </div>
-
-        {/* Article Header */}
-        <article className="bg-card rounded-lg shadow-sm">
-          <div className="p-8 border-b">
-            <div className="flex items-start justify-between gap-4 mb-6">
-              <div className="flex items-center gap-3">
-                <Badge className={getPostTypeColor(post.post_type)}>
-                  {getPostTypeLabel(post.post_type)}
-                </Badge>
+      <Header />
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+          {/* Main Content */}
+          <div className="lg:col-span-3">
+            {/* Breadcrumb */}
+            <nav aria-label="Breadcrumb" className="mb-6">
+              <ol className="flex items-center space-x-2 text-sm text-muted-foreground">
+                <li><Link to="/wiki" className="hover:text-primary">Wiki</Link></li>
+                <ChevronRight className="h-4 w-4" />
                 {post.wiki_categories && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="text-lg">{post.wiki_categories.icon}</span>
-                    <span className="text-sm">{post.wiki_categories.name}</span>
-                  </div>
+                  <>
+                    <li>{post.wiki_categories.name}</li>
+                    <ChevronRight className="h-4 w-4" />
+                  </>
                 )}
-              </div>
+                <li className="text-foreground font-medium line-clamp-1">{post.title}</li>
+              </ol>
+            </nav>
+
+            {/* Navigation */}
+            <div className="flex items-center justify-between mb-8">
+              <Link to="/wiki">
+                <Button variant="ghost" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  Voltar para Wiki
+                </Button>
+              </Link>
+
+              {user && user.id === post.author_id && (
+                <Link to={`/wiki/edit/${post.slug}`}>
+                  <Button variant="outline" className="gap-2">
+                    <Edit className="h-4 w-4" />
+                    Editar
+                  </Button>
+                </Link>
+              )}
             </div>
 
-            <h1 className="text-4xl font-bold mb-4 leading-tight">
-              {post.title}
-            </h1>
+            {/* Article Header */}
+            <article className="bg-card rounded-lg shadow-sm">
+              <header className="p-8 border-b">
+                <div className="flex items-start justify-between gap-4 mb-6">
+                  <div className="flex items-center gap-3">
+                    <Badge className={getPostTypeColor(post.post_type)}>
+                      {getPostTypeLabel(post.post_type)}
+                    </Badge>
+                    {post.wiki_categories && (
+                      <div className="flex items-center gap-2 text-muted-foreground">
+                        <span className="text-lg" role="img" aria-label={post.wiki_categories.name}>
+                          {post.wiki_categories.icon}
+                        </span>
+                        <span className="text-sm">{post.wiki_categories.name}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
 
-            {post.excerpt && (
-              <p className="text-xl text-muted-foreground mb-6">
-                {post.excerpt}
-              </p>
+                <h1 className="text-4xl font-bold mb-4 leading-tight">
+                  {post.title}
+                </h1>
+
+                {post.excerpt && (
+                  <p className="text-xl text-muted-foreground mb-6">
+                    {post.excerpt}
+                  </p>
+                )}
+
+                <div className="flex flex-wrap items-center gap-6 text-muted-foreground text-sm">
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4" aria-hidden="true" />
+                    <span>
+                      {post.profiles?.full_name || post.profiles?.username || 'Autor'}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-4 w-4" aria-hidden="true" />
+                    <time dateTime={post.published_at || post.created_at}>
+                      {formatDate(post.published_at || post.created_at)}
+                    </time>
+                  </div>
+                  {readingTime > 0 && (
+                    <div className="flex items-center gap-2">
+                      <Clock className="h-4 w-4" aria-hidden="true" />
+                      <span>{readingTime} min de leitura</span>
+                    </div>
+                  )}
+                </div>
+              </header>
+
+              {/* Article Content */}
+              <div className="p-8">
+                <TiptapViewer 
+                  content={post.content}
+                  className="max-w-none"
+                />
+              </div>
+            </article>
+
+            {/* Related Posts */}
+            {relatedPosts.length > 0 && (
+              <section className="mt-8" aria-labelledby="related-posts-heading">
+                <h2 id="related-posts-heading" className="text-2xl font-bold mb-4">
+                  Artigos Relacionados
+                </h2>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {relatedPosts.map((relatedPost) => (
+                    <Card key={relatedPost.id} className="hover:shadow-md transition-shadow">
+                      <CardContent className="p-4">
+                        <h3 className="font-semibold mb-2 line-clamp-2">
+                          <Link 
+                            to={`/wiki/${relatedPost.slug}`}
+                            className="hover:text-primary"
+                          >
+                            {relatedPost.title}
+                          </Link>
+                        </h3>
+                        {relatedPost.excerpt && (
+                          <p className="text-sm text-muted-foreground line-clamp-3 mb-2">
+                            {relatedPost.excerpt}
+                          </p>
+                        )}
+                        <div className="text-xs text-muted-foreground">
+                          {formatDate(relatedPost.published_at)}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              </section>
             )}
-
-            <div className="flex items-center gap-6 text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <User className="h-4 w-4" />
-                <span>
-                  {post.profiles?.full_name || post.profiles?.username || 'Autor'}
-                </span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                <span>{formatDate(post.published_at || post.created_at)}</span>
-              </div>
-            </div>
           </div>
 
-          {/* Article Content */}
-          <div className="p-8">
-            <TiptapViewer 
-              content={post.content}
-              className="max-w-none"
-            />
-          </div>
-        </article>
+          {/* Sidebar */}
+          <div className="lg:col-span-1">
+            <TableOfContents content={post.content} className="mb-8" />
 
-        {/* Author Info */}
-        <Card className="mt-8">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <h3 className="text-lg">
-                  {post.profiles?.full_name || post.profiles?.username || 'Autor'}
-                </h3>
-                <p className="text-sm text-muted-foreground font-normal">
-                  Contribuidor da comunidade
-                </p>
-              </div>
-            </CardTitle>
-          </CardHeader>
-        </Card>
-      </div>
+            {/* Author Info */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+                    <User className="h-5 w-5 text-primary" aria-hidden="true" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg">
+                      {post.profiles?.full_name || post.profiles?.username || 'Autor'}
+                    </h3>
+                    <p className="text-sm text-muted-foreground font-normal">
+                      Contribuidor da comunidade
+                    </p>
+                  </div>
+                </CardTitle>
+              </CardHeader>
+            </Card>
+          </div>
+        </div>
+      </main>
     </div>
   );
 };
