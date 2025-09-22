@@ -14,6 +14,8 @@ import 'katex/dist/katex.min.css'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/integrations/supabase/client'
 import { Card } from '@/components/ui/card'
+import { useToast } from '@/hooks/use-toast'
+import { useState } from 'react'
 import { 
   Bold, 
   Italic, 
@@ -30,7 +32,9 @@ import {
   Image as ImageIcon,
   Table as TableIcon,
   CheckSquare,
-  Calculator
+  Calculator,
+  Copy,
+  Loader2
 } from 'lucide-react'
 
 interface TiptapEditorProps {
@@ -40,40 +44,76 @@ interface TiptapEditorProps {
 }
 
 export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps) => {
+  const { toast } = useToast();
+  const [uploading, setUploading] = useState(false);
+
   const editor = useEditor({
     extensions: [
-      StarterKit,
+      StarterKit.configure({
+        codeBlock: false, // We'll use our custom CodeBlock
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-primary underline',
+          class: 'text-primary underline hover:text-primary/80',
+          target: '_blank',
+          rel: 'noopener noreferrer',
         },
       }),
       Image.configure({
         HTMLAttributes: {
-          class: 'max-w-full h-auto rounded-lg',
+          class: 'max-w-full h-auto rounded-lg my-4',
+          loading: 'lazy',
         },
+        allowBase64: true,
       }),
       Table.configure({
         resizable: true,
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      CodeBlock.configure({
         HTMLAttributes: {
-          class: 'bg-muted p-4 rounded-lg font-mono text-sm',
+          class: 'border-collapse border border-border w-full my-4',
         },
       }),
-      TaskList,
+      TableRow.configure({
+        HTMLAttributes: {
+          class: 'border-b border-border',
+        },
+      }),
+      TableHeader.configure({
+        HTMLAttributes: {
+          class: 'border border-border bg-muted p-2 text-left font-semibold',
+        },
+      }),
+      TableCell.configure({
+        HTMLAttributes: {
+          class: 'border border-border p-2',
+        },
+      }),
+      CodeBlock.configure({
+        HTMLAttributes: {
+          class: 'bg-muted p-4 rounded-lg font-mono text-sm my-4 overflow-x-auto relative',
+        },
+      }),
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'list-none',
+        },
+      }),
       TaskItem.configure({
         nested: true,
+        HTMLAttributes: {
+          class: 'flex items-start gap-2',
+        },
       }),
       Mathematics,
     ],
     content: content || { type: 'doc', content: [] },
     onUpdate: ({ editor }) => {
       onChange(editor.getJSON())
+    },
+    editorProps: {
+      attributes: {
+        class: 'prose prose-sm max-w-none focus:outline-none min-h-[300px] px-4 py-2',
+      },
     },
   })
 
@@ -85,26 +125,70 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
       const file = (e.target as HTMLInputElement).files?.[0]
       if (!file || !editor) return
 
+      setUploading(true);
+      
       try {
-        const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'png'
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`
+        // Validate file size (max 5MB)
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error('Arquivo muito grande. Máximo 5MB.');
+        }
+
+        // Validate file type
+        if (!file.type.startsWith('image/')) {
+          throw new Error('Apenas arquivos de imagem são permitidos.');
+        }
+
+        // Generate optimized filename
+        const fileExtension = file.name.split('.').pop()?.toLowerCase() || 'jpg'
+        const fileName = `wiki-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`
         const filePath = `wiki/${fileName}`
 
-        const { error } = await supabase.storage
+        // Show loading state
+        const loadingNode = editor.chain().focus().insertContent({
+          type: 'paragraph',
+          content: [{
+            type: 'text',
+            text: '🔄 Fazendo upload da imagem...'
+          }]
+        }).run();
+
+        // Upload to Supabase Storage
+        const { error: uploadError } = await supabase.storage
           .from('blog')
           .upload(filePath, file, {
-            cacheControl: '3600',
+            cacheControl: '31536000', // 1 year cache
             upsert: false
           })
 
-        if (error) throw error
+        if (uploadError) throw uploadError
 
         const { data } = supabase.storage.from('blog').getPublicUrl(filePath)
         
-        editor.chain().focus().setImage({ src: data.publicUrl }).run()
-      } catch (error) {
+        // Remove loading message and insert image
+        editor.commands.undo(); // Remove loading message
+        editor.chain().focus().setImage({ 
+          src: data.publicUrl,
+          alt: file.name.replace(/\.[^/.]+$/, ""), // filename without extension as alt
+          title: file.name
+        }).run()
+
+        toast({
+          description: "Imagem carregada com sucesso!",
+        });
+
+      } catch (error: any) {
         console.error('Erro ao fazer upload da imagem:', error)
-        alert('Erro ao fazer upload da imagem. Tente novamente.')
+        
+        // Remove loading message if it exists
+        editor.commands.undo();
+        
+        toast({
+          title: "Erro no upload",
+          description: error.message || "Erro ao fazer upload da imagem. Tente novamente.",
+          variant: "destructive",
+        });
+      } finally {
+        setUploading(false);
       }
     }
     input.click()
@@ -124,11 +208,30 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
   }
 
   const insertMath = () => {
-    const formula = window.prompt('Digite a fórmula LaTeX:')
+    const formula = window.prompt('Digite a fórmula LaTeX (sem $):')
     if (formula && editor) {
-      editor.chain().focus().insertContent(`$${formula}$`).run()
+      const isDisplay = window.confirm('Fórmula em linha separada (display)?');
+      if (isDisplay) {
+        editor.chain().focus().insertContent(`$$${formula}$$`).run()
+      } else {
+        editor.chain().focus().insertContent(`$${formula}$`).run()  
+      }
     }
   }
+
+  const copyCodeBlock = (code: string) => {
+    navigator.clipboard.writeText(code).then(() => {
+      toast({
+        description: "Código copiado para a área de transferência!",
+      });
+    }).catch(() => {
+      toast({
+        title: "Erro",
+        description: "Não foi possível copiar o código.",
+        variant: "destructive",
+      });
+    });
+  };
 
   if (!editor) {
     return (
@@ -257,8 +360,17 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
           <LinkIcon className="h-4 w-4" />
         </Button>
 
-        <Button variant="ghost" size="sm" onClick={handleImageUpload}>
-          <ImageIcon className="h-4 w-4" />
+        <Button 
+          variant="ghost" 
+          size="sm" 
+          onClick={handleImageUpload}
+          disabled={uploading}
+        >
+          {uploading ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <ImageIcon className="h-4 w-4" />
+          )}
         </Button>
 
         <Button variant="ghost" size="sm" onClick={insertTable}>
@@ -270,11 +382,31 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
         </Button>
       </div>
 
-      <div className="p-4">
+      <div className="relative p-4">
         <EditorContent 
           editor={editor} 
           className="prose prose-sm max-w-none focus:outline-none min-h-[300px]"
         />
+        
+        {/* CSS for code block styling */}
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            .tiptap pre {
+              position: relative;
+            }
+            .tiptap pre code {
+              display: block;
+              overflow-x: auto;
+            }
+            .tiptap .katex-display {
+              margin: 1rem 0;
+              text-align: center;
+            }
+            .tiptap .katex {
+              font-size: 1.1em;
+            }
+          `
+        }} />
       </div>
     </Card>
   )

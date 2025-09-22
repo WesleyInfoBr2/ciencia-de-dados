@@ -195,7 +195,7 @@ const Libraries = () => {
           if (key === 'is_open_source') {
             query = query.eq('is_open_source', values.includes('true'));
           } else if (key === 'price') {
-            query = query.in('price', values);
+            query = query.in('price', values as ('free' | 'paid' | 'freemium' | 'subscription')[]);
           } else if (key === 'language') {
             query = query.in('language', values);
           } else if (key === 'tags') {
@@ -492,7 +492,6 @@ const Libraries = () => {
               {showImport && user && (
                 <div className="mb-6">
                   <LibraryImport
-                    category={activeTab}
                     onImportComplete={() => {
                       setShowImport(false);
                       fetchItems();
