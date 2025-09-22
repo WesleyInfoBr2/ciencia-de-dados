@@ -1,5 +1,3 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
@@ -8,14 +6,9 @@ import ProductsSection from "@/components/ProductsSection";
 import Footer from "@/components/Footer";
 
 const Index = () => {
-  const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const { loading } = useAuth();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate("/auth");
-    }
-  }, [user, loading, navigate]);
+  // Removed forced redirect to auth - allow public access to view content
 
   if (loading) {
     return (
@@ -23,10 +16,6 @@ const Index = () => {
         <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
       </div>
     );
-  }
-
-  if (!user) {
-    return null;
   }
 
   return (
