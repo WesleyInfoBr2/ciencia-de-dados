@@ -95,16 +95,21 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
       }),
       TaskList.configure({
         HTMLAttributes: {
-          class: 'list-none',
+          class: 'my-4',
         },
       }),
       TaskItem.configure({
         nested: true,
         HTMLAttributes: {
-          class: 'flex items-start gap-2',
+          class: 'flex items-start gap-2 my-1',
         },
       }),
-      Mathematics,
+      Mathematics.configure({
+        katexOptions: {
+          throwOnError: false,
+          displayMode: false,
+        },
+      }),
     ],
     content: content || { type: 'doc', content: [] },
     onUpdate: ({ editor }) => {
@@ -143,14 +148,11 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
         const fileName = `wiki-${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExtension}`
         const filePath = `wiki/${fileName}`
 
+        // Get current position to replace later
+        const currentPos = editor.state.selection.from;
+        
         // Show loading state
-        const loadingNode = editor.chain().focus().insertContent({
-          type: 'paragraph',
-          content: [{
-            type: 'text',
-            text: '🔄 Fazendo upload da imagem...'
-          }]
-        }).run();
+        editor.chain().focus().insertContent('🔄 Fazendo upload da imagem...').run();
 
         // Upload to Supabase Storage
         const { error: uploadError } = await supabase.storage
@@ -164,13 +166,17 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
 
         const { data } = supabase.storage.from('blog').getPublicUrl(filePath)
         
-        // Remove loading message and insert image
-        editor.commands.undo(); // Remove loading message
-        editor.chain().focus().setImage({ 
-          src: data.publicUrl,
-          alt: file.name.replace(/\.[^/.]+$/, ""), // filename without extension as alt
-          title: file.name
-        }).run()
+        // Remove loading message by selecting and deleting it
+        editor.chain()
+          .focus()
+          .setTextSelection({ from: currentPos, to: currentPos + 32 }) // Select loading text
+          .deleteSelection()
+          .setImage({ 
+            src: data.publicUrl,
+            alt: file.name.replace(/\.[^/.]+$/, ""), // filename without extension as alt
+            title: file.name
+          })
+          .run()
 
         toast({
           description: "Imagem carregada com sucesso!",
@@ -179,8 +185,12 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
       } catch (error: any) {
         console.error('Erro ao fazer upload da imagem:', error)
         
-        // Remove loading message if it exists
-        editor.commands.undo();
+        // Remove loading message by finding and deleting it
+        const currentContent = editor.getHTML();
+        if (currentContent.includes('🔄 Fazendo upload da imagem...')) {
+          const newContent = currentContent.replace('🔄 Fazendo upload da imagem...', '');
+          editor.commands.setContent(newContent);
+        }
         
         toast({
           title: "Erro no upload",
@@ -211,11 +221,10 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
     const formula = window.prompt('Digite a fórmula LaTeX (sem $):')
     if (formula && editor) {
       const isDisplay = window.confirm('Fórmula em linha separada (display)?');
-      if (isDisplay) {
-        editor.chain().focus().insertContent(`$$${formula}$$`).run()
-      } else {
-        editor.chain().focus().insertContent(`$${formula}$`).run()  
-      }
+      editor.chain().focus().insertContent({
+        type: 'text',
+        text: isDisplay ? `$$${formula}$$` : `$${formula}$`
+      }).run()
     }
   }
 
@@ -388,7 +397,7 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
           className="prose prose-sm max-w-none focus:outline-none min-h-[300px]"
         />
         
-        {/* CSS for code block styling */}
+        {/* CSS for editor styling */}
         <style dangerouslySetInnerHTML={{
           __html: `
             .tiptap pre {
@@ -404,6 +413,39 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
             }
             .tiptap .katex {
               font-size: 1.1em;
+            }
+            .tiptap ul {
+              list-style-type: disc;
+              margin-left: 1.5rem;
+            }
+            .tiptap ol {
+              list-style-type: decimal;
+              margin-left: 1.5rem;
+            }
+            .tiptap li {
+              margin: 0.25rem 0;
+            }
+            .tiptap h1 {
+              font-size: 16px;
+              font-weight: bold;
+              margin: 1rem 0 0.5rem 0;
+            }
+            .tiptap h2 {
+              font-size: 14px;
+              font-weight: bold;
+              margin: 0.75rem 0 0.5rem 0;
+            }
+            .tiptap h3 {
+              font-size: inherit;
+              font-weight: bold;
+              margin: 0.5rem 0 0.25rem 0;
+            }
+            .tiptap a {
+              color: hsl(var(--primary));
+              text-decoration: underline;
+            }
+            .tiptap a:hover {
+              color: hsl(var(--primary) / 0.8);
             }
           `
         }} />

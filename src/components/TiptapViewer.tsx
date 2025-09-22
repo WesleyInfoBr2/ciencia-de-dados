@@ -64,34 +64,139 @@ export const TiptapViewer = ({ content, className }: TiptapViewerProps) => {
     }),
     TaskList.configure({
       HTMLAttributes: {
-        class: 'list-none',
+        class: 'my-4',
       },
     }),
     TaskItem.configure({
       HTMLAttributes: {
-        class: 'flex items-start gap-2',
+        class: 'flex items-start gap-2 my-1',
       },
     }),
-    Mathematics,
+    Mathematics.configure({
+      katexOptions: {
+        throwOnError: false,
+      },
+    }),
   ])
 
   return (
-    <div 
-      className={`prose prose-lg max-w-none 
-        prose-headings:text-foreground prose-headings:font-bold
-        prose-h1:text-3xl prose-h1:mb-4 prose-h1:mt-8
-        prose-h2:text-2xl prose-h2:mb-3 prose-h2:mt-6
-        prose-h3:text-xl prose-h3:mb-2 prose-h3:mt-4
-        prose-p:text-foreground prose-p:leading-7
-        prose-strong:text-foreground prose-strong:font-semibold
-        prose-em:text-foreground/90
-        prose-code:bg-muted prose-code:px-1 prose-code:py-0.5 prose-code:rounded prose-code:text-sm
-        prose-blockquote:border-l-4 prose-blockquote:border-primary prose-blockquote:pl-4 prose-blockquote:italic prose-blockquote:text-muted-foreground
-        prose-ul:list-disc prose-ul:ml-6
-        prose-ol:list-decimal prose-ol:ml-6
-        prose-li:text-foreground prose-li:my-1
-        ${className || ''}`}
-      dangerouslySetInnerHTML={{ __html: html }}
-    />
+    <div className={`tiptap-viewer max-w-none ${className || ''}`}>
+      <div dangerouslySetInnerHTML={{ __html: html }} />
+      
+      {/* CSS for viewer styling */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .tiptap-viewer .katex-display {
+            margin: 1rem 0;
+            text-align: center;
+          }
+          .tiptap-viewer .katex {
+            font-size: 1.1em;
+          }
+          .tiptap-viewer {
+            color: hsl(var(--foreground));
+            line-height: 1.7;
+          }
+          .tiptap-viewer h1 {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 1.5rem 0 0.75rem 0;
+            color: hsl(var(--foreground));
+          }
+          .tiptap-viewer h2 {
+            font-size: 14px;
+            font-weight: bold;
+            margin: 1.25rem 0 0.5rem 0;
+            color: hsl(var(--foreground));
+          }
+          .tiptap-viewer h3 {
+            font-size: inherit;
+            font-weight: bold;
+            margin: 1rem 0 0.5rem 0;
+            color: hsl(var(--foreground));
+          }
+          .tiptap-viewer p {
+            margin: 0.75rem 0;
+            color: hsl(var(--foreground));
+          }
+          .tiptap-viewer ul {
+            list-style-type: disc;
+            margin-left: 1.5rem;
+            margin: 1rem 0;
+          }
+          .tiptap-viewer ol {
+            list-style-type: decimal;
+            margin-left: 1.5rem;
+            margin: 1rem 0;
+          }
+          .tiptap-viewer li {
+            margin: 0.25rem 0;
+            color: hsl(var(--foreground));
+          }
+          .tiptap-viewer a {
+            color: hsl(var(--primary));
+            text-decoration: underline;
+          }
+          .tiptap-viewer a:hover {
+            color: hsl(var(--primary) / 0.8);
+          }
+          .tiptap-viewer strong {
+            font-weight: 600;
+            color: hsl(var(--foreground));
+          }
+          .tiptap-viewer em {
+            font-style: italic;
+            color: hsl(var(--foreground) / 0.9);
+          }
+          .tiptap-viewer blockquote {
+            border-left: 4px solid hsl(var(--primary));
+            padding-left: 1rem;
+            font-style: italic;
+            color: hsl(var(--muted-foreground));
+            margin: 1rem 0;
+          }
+          .tiptap-viewer code {
+            background-color: hsl(var(--muted));
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-family: monospace;
+          }
+          .tiptap-viewer pre {
+            background-color: hsl(var(--muted));
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+          }
+          .tiptap-viewer pre code {
+            background: none;
+            padding: 0;
+            border-radius: 0;
+          }
+          .tiptap-viewer img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin: 1rem 0;
+          }
+          .tiptap-viewer table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+            border: 1px solid hsl(var(--border));
+          }
+          .tiptap-viewer th, .tiptap-viewer td {
+            border: 1px solid hsl(var(--border));
+            padding: 0.5rem;
+            text-align: left;
+          }
+          .tiptap-viewer th {
+            background-color: hsl(var(--muted));
+            font-weight: 600;
+          }
+        `
+      }} />
+    </div>
   )
 }
