@@ -1000,6 +1000,7 @@ export type Database = {
           author_id: string
           category_id: string | null
           content: Json
+          cover_image_url: string | null
           created_at: string | null
           excerpt: string | null
           id: string
@@ -1007,6 +1008,7 @@ export type Database = {
           post_type: Database["public"]["Enums"]["wiki_post_type"]
           published_at: string | null
           slug: string
+          tags: string[] | null
           title: string
           updated_at: string | null
         }
@@ -1014,6 +1016,7 @@ export type Database = {
           author_id: string
           category_id?: string | null
           content: Json
+          cover_image_url?: string | null
           created_at?: string | null
           excerpt?: string | null
           id?: string
@@ -1021,6 +1024,7 @@ export type Database = {
           post_type: Database["public"]["Enums"]["wiki_post_type"]
           published_at?: string | null
           slug: string
+          tags?: string[] | null
           title: string
           updated_at?: string | null
         }
@@ -1028,6 +1032,7 @@ export type Database = {
           author_id?: string
           category_id?: string | null
           content?: Json
+          cover_image_url?: string | null
           created_at?: string | null
           excerpt?: string | null
           id?: string
@@ -1035,6 +1040,7 @@ export type Database = {
           post_type?: Database["public"]["Enums"]["wiki_post_type"]
           published_at?: string | null
           slug?: string
+          tags?: string[] | null
           title?: string
           updated_at?: string | null
         }
