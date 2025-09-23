@@ -4,8 +4,7 @@ import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Mathematics from '@tiptap/extension-mathematics'
-import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { common } from 'lowlight'
+import CodeBlock from '@tiptap/extension-code-block'
 import { Table } from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
@@ -26,7 +25,11 @@ const extensionsList = [
   StarterKit.configure({ codeBlock: false }),
   Link.configure({ openOnClick: true }),
   Image,
-  CodeBlockLowlight.configure({ lowlight: common }),
+  CodeBlock.configure({
+    HTMLAttributes: {
+      class: 'rounded-lg bg-gray-100 p-4 font-mono text-sm',
+    },
+  }),
   Table.configure({ resizable: true }),
   TableRow, TableHeader, TableCell,
   TaskList, TaskItem.configure({ nested: true }),
