@@ -9,7 +9,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import CodeBlock from '@tiptap/extension-code-block'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
-import Mathematics from '@tiptap/extension-mathematics'
+import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics'
 import 'katex/dist/katex.min.css'
 import { Button } from '@/components/ui/button'
 import { supabase } from '@/integrations/supabase/client'
@@ -112,8 +112,14 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
       }),
     ],
     content: content || { type: 'doc', content: [] },
+    onCreate: ({ editor }) => {
+      // Migra automaticamente strings $...$ e $$...$$ para math nodes
+      migrateMathStrings(editor)
+    },
     onUpdate: ({ editor }) => {
       onChange(editor.getJSON())
+      // Migra novos math strings quando o conteúdo muda
+      migrateMathStrings(editor)
     },
     editorProps: {
       attributes: {
@@ -218,13 +224,15 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
   }
 
   const insertMath = () => {
-    const formula = window.prompt('Digite a fórmula LaTeX (sem $):')
+    // Opcional: inserir uma fórmula de exemplo (pode digitar $formula$ direto no texto)
+    const formula = window.prompt('Digite a fórmula LaTeX (opcional - você também pode digitar $formula$ no texto):')
     if (formula && editor) {
       const isDisplay = window.confirm('Fórmula em linha separada (display)?');
-      editor.chain().focus().insertContent({
-        type: 'text',
-        text: isDisplay ? `$$${formula}$$` : `$${formula}$`
-      }).run()
+      if (isDisplay) {
+        editor.chain().focus().insertBlockMath({ latex: formula }).run()
+      } else {
+        editor.chain().focus().insertInlineMath({ latex: formula }).run()
+      }
     }
   }
 
@@ -413,6 +421,27 @@ export const TiptapEditor = ({ content, onChange, className }: TiptapEditorProps
             }
             .tiptap .katex {
               font-size: 1.1em;
+            }
+            /* Tiptap Mathematics extension styles */
+            .tiptap .tiptap-mathematics-render {
+              display: inline-block;
+              margin: 0 2px;
+              cursor: pointer;
+              border: 1px solid transparent;
+              border-radius: 0.25rem;
+              padding: 0.125rem 0.25rem;
+            }
+            .tiptap .tiptap-mathematics-render:hover {
+              background-color: hsl(var(--muted));
+              border-color: hsl(var(--border));
+            }
+            .tiptap .tiptap-mathematics-render[data-type="block-math"] {
+              display: block;
+              margin: 1rem 0;
+              text-align: center;
+            }
+            .tiptap .tiptap-mathematics-render[data-type="inline-math"] {
+              display: inline;
             }
             .tiptap ul {
               list-style-type: disc;

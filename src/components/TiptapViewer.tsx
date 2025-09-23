@@ -9,7 +9,7 @@ import TableHeader from '@tiptap/extension-table-header'
 import CodeBlock from '@tiptap/extension-code-block'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
-import Mathematics from '@tiptap/extension-mathematics'
+import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics'
 import 'katex/dist/katex.min.css'
 
 interface TiptapViewerProps {
@@ -22,10 +22,8 @@ export const TiptapViewer = ({ content, className }: TiptapViewerProps) => {
     return <div className={className}>Conteúdo não disponível</div>
   }
 
-  // Debug: log content to see math nodes
-  console.log('TiptapViewer content:', JSON.stringify(content, null, 2));
-
   // Generate HTML from ProseMirror JSON
+  // Para garantir que fórmulas $...$ e $$...$$ sejam convertidas corretamente
   const html = generateHTML(content, [
     StarterKit,
     Link.configure({
@@ -214,10 +212,23 @@ export const TiptapViewer = ({ content, className }: TiptapViewerProps) => {
             padding: 0.5rem;
             text-align: left;
           }
-          .tiptap-viewer th {
-            background-color: hsl(var(--muted));
-            font-weight: 600;
-          }
+           .tiptap-viewer th {
+             background-color: hsl(var(--muted));
+             font-weight: 600;
+           }
+           /* Tiptap Mathematics extension styles */
+           .tiptap-viewer .tiptap-mathematics-render {
+             display: inline-block;
+             margin: 0 2px;
+           }
+           .tiptap-viewer .tiptap-mathematics-render[data-type="block-math"] {
+             display: block;
+             margin: 1rem 0;
+             text-align: center;
+           }
+           .tiptap-viewer .tiptap-mathematics-render[data-type="inline-math"] {
+             display: inline;
+           }
         `
       }} />
     </div>
