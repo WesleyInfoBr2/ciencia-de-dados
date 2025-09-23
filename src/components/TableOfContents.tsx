@@ -49,7 +49,9 @@ export const TableOfContents = ({ content, className }: TableOfContentsProps) =>
   useEffect(() => {
     // Add IDs to headings in the DOM
     headings.forEach(heading => {
-      const element = document.querySelector(`h${heading.level}:contains("${heading.text}")`);
+      // Find heading elements by level and text content
+      const elements = Array.from(document.querySelectorAll(`h${heading.level}`));
+      const element = elements.find(el => el.textContent?.trim() === heading.text);
       if (element) {
         element.id = heading.id;
       }
