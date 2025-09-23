@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, User, Edit, BookOpen, Clock, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { TiptapViewer } from "@/components/TiptapViewer";
+import WikiViewer from "@/components/WikiViewer";
 import { TableOfContents } from "@/components/TableOfContents";
 import { updatePageMetadata, generateStructuredData, calculateReadingTime } from "@/utils/seo";
 import Header from "@/components/Header";
@@ -343,9 +343,9 @@ const WikiPost = () => {
 
               {/* Article Content */}
               <div className="p-8">
-                <TiptapViewer 
+                <WikiViewer 
                   content={post.content}
-                  className="max-w-none"
+                  mode="tiptap"
                 />
               </div>
             </article>

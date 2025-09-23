@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import { TiptapEditor } from "@/components/TiptapEditor";
+import WikiEditor from "@/components/WikiEditor";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface WikiCategory {
@@ -306,10 +306,9 @@ const WikiEdit = () => {
 
                   <div>
                     <Label htmlFor="content">Conteúdo *</Label>
-                    <TiptapEditor
-                      content={formData.content}
+                    <WikiEditor
+                      initialContent={formData.content}
                       onChange={(content) => setFormData(prev => ({ ...prev, content }))}
-                      className="mt-2"
                     />
                     <p className="text-sm text-muted-foreground mt-2">
                       <strong>Dicas:</strong>

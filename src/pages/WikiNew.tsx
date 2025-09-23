@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { TiptapEditor } from "@/components/TiptapEditor";
+import WikiEditor from "@/components/WikiEditor";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -194,8 +194,8 @@ const WikiNew = () => {
                   <CardTitle>Conteúdo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <TiptapEditor
-                    content={formData.content}
+                  <WikiEditor
+                    initialContent={formData.content}
                     onChange={(content) => setFormData(prev => ({ ...prev, content }))}
                   />
                 </CardContent>
