@@ -98,10 +98,26 @@ const WikiEdit = () => {
 
     setPost(data);
     
-    // Ensure content is properly structured for Tiptap
-    const content = typeof data.content === 'object' && data.content !== null
-      ? data.content as any
-      : { type: 'doc', content: [] };
+    // Convert content to proper format for Tiptap
+    let content;
+    if (typeof data.content === 'string') {
+      // HTML content - convert to basic ProseMirror JSON structure
+      const htmlContent = data.content;
+      content = {
+        type: 'doc',
+        content: htmlContent ? [{
+          type: 'paragraph',
+          content: [{
+            type: 'text',
+            text: htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
+          }]
+        }] : []
+      };
+    } else if (typeof data.content === 'object' && data.content !== null) {
+      content = data.content as any;
+    } else {
+      content = { type: 'doc', content: [] };
+    }
     
     setFormData({
       title: data.title,

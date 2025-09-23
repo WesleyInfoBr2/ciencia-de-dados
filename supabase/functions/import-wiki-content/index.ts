@@ -4,7 +4,7 @@ import { corsHeaders } from '../_shared/cors.ts'
 interface WikiContent {
   title: string;
   slug: string;
-  content: string;
+  content: any; // ProseMirror JSON
   excerpt: string;
   post_type: 'conteudo' | 'como_fazer' | 'aplicacao_pratica';
   category_slug?: string;
@@ -151,48 +151,209 @@ Deno.serve(async (req) => {
       return data.results || [];
     }
 
-    // Convert basic blocks to HTML (simple subset)
-    function blocksToHtml(blocks: any[]): string {
-      let html = '';
+    // Extract text content from ProseMirror JSON for search and excerpts
+    function extractTextFromProseMirror(doc: any): string {
+      let text = '';
+      
+      function extractFromNode(node: any): void {
+        if (node.type === 'text') {
+          text += node.text || '';
+        } else if (node.content) {
+          node.content.forEach(extractFromNode);
+          if (node.type === 'paragraph' || node.type === 'heading') {
+            text += ' ';
+          }
+        }
+      }
+      
+      if (doc.content) {
+        doc.content.forEach(extractFromNode);
+      }
+      
+      return text.replace(/\s+/g, ' ').trim();
+    }
+
+    // Convert blocks to ProseMirror JSON format
+    function blocksToProseMirror(blocks: any[]): any {
+      const content: any[] = [];
+      let currentList: any = null;
+      
       for (const block of blocks) {
         switch (block.type) {
           case 'heading_1':
-            if (block.heading_1.rich_text?.length) html += `<h1>${block.heading_1.rich_text[0].plain_text}</h1>\n`;
+            if (block.heading_1.rich_text?.length) {
+              content.push({
+                type: 'heading',
+                attrs: { level: 1 },
+                content: [{
+                  type: 'text',
+                  text: block.heading_1.rich_text[0].plain_text
+                }]
+              });
+            }
+            currentList = null;
             break;
           case 'heading_2':
-            if (block.heading_2.rich_text?.length) html += `<h2>${block.heading_2.rich_text[0].plain_text}</h2>\n`;
+            if (block.heading_2.rich_text?.length) {
+              content.push({
+                type: 'heading',
+                attrs: { level: 2 },
+                content: [{
+                  type: 'text',
+                  text: block.heading_2.rich_text[0].plain_text
+                }]
+              });
+            }
+            currentList = null;
             break;
           case 'heading_3':
-            if (block.heading_3.rich_text?.length) html += `<h3>${block.heading_3.rich_text[0].plain_text}</h3>\n`;
+            if (block.heading_3.rich_text?.length) {
+              content.push({
+                type: 'heading',
+                attrs: { level: 3 },
+                content: [{
+                  type: 'text',
+                  text: block.heading_3.rich_text[0].plain_text
+                }]
+              });
+            }
+            currentList = null;
             break;
           case 'paragraph': {
-            const text = (block.paragraph.rich_text || []).map((t: any) => t.plain_text).join('');
-            if (text) html += `<p>${text}</p>\n`;
+            const text = (block.paragraph.rich_text || []).map((t: any) => {
+              // Handle mathematical expressions
+              if (t.plain_text.includes('$$') || t.plain_text.includes('$')) {
+                return t.plain_text; // Keep math as-is for now
+              }
+              return t.plain_text;
+            }).join('');
+            if (text) {
+              content.push({
+                type: 'paragraph',
+                content: [{
+                  type: 'text',
+                  text: text
+                }]
+              });
+            }
+            currentList = null;
             break;
           }
           case 'bulleted_list_item': {
             const text = (block.bulleted_list_item.rich_text || []).map((t: any) => t.plain_text).join('');
-            if (text) html += `<li>${text}</li>\n`;
+            if (text) {
+              if (!currentList || currentList.type !== 'bulletList') {
+                currentList = {
+                  type: 'bulletList',
+                  content: []
+                };
+                content.push(currentList);
+              }
+              currentList.content.push({
+                type: 'listItem',
+                content: [{
+                  type: 'paragraph',
+                  content: [{
+                    type: 'text',
+                    text: text
+                  }]
+                }]
+              });
+            }
             break;
           }
           case 'numbered_list_item': {
             const text = (block.numbered_list_item.rich_text || []).map((t: any) => t.plain_text).join('');
-            if (text) html += `<li>${text}</li>\n`;
+            if (text) {
+              if (!currentList || currentList.type !== 'orderedList') {
+                currentList = {
+                  type: 'orderedList',
+                  attrs: { start: 1 },
+                  content: []
+                };
+                content.push(currentList);
+              }
+              currentList.content.push({
+                type: 'listItem',
+                content: [{
+                  type: 'paragraph',
+                  content: [{
+                    type: 'text',
+                    text: text
+                  }]
+                }]
+              });
+            }
             break;
           }
           case 'quote': {
             const text = (block.quote.rich_text || []).map((t: any) => t.plain_text).join('');
-            if (text) html += `<blockquote><p>${text}</p></blockquote>\n`;
+            if (text) {
+              content.push({
+                type: 'blockquote',
+                content: [{
+                  type: 'paragraph',
+                  content: [{
+                    type: 'text',
+                    text: text
+                  }]
+                }]
+              });
+            }
+            currentList = null;
             break;
           }
           case 'code': {
             const text = (block.code.rich_text || []).map((t: any) => t.plain_text).join('');
-            html += `<pre><code>${text}</code></pre>\n`;
+            if (text) {
+              content.push({
+                type: 'codeBlock',
+                attrs: { language: null },
+                content: [{
+                  type: 'text',
+                  text: text
+                }]
+              });
+            }
+            currentList = null;
+            break;
+          }
+          case 'equation': {
+            const expression = block.equation?.expression || '';
+            if (expression) {
+              content.push({
+                type: 'math_display',
+                attrs: { value: expression }
+              });
+            }
+            currentList = null;
+            break;
+          }
+          case 'image': {
+            const imageUrl = block.image?.file?.url || block.image?.external?.url;
+            if (imageUrl) {
+              content.push({
+                type: 'image',
+                attrs: {
+                  src: imageUrl,
+                  alt: 'Imported image',
+                  title: null
+                }
+              });
+            }
+            currentList = null;
             break;
           }
         }
       }
-      return html.trim();
+      
+      return {
+        type: 'doc',
+        content: content.length > 0 ? content : [{
+          type: 'paragraph',
+          content: []
+        }]
+      };
     }
 
     function createSlug(title: string): string {
@@ -230,16 +391,19 @@ Deno.serve(async (req) => {
           if (child.type === 'child_page') {
             const title = child.child_page?.title || 'Artigo sem título';
             const blocks = await getPageBlocks(child.id);
-            const html = blocksToHtml(blocks);
-            if (!html || html.length < 50) continue;
+            const proseMirrorContent = blocksToProseMirror(blocks);
+            if (!proseMirrorContent.content || proseMirrorContent.content.length === 0) continue;
             
-            const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-            const contentType = determineContentType(title, html);
+            // Create excerpt from text content
+            const textContent = extractTextFromProseMirror(proseMirrorContent);
+            if (textContent.length < 50) continue;
+            const excerpt = textContent.slice(0, 150) + '...';
+            const contentType = determineContentType(title, textContent);
             
             wikiContents.push({
               title,
               slug: createSlug(title),
-              content: html,
+              content: proseMirrorContent,
               excerpt,
               post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
               category_slug: contentType.category_slug
@@ -251,16 +415,17 @@ Deno.serve(async (req) => {
             for (const entry of entries) {
               const title = extractTitleFromProperties(entry);
               const blocks = await getPageBlocks(entry.id);
-              const html = blocksToHtml(blocks);
-              if (!html || html.length < 50) continue;
+              const proseMirrorContent = blocksToProseMirror(blocks);
+              const textContent = extractTextFromProseMirror(proseMirrorContent);
+              if (!textContent || textContent.length < 50) continue;
               
-              const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-              const contentType = determineContentType(title, html);
+              const excerpt = textContent.slice(0, 150) + '...';
+              const contentType = determineContentType(title, textContent);
               
               wikiContents.push({
                 title,
                 slug: createSlug(title),
-                content: html,
+                content: proseMirrorContent,
                 excerpt,
                 post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
                 category_slug: contentType.category_slug
@@ -271,17 +436,18 @@ Deno.serve(async (req) => {
             const lt = child.link_to_page;
             if (lt?.type === 'page_id' && lt.page_id) {
               const details = await getPageBlocks(lt.page_id);
-              const html = blocksToHtml(details);
+              const proseMirrorContent = blocksToProseMirror(details);
               const title = child.child_page?.title || 'Artigo do Notion';
-              if (!html || html.length < 50) continue;
+              const textContent = extractTextFromProseMirror(proseMirrorContent);
+              if (!textContent || textContent.length < 50) continue;
               
-              const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-              const contentType = determineContentType(title, html);
+              const excerpt = textContent.slice(0, 150) + '...';
+              const contentType = determineContentType(title, textContent);
               
               wikiContents.push({
                 title,
                 slug: createSlug(title),
-                content: html,
+                content: proseMirrorContent,
                 excerpt,
                 post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
                 category_slug: contentType.category_slug
@@ -293,16 +459,17 @@ Deno.serve(async (req) => {
               for (const entry of entries) {
                 const title = extractTitleFromProperties(entry);
                 const blocks = await getPageBlocks(entry.id);
-                const html = blocksToHtml(blocks);
-                if (!html || html.length < 50) continue;
+                const proseMirrorContent = blocksToProseMirror(blocks);
+                const textContent = extractTextFromProseMirror(proseMirrorContent);
+                if (!textContent || textContent.length < 50) continue;
                 
-                const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-                const contentType = determineContentType(title, html);
+                const excerpt = textContent.slice(0, 150) + '...';
+                const contentType = determineContentType(title, textContent);
                 
                 wikiContents.push({
                   title,
                   slug: createSlug(title),
-                  content: html,
+                  content: proseMirrorContent,
                   excerpt,
                   post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
                   category_slug: contentType.category_slug
@@ -352,20 +519,21 @@ Deno.serve(async (req) => {
       for (const entry of entries) {
         const title = extractTitleFromProperties(entry);
         const blocks = await getPageBlocks(entry.id);
-        const html = blocksToHtml(blocks);
+        const proseMirrorContent = blocksToProseMirror(blocks);
         
-        if (!html || html.length < 50) {
+        const textContent = extractTextFromProseMirror(proseMirrorContent);
+        if (!textContent || textContent.length < 50) {
           console.log(`Skipping "${title}" - insufficient content`);
           continue;
         }
         
-        const excerpt = html.replace(/<[^>]*>/g, '').slice(0, 150) + '...';
-        const contentType = determineContentType(title, html);
+        const excerpt = textContent.slice(0, 150) + '...';
+        const contentType = determineContentType(title, textContent);
         
         wikiContents.push({
           title,
           slug: createSlug(title),
-          content: html,
+          content: proseMirrorContent,
           excerpt,
           post_type: contentType.post_type as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
           category_slug: contentType.category_slug
