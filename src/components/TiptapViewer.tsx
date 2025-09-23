@@ -22,6 +22,9 @@ export const TiptapViewer = ({ content, className }: TiptapViewerProps) => {
     return <div className={className}>Conteúdo não disponível</div>
   }
 
+  // Debug: log content to see math nodes
+  console.log('TiptapViewer content:', JSON.stringify(content, null, 2));
+
   // Generate HTML from ProseMirror JSON
   const html = generateHTML(content, [
     StarterKit,
@@ -75,6 +78,7 @@ export const TiptapViewer = ({ content, className }: TiptapViewerProps) => {
     Mathematics.configure({
       katexOptions: {
         throwOnError: false,
+        displayMode: false,
       },
     }),
   ])
@@ -92,6 +96,25 @@ export const TiptapViewer = ({ content, className }: TiptapViewerProps) => {
           }
           .tiptap-viewer .katex {
             font-size: 1.1em;
+          }
+          /* Math display and inline styles */
+          .tiptap-viewer math-display {
+            display: block;
+            margin: 1rem 0;
+            text-align: center;
+          }
+          .tiptap-viewer math-inline {
+            display: inline;
+          }
+          /* Ensure math content is visible */
+          .tiptap-viewer [data-type="mathematics"] {
+            display: inline-block;
+            margin: 0 2px;
+          }
+          .tiptap-viewer [data-type="mathematics"][data-display="true"] {
+            display: block;
+            margin: 1rem 0;
+            text-align: center;
           }
           .tiptap-viewer {
             color: hsl(var(--foreground));
