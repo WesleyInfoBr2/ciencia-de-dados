@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
+import { NodeSelection } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
@@ -50,6 +51,7 @@ export default function WikiEditor({
   const [showTableOptions, setShowTableOptions] = useState(false)
   const [tableRows, setTableRows] = useState(3)
   const [tableCols, setTableCols] = useState(3)
+  const [isImageSelected, setIsImageSelected] = useState(false)
   const dirtyRef = useRef(false)
   const autosaveTimer = useRef<number | null>(null)
 
@@ -62,14 +64,16 @@ export default function WikiEditor({
         link: false // disable to avoid duplicate
       }),
       Link.configure({ openOnClick: true, autolink: true }),
-      Image.extend({
+      Image.configure({
+        inline: false,
+        allowBase64: false,
+        HTMLAttributes: {
+          class: 'rounded-lg max-w-full h-auto cursor-pointer',
+        },
+      }).extend({
         addAttributes() {
           return {
-            src: { default: null },
-            alt: { default: null },
-            title: { default: null },
-            width: { default: null },
-            height: { default: null },
+            ...this.parent?.(),
             align: { 
               default: null,
               parseHTML: element => element.getAttribute('data-align'),
@@ -78,6 +82,25 @@ export default function WikiEditor({
                 return { 'data-align': attributes.align }
               }
             },
+          }
+        },
+        addNodeView() {
+          return ({ node, HTMLAttributes, getPos, editor }) => {
+            const img = document.createElement('img')
+            Object.entries(HTMLAttributes).forEach(([key, value]) => {
+              img.setAttribute(key, value)
+            })
+            
+            img.addEventListener('click', () => {
+              if (typeof getPos === 'function') {
+                const pos = getPos()
+                editor.commands.setNodeSelection(pos)
+              }
+            })
+            
+            return {
+              dom: img,
+            }
           }
         },
       }),
@@ -103,6 +126,14 @@ export default function WikiEditor({
     content: initialContent ?? { type: 'doc', content: [{ type: 'paragraph' }] },
     autofocus: 'end',
     onCreate: ({ editor }) => migrateMathStrings(editor),
+    onSelectionUpdate: ({ editor }) => {
+      // Check if image is selected when selection changes
+      const state = editor.state
+      const { selection } = state
+      const isImageActive = editor.isActive('image') || 
+        (selection instanceof NodeSelection && selection.node.type.name === 'image')
+      setIsImageSelected(isImageActive)
+    },
     onUpdate: ({ editor, transaction }) => {
       // Only migrate math strings if there were actual content changes (not just selection changes)
       if (transaction.docChanged) {
@@ -123,6 +154,13 @@ export default function WikiEditor({
           }
         }, 1500)
       }
+
+      // Check if image is selected (either through isActive or NodeSelection)
+      const state = editor.state
+      const { selection } = state
+      const isImageActive = editor.isActive('image') || 
+        (selection instanceof NodeSelection && selection.node.type.name === 'image')
+      setIsImageSelected(isImageActive)
     },
     editorProps: {
       attributes: { class: 'prose prose-neutral max-w-none focus:outline-none tiptap-content' },
@@ -263,7 +301,7 @@ export default function WikiEditor({
         </div>
 
         {/* IMAGE ALIGNMENT - só aparece se uma imagem estiver selecionada */}
-        {editor?.isActive('image') && (
+        {isImageSelected && (
           <div className="flex gap-1 border-l border-gray-300 pl-2 ml-2">
             <span className="text-xs text-gray-600 py-1">Imagem:</span>
             <button 
