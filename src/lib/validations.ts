@@ -6,7 +6,6 @@ export const wikiPostSchema = z.object({
     .regex(/^[a-z0-9-]+$/, 'Slug deve conter apenas letras minúsculas, números e hífens'),
   content: z.any(),
   excerpt: z.string().max(500, 'Resumo muito longo').optional(),
-  post_type: z.enum(['conteudo', 'como_fazer', 'aplicacao_pratica']),
   category_id: z.string().uuid().optional(),
   is_published: z.boolean().default(false),
   tags: z.array(z.string()).optional(),

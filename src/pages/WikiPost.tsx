@@ -23,7 +23,7 @@ interface WikiPostData {
   published_at: string;
   created_at: string;
   updated_at: string;
-  post_type: string;
+  tags: string[] | null;
   profiles: {
     full_name: string;
     username: string;
@@ -77,7 +77,7 @@ const WikiPost = () => {
         published_at,
         created_at,
         updated_at,
-        post_type,
+        tags,
         profiles!wiki_posts_author_id_fkey (
           full_name,
           username,
@@ -123,7 +123,7 @@ const WikiPost = () => {
       ogImage: `https://cienciadedados.org/og-image.jpg`,
       articlePublishedTime: post.published_at,
       articleModifiedTime: post.updated_at,
-      articleTags: [],
+      articleTags: post.tags || [],
       author: authorName
     });
 
@@ -133,7 +133,7 @@ const WikiPost = () => {
       author: authorName,
       publishedAt: post.published_at,
       updatedAt: post.updated_at,
-      tags: [],
+      tags: post.tags || [],
       category: post.wiki_categories?.name,
       url
     });
@@ -188,24 +188,6 @@ const WikiPost = () => {
       month: 'long',
       day: 'numeric'
     });
-  };
-
-  const getPostTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'conteudo': 'Conteúdo',
-      'como_fazer': 'Como fazer',
-      'aplicacao_pratica': 'Aplicação prática'
-    };
-    return types[type] || type;
-  };
-
-  const getPostTypeColor = (type: string) => {
-    const colors: Record<string, string> = {
-      'conteudo': 'bg-blue-100 text-blue-800',
-      'como_fazer': 'bg-green-100 text-green-800',
-      'aplicacao_pratica': 'bg-purple-100 text-purple-800'
-    };
-    return colors[type] || 'bg-gray-100 text-gray-800';
   };
 
   if (loading) {
@@ -293,21 +275,24 @@ const WikiPost = () => {
             {/* Article Header */}
             <article className="bg-card rounded-lg shadow-sm">
               <header className="p-8 border-b">
-                <div className="flex items-start justify-between gap-4 mb-6">
-                  <div className="flex items-center gap-3">
-                    <Badge className={getPostTypeColor(post.post_type)}>
-                      {getPostTypeLabel(post.post_type)}
-                    </Badge>
-                    {post.wiki_categories && (
-                      <div className="flex items-center gap-2 text-muted-foreground">
-                        <span className="text-lg" role="img" aria-label={post.wiki_categories.name}>
-                          {post.wiki_categories.icon}
-                        </span>
-                        <span className="text-sm">{post.wiki_categories.name}</span>
-                      </div>
-                    )}
+                {post.wiki_categories && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <span className="text-lg" role="img" aria-label={post.wiki_categories.name}>
+                      {post.wiki_categories.icon}
+                    </span>
+                    <span className="text-sm">{post.wiki_categories.name}</span>
                   </div>
-                </div>
+                )}
+
+                {post.tags && post.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-4">
+                    {post.tags.map((tag, index) => (
+                      <Badge key={index} variant="secondary">
+                        {tag}
+                      </Badge>
+                    ))}
+                  </div>
+                )}
 
                 <h1 className="text-4xl font-bold mb-4 leading-tight">
                   {post.title}

@@ -34,8 +34,8 @@ const WikiNew = () => {
     slug: "",
     content: { type: 'doc', content: [] },
     excerpt: "",
-    post_type: "conteudo",
     category_id: undefined,
+    tags: [],
     is_published: false,
   });
 
@@ -103,8 +103,8 @@ const WikiNew = () => {
           slug: validatedData.slug,
           content: validatedData.content,
           excerpt: validatedData.excerpt,
-          post_type: validatedData.post_type,
           category_id: validatedData.category_id,
+          tags: validatedData.tags,
           author_id: user.id,
           is_published: validatedData.is_published,
           published_at: validatedData.is_published ? new Date().toISOString() : null,

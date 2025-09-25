@@ -49,8 +49,8 @@ const WikiEdit = () => {
     slug: '',
     excerpt: '',
     content: { type: 'doc', content: [] },
-    post_type: 'conteudo' as 'conteudo' | 'como_fazer' | 'aplicacao_pratica',
     category_id: '',
+    tags: [] as string[],
     is_published: false
   });
 
@@ -124,8 +124,8 @@ const WikiEdit = () => {
       slug: data.slug,
       excerpt: data.excerpt || '',
       content: content,
-      post_type: data.post_type,
       category_id: data.category_id || '',
+      tags: data.tags || [],
       is_published: data.is_published
     });
     setLoading(false);
@@ -347,23 +347,6 @@ const WikiEdit = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="post_type">Tipo de Post</Label>
-                    <Select
-                      value={formData.post_type}
-                      onValueChange={(value: any) => setFormData(prev => ({ ...prev, post_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="conteudo">Conteúdo</SelectItem>
-                        <SelectItem value="como_fazer">Como fazer</SelectItem>
-                        <SelectItem value="aplicacao_pratica">Aplicação prática</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
                     <Label htmlFor="category">Categoria</Label>
                     <Select
                       value={formData.category_id}
@@ -380,6 +363,19 @@ const WikiEdit = () => {
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input
+                      id="tags"
+                      value={formData.tags.join(', ')}
+                      onChange={(e) => {
+                        const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+                        setFormData(prev => ({ ...prev, tags }));
+                      }}
+                      placeholder="Separar por vírgulas"
+                    />
                   </div>
 
                   <div className="flex items-center justify-between">
