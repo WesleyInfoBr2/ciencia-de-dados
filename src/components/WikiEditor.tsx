@@ -16,6 +16,8 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import { TextAlign } from '@tiptap/extension-text-align'
+import { FontFamily } from '@tiptap/extension-font-family'
 import 'katex/dist/katex.min.css'
 
 type WikiEditorProps = {
@@ -73,6 +75,9 @@ export default function WikiEditor({
       }),
       // estilos de texto
       TextStyle, Color, Underline, Highlight,
+      // alinhamento de texto
+      TextAlign.configure({ types: ['heading', 'paragraph'] }),
+      FontFamily,
       // código com highlight
       CodeBlockLowlight.configure({ lowlight }),
       // tabela
@@ -215,6 +220,39 @@ export default function WikiEditor({
             type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: l as 1|2|3 }).run()}
             className={`px-2 py-1 rounded ${editor?.isActive('heading', { level: l }) ? 'bg-black text-white' : 'bg-gray-100'}`}>H{l}</button>
         ))}
+        <div className="h-6 w-px bg-gray-300 mx-1" />
+        {/* FONT SIZE */}
+        <select
+          onChange={(e) => {
+            const size = e.target.value;
+            if (size === 'small') {
+              editor?.chain().focus().setMark('textStyle', { fontSize: '14px' }).run();
+            } else if (size === 'normal') {
+              editor?.chain().focus().setMark('textStyle', { fontSize: '16px' }).run();
+            } else if (size === 'large') {
+              editor?.chain().focus().setMark('textStyle', { fontSize: '20px' }).run();
+            } else if (size === 'xlarge') {
+              editor?.chain().focus().setMark('textStyle', { fontSize: '24px' }).run();
+            } else if (size === '') {
+              editor?.chain().focus().unsetMark('textStyle').run();
+            }
+          }}
+          className="px-2 py-1 rounded bg-gray-100 text-sm"
+        >
+          <option value="">Tamanho</option>
+          <option value="small">Pequeno</option>
+          <option value="normal">Normal</option>
+          <option value="large">Grande</option>
+          <option value="xlarge">Extra G</option>
+        </select>
+        
+        {/* TEXT ALIGNMENT */}
+        <div className="flex gap-1">
+          <button type="button" onClick={() => editor?.chain().focus().setTextAlign('left').run()} className={`px-2 py-1 rounded ${editor?.isActive({ textAlign: 'left' }) ? 'bg-black text-white' : 'bg-gray-100'}`} title="Alinhar à esquerda">⬅</button>
+          <button type="button" onClick={() => editor?.chain().focus().setTextAlign('center').run()} className={`px-2 py-1 rounded ${editor?.isActive({ textAlign: 'center' }) ? 'bg-black text-white' : 'bg-gray-100'}`} title="Centralizar">⬌</button>
+          <button type="button" onClick={() => editor?.chain().focus().setTextAlign('right').run()} className={`px-2 py-1 rounded ${editor?.isActive({ textAlign: 'right' }) ? 'bg-black text-white' : 'bg-gray-100'}`} title="Alinhar à direita">➡</button>
+          <button type="button" onClick={() => editor?.chain().focus().setTextAlign('justify').run()} className={`px-2 py-1 rounded ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-black text-white' : 'bg-gray-100'}`} title="Justificar">≡</button>
+        </div>
         <div className="h-6 w-px bg-gray-300 mx-1" />
         <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-2 py-1 rounded ${editor?.isActive('bulletList') ? 'bg-black text-white' : 'bg-gray-100'}`}>• Lista</button>
         <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-2 py-1 rounded ${editor?.isActive('orderedList') ? 'bg-black text-white' : 'bg-gray-100'}`}>1. Lista</button>

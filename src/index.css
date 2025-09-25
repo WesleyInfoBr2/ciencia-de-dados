@@ -193,4 +193,38 @@
   .tiptap-content tr:nth-child(even) { 
     background-color: hsl(var(--muted) / 0.3); 
   }
+
+  /* Text alignment styles */
+  .tiptap-content [style*="text-align: left"] {
+    text-align: left !important;
+  }
+
+  .tiptap-content [style*="text-align: center"] {
+    text-align: center !important;
+  }
+
+  .tiptap-content [style*="text-align: right"] {
+    text-align: right !important;
+  }
+
+  .tiptap-content [style*="text-align: justify"] {
+    text-align: justify !important;
+  }
+
+  /* Font size styles */
+  .tiptap-content [style*="font-size: 14px"] {
+    font-size: 14px !important;
+  }
+
+  .tiptap-content [style*="font-size: 16px"] {
+    font-size: 16px !important;
+  }
+
+  .tiptap-content [style*="font-size: 20px"] {
+    font-size: 20px !important;
+  }
+
+  .tiptap-content [style*="font-size: 24px"] {
+    font-size: 24px !important;
+  }
 }
