@@ -33,6 +33,7 @@ interface WikiPostData {
     name: string;
     slug: string;
     icon: string;
+    color: string;
   } | null;
 }
 
@@ -86,7 +87,8 @@ const WikiPost = () => {
         wiki_categories (
           name,
           slug,
-          icon
+          icon,
+          color
         )
       `)
       .eq('slug', slug)
@@ -167,7 +169,7 @@ const WikiPost = () => {
           slug,
           excerpt,
           published_at,
-          wiki_categories(name, icon)
+          wiki_categories(name, icon, color)
         `)
         .eq('is_published', true)
         .neq('id', post.id)
@@ -190,13 +192,13 @@ const WikiPost = () => {
     });
   };
 
-  const getCategoryDotColor = (categoryName?: string) => {
-    const colors: Record<string, string> = {
-      'Conteúdo': 'bg-blue-500',
-      'Como fazer': 'bg-green-500',
-      'Aplicação prática': 'bg-purple-500'
+  const getCategoryColor = (color?: string) => {
+    const colorMap: Record<string, string> = {
+      'green': 'bg-green-500',
+      'yellow': 'bg-yellow-500', 
+      'red': 'bg-red-500'
     };
-    return colors[categoryName || ''] || 'bg-gray-400';
+    return colorMap[color || ''] || 'bg-muted';
   };
 
   if (loading) {
@@ -285,10 +287,9 @@ const WikiPost = () => {
             <article className="bg-card rounded-lg shadow-sm">
               <header className="p-8 border-b">
                 {post.wiki_categories && (
-                  <div className="flex items-center gap-2 text-muted-foreground mb-4">
-                    <div className={`w-3 h-3 rounded-full ${getCategoryDotColor(post.wiki_categories.name)}`}></div>
-                    <span className="text-sm font-medium">{post.wiki_categories.name}</span>
-                  </div>
+                  <Badge variant="secondary" className={`mb-4 ${getCategoryColor(post.wiki_categories.color)}`}>
+                    {post.wiki_categories.name}
+                  </Badge>
                 )}
 
                 {post.tags && post.tags.length > 0 && (

@@ -967,6 +967,7 @@ export type Database = {
       }
       wiki_categories: {
         Row: {
+          color: string | null
           created_at: string | null
           description: string | null
           icon: string | null
@@ -976,6 +977,7 @@ export type Database = {
           sort_order: number | null
         }
         Insert: {
+          color?: string | null
           created_at?: string | null
           description?: string | null
           icon?: string | null
@@ -985,6 +987,7 @@ export type Database = {
           sort_order?: number | null
         }
         Update: {
+          color?: string | null
           created_at?: string | null
           description?: string | null
           icon?: string | null

@@ -29,6 +29,7 @@ interface WikiPost {
     name: string;
     slug: string;
     icon: string;
+    color: string;
   } | null;
 }
 
@@ -38,6 +39,7 @@ interface WikiCategory {
   slug: string;
   description: string;
   icon: string;
+  color: string;
 }
 
 const Wiki = () => {
@@ -112,7 +114,8 @@ const Wiki = () => {
           wiki_categories (
             name,
             slug,
-            icon
+            icon,
+            color
           )
         `)
         .eq('is_published', true);
@@ -150,7 +153,7 @@ const Wiki = () => {
     try {
       const { data, error } = await supabase
         .from('wiki_categories')
-        .select('*')
+        .select('id, name, slug, description, icon, color, sort_order')
         .order('sort_order', { ascending: true });
 
       if (error) throw error;
@@ -190,22 +193,13 @@ const Wiki = () => {
     });
   };
 
-  const getCategoryColor = (categoryName?: string) => {
-    const colors: Record<string, string> = {
-      'Conteúdo': 'border-blue-500 bg-blue-50 dark:bg-blue-950',
-      'Como fazer': 'border-green-500 bg-green-50 dark:bg-green-950', 
-      'Aplicação prática': 'border-purple-500 bg-purple-50 dark:bg-purple-950'
+  const getCategoryColor = (color?: string) => {
+    const colorMap: Record<string, string> = {
+      'green': 'border-green-500 bg-green-50 dark:bg-green-950',
+      'yellow': 'border-yellow-500 bg-yellow-50 dark:bg-yellow-950', 
+      'red': 'border-red-500 bg-red-50 dark:bg-red-950'
     };
-    return colors[categoryName || ''] || 'border-gray-200 bg-gray-50 dark:bg-gray-900';
-  };
-
-  const getCategoryDotColor = (categoryName?: string) => {
-    const colors: Record<string, string> = {
-      'Conteúdo': 'bg-blue-500',
-      'Como fazer': 'bg-green-500',
-      'Aplicação prática': 'bg-purple-500'
-    };
-    return colors[categoryName || ''] || 'bg-gray-400';
+    return colorMap[color || ''] || 'border-muted bg-muted/20';
   };
 
 
@@ -371,15 +365,14 @@ const Wiki = () => {
               ) : posts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {posts.map((post) => (
-                    <Card key={post.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${getCategoryColor(post.wiki_categories?.name)} hover:border-l-primary`}>
+                    <Card key={post.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${getCategoryColor(post.wiki_categories?.color)} hover:border-l-primary`}>
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex items-center gap-3">
                             {post.wiki_categories && (
-                              <div className="flex items-center gap-2 text-muted-foreground">
-                                <div className={`w-3 h-3 rounded-full ${getCategoryDotColor(post.wiki_categories.name)}`}></div>
-                                <span className="text-xs font-medium">{post.wiki_categories.name}</span>
-                              </div>
+                              <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
+                                {post.wiki_categories.name}
+                              </Badge>
                             )}
                           </div>
                         </div>
@@ -466,9 +459,11 @@ const Wiki = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <span className="text-lg" role="img" aria-label={category.name}>
-                          {category.icon}
-                        </span>
+                        <div className={`w-4 h-4 rounded-full ${
+                          category.color === 'green' ? 'bg-green-500' :
+                          category.color === 'yellow' ? 'bg-yellow-500' :
+                          category.color === 'red' ? 'bg-red-500' : 'bg-muted'
+                        }`}></div>
                         <div className="flex-1">
                           <div className="font-medium text-sm">{category.name}</div>
                           <div className="text-xs text-muted-foreground line-clamp-2">
