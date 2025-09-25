@@ -190,6 +190,15 @@ const WikiPost = () => {
     });
   };
 
+  const getCategoryDotColor = (categoryName?: string) => {
+    const colors: Record<string, string> = {
+      'Conteúdo': 'bg-blue-500',
+      'Como fazer': 'bg-green-500',
+      'Aplicação prática': 'bg-purple-500'
+    };
+    return colors[categoryName || ''] || 'bg-gray-400';
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-background to-secondary p-4">
@@ -276,11 +285,9 @@ const WikiPost = () => {
             <article className="bg-card rounded-lg shadow-sm">
               <header className="p-8 border-b">
                 {post.wiki_categories && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <span className="text-lg" role="img" aria-label={post.wiki_categories.name}>
-                      {post.wiki_categories.icon}
-                    </span>
-                    <span className="text-sm">{post.wiki_categories.name}</span>
+                  <div className="flex items-center gap-2 text-muted-foreground mb-4">
+                    <div className={`w-3 h-3 rounded-full ${getCategoryDotColor(post.wiki_categories.name)}`}></div>
+                    <span className="text-sm font-medium">{post.wiki_categories.name}</span>
                   </div>
                 )}
 

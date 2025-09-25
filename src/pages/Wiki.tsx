@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Calendar, User, Plus, FileText, HelpCircle, Lightbulb, Users, TrendingUp, Search as SearchIcon } from "lucide-react";
+import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon } from "lucide-react";
 import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
 import { updatePageMetadata } from "@/utils/seo";
@@ -21,7 +21,6 @@ interface WikiPost {
   is_published: boolean;
   published_at: string;
   created_at: string;
-  post_type: string;
   profiles: {
     full_name: string;
     username: string;
@@ -48,7 +47,6 @@ const Wiki = () => {
   // Parse URL parameters
   const searchQuery = searchParams.get('q') || '';
   const selectedCategory = searchParams.get('category') || '';
-  const selectedType = searchParams.get('type') || '';
   
   const [posts, setPosts] = useState<WikiPost[]>([]);
   const [categories, setCategories] = useState<WikiCategory[]>([]);
@@ -59,7 +57,6 @@ const Wiki = () => {
   const updateURL = (updates: Partial<{
     q: string;
     category: string;
-    type: string;
   }>) => {
     const newParams = new URLSearchParams(searchParams);
     
@@ -78,7 +75,7 @@ const Wiki = () => {
     fetchPosts();
     fetchCategories();
     loadStats();
-  }, [searchQuery, selectedCategory, selectedType]);
+  }, [searchQuery, selectedCategory]);
 
   useEffect(() => {
     // Update page metadata
@@ -107,7 +104,6 @@ const Wiki = () => {
           is_published,
           published_at,
           created_at,
-          post_type,
           category_id,
           profiles!wiki_posts_author_id_fkey (
             full_name,
@@ -129,11 +125,6 @@ const Wiki = () => {
       // Apply category filter
       if (selectedCategory) {
         query = query.eq('wiki_categories.slug', selectedCategory);
-      }
-
-      // Apply post type filter
-      if (selectedType) {
-        query = query.eq('post_type', selectedType as 'conteudo' | 'como_fazer' | 'aplicacao_pratica');
       }
 
       // Order by relevance for search, otherwise by date
@@ -199,36 +190,24 @@ const Wiki = () => {
     });
   };
 
-  const getPostTypeLabel = (type: string) => {
-    const types: Record<string, string> = {
-      'conteudo': 'Conteúdo',
-      'como_fazer': 'Como fazer',
-      'aplicacao_pratica': 'Aplicação prática'
-    };
-    return types[type] || type;
-  };
-
-  const getPostTypeColor = (type: string) => {
+  const getCategoryColor = (categoryName?: string) => {
     const colors: Record<string, string> = {
-      'conteudo': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
-      'como_fazer': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
-      'aplicacao_pratica': 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300'
+      'Conteúdo': 'border-blue-500 bg-blue-50 dark:bg-blue-950',
+      'Como fazer': 'border-green-500 bg-green-50 dark:bg-green-950', 
+      'Aplicação prática': 'border-purple-500 bg-purple-50 dark:bg-purple-950'
     };
-    return colors[type] || 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+    return colors[categoryName || ''] || 'border-gray-200 bg-gray-50 dark:bg-gray-900';
   };
 
-  const getCategoryIcon = (iconName: string) => {
-    const iconMap: Record<string, React.ComponentType<any>> = {
-      'FileText': FileText,
-      'HelpCircle': HelpCircle,
-      'Lightbulb': Lightbulb,
-      'Users': Users,
-      'TrendingUp': TrendingUp
+  const getCategoryDotColor = (categoryName?: string) => {
+    const colors: Record<string, string> = {
+      'Conteúdo': 'bg-blue-500',
+      'Como fazer': 'bg-green-500',
+      'Aplicação prática': 'bg-purple-500'
     };
-    
-    const IconComponent = iconMap[iconName] || FileText;
-    return <IconComponent className="h-4 w-4" />;
+    return colors[categoryName || ''] || 'bg-gray-400';
   };
+
 
   const handleSearch = (query: string) => {
     updateURL({ q: query });
@@ -236,10 +215,6 @@ const Wiki = () => {
 
   const handleCategoryFilter = (category: string) => {
     updateURL({ category: category === 'all' ? '' : category });
-  };
-
-  const handleTypeFilter = (type: string) => {
-    updateURL({ type: type === 'all' ? '' : type });
   };
 
   const highlightSearchTerms = (text: string, searchTerm: string) => {
@@ -320,40 +295,23 @@ const Wiki = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Todas as categorias</SelectItem>
-                    {categories.map((category) => (
-                      <SelectItem key={category.id} value={category.slug}>
-                        <span className="flex items-center gap-2">
-                          <span>{category.icon}</span>
-                          {category.name}
-                        </span>
-                      </SelectItem>
-                    ))}
+                     {categories.map((category) => (
+                       <SelectItem key={category.id} value={category.slug}>
+                         {category.name}
+                       </SelectItem>
+                     ))}
                   </SelectContent>
                 </Select>
               </div>
 
-              <div>
-                <label className="text-sm font-medium mb-2 block">Tipo</label>
-                <Select value={selectedType || 'all'} onValueChange={handleTypeFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos os tipos</SelectItem>
-                    <SelectItem value="conteudo">Conteúdo</SelectItem>
-                    <SelectItem value="como_fazer">Como fazer</SelectItem>
-                    <SelectItem value="aplicacao_pratica">Aplicação prática</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
             </div>
 
-            {(searchQuery || selectedCategory || selectedType) && (
+            {(searchQuery || selectedCategory) && (
               <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => {
-                  updateURL({ q: '', category: '', type: '' });
+                  updateURL({ q: '', category: '' });
                 }}
               >
                 Limpar filtros
@@ -362,7 +320,7 @@ const Wiki = () => {
           </div>
 
           {/* Active search/filter indicators */}
-          {(searchQuery || selectedCategory || selectedType) && (
+          {(searchQuery || selectedCategory) && (
             <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
               <span className="text-sm text-muted-foreground">Filtros ativos:</span>
               {searchQuery && (
@@ -373,11 +331,6 @@ const Wiki = () => {
               {selectedCategory && (
                 <Badge variant="secondary">
                   Categoria: {categories.find(c => c.slug === selectedCategory)?.name}
-                </Badge>
-              )}
-              {selectedType && (
-                <Badge variant="secondary">
-                  Tipo: {getPostTypeLabel(selectedType)}
                 </Badge>
               )}
             </div>
@@ -391,7 +344,7 @@ const Wiki = () => {
               <h2 id="articles-heading" className="text-2xl font-bold mb-6">
                 {searchQuery ? (
                   <>Resultados da busca "{searchQuery}" ({posts.length})</>
-                ) : selectedCategory || selectedType ? (
+                ) : selectedCategory ? (
                   <>Artigos filtrados ({posts.length})</>
                 ) : (
                   <>Artigos recentes</>
@@ -418,19 +371,14 @@ const Wiki = () => {
               ) : posts.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {posts.map((post) => (
-                    <Card key={post.id} className="group hover:shadow-lg transition-all duration-200 border-l-4 border-l-primary/20 hover:border-l-primary">
+                    <Card key={post.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${getCategoryColor(post.wiki_categories?.name)} hover:border-l-primary`}>
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex items-center gap-3">
-                            <Badge className={getPostTypeColor(post.post_type)}>
-                              {getPostTypeLabel(post.post_type)}
-                            </Badge>
                             {post.wiki_categories && (
                               <div className="flex items-center gap-2 text-muted-foreground">
-                                <span className="text-sm" role="img" aria-label={post.wiki_categories.name}>
-                                  {post.wiki_categories.icon}
-                                </span>
-                                <span className="text-xs">{post.wiki_categories.name}</span>
+                                <div className={`w-3 h-3 rounded-full ${getCategoryDotColor(post.wiki_categories.name)}`}></div>
+                                <span className="text-xs font-medium">{post.wiki_categories.name}</span>
                               </div>
                             )}
                           </div>
