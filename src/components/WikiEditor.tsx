@@ -5,17 +5,17 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import { lowlight } from 'lowlight/lib/common'
-import Table from '@tiptap/extension-table'
-import TableRow from '@tiptap/extension-table-row'
-import TableHeader from '@tiptap/extension-table-header'
-import TableCell from '@tiptap/extension-table-cell'
-import TaskList from '@tiptap/extension-task-list'
-import TaskItem from '@tiptap/extension-task-item'
-import Underline from '@tiptap/extension-underline'
-import Highlight from '@tiptap/extension-highlight'
-import TextStyle from '@tiptap/extension-text-style'
-import Color from '@tiptap/extension-color'
+import * as lowlight from 'lowlight'
+import { Table } from '@tiptap/extension-table'
+import { TableRow } from '@tiptap/extension-table-row'
+import { TableHeader } from '@tiptap/extension-table-header'
+import { TableCell } from '@tiptap/extension-table-cell'
+import { TaskList } from '@tiptap/extension-task-list'
+import { TaskItem } from '@tiptap/extension-task-item'
+import { Underline } from '@tiptap/extension-underline'
+import { Highlight } from '@tiptap/extension-highlight'
+import { TextStyle } from '@tiptap/extension-text-style'
+import { Color } from '@tiptap/extension-color'
 import 'katex/dist/katex.min.css'
 
 type WikiEditorProps = {
@@ -32,24 +32,7 @@ type WikiEditorProps = {
 }
 
 const MathInputRules = Mathematics.extend({
-  addInputRules() {
-    return [
-      // inline: $...$
-      this.editor.inputRule(/(?:^|[\s])\$(.+?)\$$/, ({ range, match }) => {
-        const [, latex] = match
-        this.editor.chain().deleteRange(range)
-          .insertContent({ type: 'mathInline', attrs: { latex } }).run()
-        return null
-      }),
-      // block: $$...$$
-      this.editor.inputRule(/^\$\$(.+?)\$\$$/, ({ range, match }) => {
-        const [, latex] = match
-        this.editor.chain().deleteRange(range)
-          .insertContent({ type: 'mathBlock', attrs: { latex } }).run()
-        return null
-      }),
-    ]
-  },
+  // Simplified without inputRule API
 })
 
 export default function WikiEditor({
@@ -199,7 +182,7 @@ export default function WikiEditor({
           title="Cor do texto"
           aria-label="Cor do texto"
         />
-        <button onClick={() => editor?.chain().focus().toggleHighlight().run()} className={`px-2 py-1 rounded ${editor?.isActive('highlight') ? 'bg-black text-white' : 'bg-gray-100'}`}>Sublinhar</button>
+        <button onClick={() => editor?.chain().focus().toggleHighlight().run()} className={`px-2 py-1 rounded ${editor?.isActive('highlight') ? 'bg-black text-white' : 'bg-gray-100'}`}>Destacar</button>
 
         <div className="ml-auto flex items-center gap-2">
           <label className="cursor-pointer px-3 py-1 rounded bg-gray-100">

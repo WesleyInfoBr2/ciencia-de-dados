@@ -197,7 +197,7 @@ const WikiNew = () => {
                 <CardContent>
                   <WikiEditor
                     initialContent={formData.content}
-                    onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                    onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
                   />
                 </CardContent>
               </Card>

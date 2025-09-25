@@ -324,7 +324,7 @@ const WikiEdit = () => {
                     <Label htmlFor="content">Conteúdo *</Label>
                     <WikiEditor
                       initialContent={formData.content}
-                      onChange={(content) => setFormData(prev => ({ ...prev, content }))}
+                      onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
                     />
                     <p className="text-sm text-muted-foreground mt-2">
                       <strong>Dicas:</strong>
