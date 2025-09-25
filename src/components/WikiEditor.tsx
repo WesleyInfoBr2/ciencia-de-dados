@@ -87,18 +87,26 @@ export default function WikiEditor({
     content: initialContent ?? { type: 'doc', content: [{ type: 'paragraph' }] },
     autofocus: 'end',
     onCreate: ({ editor }) => migrateMathStrings(editor),
-    onUpdate: ({ editor }) => {
-      migrateMathStrings(editor)
-      dirtyRef.current = true
-      // autosave (debounce 800ms)
-      if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current)
-      autosaveTimer.current = window.setTimeout(async () => {
-        if (onAutoSave) {
-          await onAutoSave(editor.getJSON())
-          setLastDraftAt(new Date())
-          dirtyRef.current = false
-        }
-      }, 800)
+    onUpdate: ({ editor, transaction }) => {
+      // Only migrate math strings if there were actual content changes (not just selection changes)
+      if (transaction.docChanged) {
+        setTimeout(() => migrateMathStrings(editor), 0)
+        dirtyRef.current = true
+        
+        // autosave (debounce 1500ms to avoid interference with formatting)
+        if (autosaveTimer.current) window.clearTimeout(autosaveTimer.current)
+        autosaveTimer.current = window.setTimeout(async () => {
+          if (onAutoSave && dirtyRef.current) {
+            try {
+              await onAutoSave(editor.getJSON())
+              setLastDraftAt(new Date())
+              dirtyRef.current = false
+            } catch (error) {
+              console.error('Auto save error:', error)
+            }
+          }
+        }, 1500)
+      }
     },
     editorProps: {
       attributes: { class: 'prose prose-neutral max-w-none focus:outline-none' },
