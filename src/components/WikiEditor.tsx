@@ -160,33 +160,33 @@ export default function WikiEditor({
     <div className="space-y-3">
       {/* TOOLBAR */}
       <div className="sticky top-0 z-10 flex flex-wrap items-center gap-2 rounded-xl border bg-background/90 p-2 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <button onClick={() => editor?.chain().focus().toggleBold().run()} className={`px-2 py-1 rounded ${editor?.isActive('bold') ? 'bg-black text-white' : 'bg-gray-100'}`}>B</button>
-        <button onClick={() => editor?.chain().focus().toggleItalic().run()} className={`px-2 py-1 rounded ${editor?.isActive('italic') ? 'bg-black text-white' : 'bg-gray-100'}`}>I</button>
-        <button onClick={() => editor?.chain().focus().toggleUnderline().run()} className={`px-2 py-1 rounded ${editor?.isActive('underline') ? 'bg-black text-white' : 'bg-gray-100'}`}>U</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleBold().run()} className={`px-2 py-1 rounded ${editor?.isActive('bold') ? 'bg-black text-white' : 'bg-gray-100'}`}>B</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleItalic().run()} className={`px-2 py-1 rounded ${editor?.isActive('italic') ? 'bg-black text-white' : 'bg-gray-100'}`}>I</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleUnderline().run()} className={`px-2 py-1 rounded ${editor?.isActive('underline') ? 'bg-black text-white' : 'bg-gray-100'}`}>U</button>
         <div className="h-6 w-px bg-gray-300 mx-1" />
         {[1,2,3].map(l => (
           <button key={l}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: l as 1|2|3 }).run()}
+            type="button" onClick={() => editor?.chain().focus().toggleHeading({ level: l as 1|2|3 }).run()}
             className={`px-2 py-1 rounded ${editor?.isActive('heading', { level: l }) ? 'bg-black text-white' : 'bg-gray-100'}`}>H{l}</button>
         ))}
         <div className="h-6 w-px bg-gray-300 mx-1" />
-        <button onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-2 py-1 rounded ${editor?.isActive('bulletList') ? 'bg-black text-white' : 'bg-gray-100'}`}>• Lista</button>
-        <button onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-2 py-1 rounded ${editor?.isActive('orderedList') ? 'bg-black text-white' : 'bg-gray-100'}`}>1. Lista</button>
-        <button onClick={() => editor?.chain().focus().toggleTaskList().run()} className={`px-2 py-1 rounded ${editor?.isActive('taskList') ? 'bg-black text-white' : 'bg-gray-100'}`}>☑︎ Tarefas</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-2 py-1 rounded ${editor?.isActive('bulletList') ? 'bg-black text-white' : 'bg-gray-100'}`}>• Lista</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-2 py-1 rounded ${editor?.isActive('orderedList') ? 'bg-black text-white' : 'bg-gray-100'}`}>1. Lista</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleTaskList().run()} className={`px-2 py-1 rounded ${editor?.isActive('taskList') ? 'bg-black text-white' : 'bg-gray-100'}`}>☑︎ Tarefas</button>
         <div className="h-6 w-px bg-gray-300 mx-1" />
-        <button onClick={() => editor?.chain().focus().toggleCodeBlock().run()} className={`px-2 py-1 rounded ${editor?.isActive('codeBlock') ? 'bg-black text-white' : 'bg-gray-100'}`}>{`</>`}</button>
-        <button onClick={() => editor?.chain().focus().setHorizontalRule().run()} className="px-2 py-1 rounded bg-gray-100">─</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleCodeBlock().run()} className={`px-2 py-1 rounded ${editor?.isActive('codeBlock') ? 'bg-black text-white' : 'bg-gray-100'}`}>{`</>`}</button>
+        <button type="button" onClick={() => editor?.chain().focus().setHorizontalRule().run()} className="px-2 py-1 rounded bg-gray-100">─</button>
         <div className="h-6 w-px bg-gray-300 mx-1" />
         {/* TABLE */}
-        <button onClick={insertTable} className="px-2 py-1 rounded bg-gray-100">Tabela 3×3</button>
+        <button type="button" onClick={insertTable} className="px-2 py-1 rounded bg-gray-100">Tabela 3×3</button>
         <div className="flex gap-1">
-          <button onClick={tableCmd(() => editor!.chain().addColumnBefore().run())} className="px-2 py-1 rounded bg-gray-100">+ Col ←</button>
-          <button onClick={tableCmd(() => editor!.chain().addColumnAfter().run())} className="px-2 py-1 rounded bg-gray-100">+ Col →</button>
-          <button onClick={tableCmd(() => editor!.chain().addRowBefore().run())} className="px-2 py-1 rounded bg-gray-100">+ Linha ↑</button>
-          <button onClick={tableCmd(() => editor!.chain().addRowAfter().run())} className="px-2 py-1 rounded bg-gray-100">+ Linha ↓</button>
-          <button onClick={tableCmd(() => editor!.chain().toggleHeaderRow().run())} className="px-2 py-1 rounded bg-gray-100">Header</button>
-          <button onClick={tableCmd(() => editor!.chain().mergeCells().run())} className="px-2 py-1 rounded bg-gray-100">Mesclar</button>
-          <button onClick={tableCmd(() => editor!.chain().deleteTable().run())} className="px-2 py-1 rounded bg-gray-100 text-red-600">Del</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().addColumnBefore().run())} className="px-2 py-1 rounded bg-gray-100">+ Col ←</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().addColumnAfter().run())} className="px-2 py-1 rounded bg-gray-100">+ Col →</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().addRowBefore().run())} className="px-2 py-1 rounded bg-gray-100">+ Linha ↑</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().addRowAfter().run())} className="px-2 py-1 rounded bg-gray-100">+ Linha ↓</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().toggleHeaderRow().run())} className="px-2 py-1 rounded bg-gray-100">Header</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().mergeCells().run())} className="px-2 py-1 rounded bg-gray-100">Mesclar</button>
+          <button type="button" onClick={tableCmd(() => editor!.chain().deleteTable().run())} className="px-2 py-1 rounded bg-gray-100 text-red-600">Del</button>
         </div>
         <div className="h-6 w-px bg-gray-300 mx-1" />
         {/* COLORS / HIGHLIGHT */}
@@ -197,7 +197,7 @@ export default function WikiEditor({
           title="Cor do texto"
           aria-label="Cor do texto"
         />
-        <button onClick={() => editor?.chain().focus().toggleHighlight().run()} className={`px-2 py-1 rounded ${editor?.isActive('highlight') ? 'bg-black text-white' : 'bg-gray-100'}`}>Destacar</button>
+        <button type="button" onClick={() => editor?.chain().focus().toggleHighlight().run()} className={`px-2 py-1 rounded ${editor?.isActive('highlight') ? 'bg-black text-white' : 'bg-gray-100'}`}>Destacar</button>
 
         <div className="ml-auto flex items-center gap-2">
           <label className="cursor-pointer px-3 py-1 rounded bg-gray-100">
