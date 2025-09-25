@@ -227,4 +227,22 @@
   .tiptap-content [style*="font-size: 24px"] {
     font-size: 24px !important;
   }
+
+  /* Image alignment styles */
+  .tiptap-content img[data-align="left"] {
+    float: left;
+    margin-right: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tiptap-content img[data-align="right"] {
+    float: right;
+    margin-left: 1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .tiptap-content img[data-align="center"] {
+    display: block;
+    margin: 1rem auto;
+  }
 }

@@ -70,6 +70,14 @@ export default function WikiEditor({
             title: { default: null },
             width: { default: null },
             height: { default: null },
+            align: { 
+              default: null,
+              parseHTML: element => element.getAttribute('data-align'),
+              renderHTML: attributes => {
+                if (!attributes.align) return {}
+                return { 'data-align': attributes.align }
+              }
+            },
           }
         },
       }),
@@ -253,6 +261,43 @@ export default function WikiEditor({
           <button type="button" onClick={() => editor?.chain().focus().setTextAlign('right').run()} className={`px-2 py-1 rounded ${editor?.isActive({ textAlign: 'right' }) ? 'bg-black text-white' : 'bg-gray-100'}`} title="Alinhar à direita">➡</button>
           <button type="button" onClick={() => editor?.chain().focus().setTextAlign('justify').run()} className={`px-2 py-1 rounded ${editor?.isActive({ textAlign: 'justify' }) ? 'bg-black text-white' : 'bg-gray-100'}`} title="Justificar">≡</button>
         </div>
+
+        {/* IMAGE ALIGNMENT - só aparece se uma imagem estiver selecionada */}
+        {editor?.isActive('image') && (
+          <div className="flex gap-1 border-l border-gray-300 pl-2 ml-2">
+            <span className="text-xs text-gray-600 py-1">Imagem:</span>
+            <button 
+              type="button" 
+              onClick={() => {
+                editor?.chain().focus().updateAttributes('image', { align: 'left' }).run();
+              }} 
+              className="px-2 py-1 rounded bg-blue-100 text-xs" 
+              title="Imagem à esquerda"
+            >
+              ⬅ Esq
+            </button>
+            <button 
+              type="button" 
+              onClick={() => {
+                editor?.chain().focus().updateAttributes('image', { align: 'center' }).run();
+              }} 
+              className="px-2 py-1 rounded bg-blue-100 text-xs" 
+              title="Imagem centralizada"
+            >
+              ⬌ Centro
+            </button>
+            <button 
+              type="button" 
+              onClick={() => {
+                editor?.chain().focus().updateAttributes('image', { align: 'right' }).run();
+              }} 
+              className="px-2 py-1 rounded bg-blue-100 text-xs" 
+              title="Imagem à direita"
+            >
+              ➡ Dir
+            </button>
+          </div>
+        )}
         <div className="h-6 w-px bg-gray-300 mx-1" />
         <button type="button" onClick={() => editor?.chain().focus().toggleBulletList().run()} className={`px-2 py-1 rounded ${editor?.isActive('bulletList') ? 'bg-black text-white' : 'bg-gray-100'}`}>• Lista</button>
         <button type="button" onClick={() => editor?.chain().focus().toggleOrderedList().run()} className={`px-2 py-1 rounded ${editor?.isActive('orderedList') ? 'bg-black text-white' : 'bg-gray-100'}`}>1. Lista</button>
