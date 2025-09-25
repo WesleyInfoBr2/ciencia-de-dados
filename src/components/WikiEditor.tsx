@@ -109,7 +109,7 @@ export default function WikiEditor({
       }
     },
     editorProps: {
-      attributes: { class: 'prose prose-neutral max-w-none focus:outline-none' },
+      attributes: { class: 'prose prose-neutral max-w-none focus:outline-none tiptap-content' },
       handleKeyDown: (_view, event) => {
         // atalhos básicos
         if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === 's') {

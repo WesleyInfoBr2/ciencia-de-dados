@@ -151,39 +151,26 @@
 }
 
 @layer components {
-  .gradient-primary {
-    background: var(--gradient-primary);
+  .gradient-primary { background: var(--gradient-primary); }
+  .gradient-secondary { background: var(--gradient-secondary); }
+  .gradient-hero { background: var(--gradient-hero); }
+
+  .shadow-primary { box-shadow: var(--shadow-primary); }
+  .shadow-secondary { box-shadow: var(--shadow-secondary); }
+  .shadow-elegant { box-shadow: var(--shadow-elegant); }
+  .shadow-card { box-shadow: var(--shadow-card); }
+
+  .transition-smooth { transition: var(--transition-smooth); }
+  .transition-bounce { transition: var(--transition-bounce); }
+
+  /* Tiptap content defaults (since @tailwindcss/typography is not enabled) */
+  .tiptap-content {
+    line-height: 1.7;
   }
-  
-  .gradient-secondary {
-    background: var(--gradient-secondary);
-  }
-  
-  .gradient-hero {
-    background: var(--gradient-hero);
-  }
-  
-  .shadow-primary {
-    box-shadow: var(--shadow-primary);
-  }
-  
-  .shadow-secondary {
-    box-shadow: var(--shadow-secondary);
-  }
-  
-  .shadow-elegant {
-    box-shadow: var(--shadow-elegant);
-  }
-  
-  .shadow-card {
-    box-shadow: var(--shadow-card);
-  }
-  
-  .transition-smooth {
-    transition: var(--transition-smooth);
-  }
-  
-  .transition-bounce {
-    transition: var(--transition-bounce);
-  }
+  .tiptap-content h1, .tiptap-content h2, .tiptap-content h3 { font-weight: 700; }
+  .tiptap-content ul { list-style: disc; padding-left: 1.25rem; margin-left: 0.5rem; }
+  .tiptap-content ol { list-style: decimal; padding-left: 1.25rem; margin-left: 0.5rem; }
+  .tiptap-content blockquote { border-left: 4px solid hsl(var(--primary)); padding-left: 1rem; color: hsl(var(--muted-foreground)); }
+  .tiptap-content pre { background: hsl(var(--muted)); padding: 0.75rem; border-radius: 0.5rem; overflow-x: auto; }
+  .tiptap-content hr { border-color: hsl(var(--border)); margin: 1rem 0; }
 }

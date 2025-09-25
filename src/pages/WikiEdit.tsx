@@ -322,10 +322,27 @@ const WikiEdit = () => {
 
                   <div>
                     <Label htmlFor="content">Conteúdo *</Label>
-                    <WikiEditor
-                      initialContent={formData.content}
-                      onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
-                    />
+                     <WikiEditor
+                       initialContent={formData.content}
+                       onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
+                       onSave={async (docJSON) => {
+                         try {
+                           setSaving(true)
+                           const { error } = await supabase
+                             .from('wiki_posts')
+                             .update({ content: docJSON })
+                             .eq('id', post!.id)
+                           if (error) throw error
+                           setFormData(prev => ({ ...prev, content: docJSON }))
+                           toast({ title: 'Rascunho salvo', description: 'Conteúdo salvo com sucesso.' })
+                         } catch (e) {
+                           console.error('Erro ao salvar rascunho:', e)
+                           toast({ title: 'Erro', description: 'Não foi possível salvar o rascunho.', variant: 'destructive' })
+                         } finally {
+                           setSaving(false)
+                         }
+                       }}
+                     />
                     <p className="text-sm text-muted-foreground mt-2">
                       <strong>Dicas:</strong>
                       <br />• Use o botão de fórmula (∑) para adicionar equações matemáticas
