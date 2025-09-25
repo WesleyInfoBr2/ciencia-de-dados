@@ -103,6 +103,7 @@ const WikiNew = () => {
           slug: validatedData.slug,
           content: validatedData.content,
           excerpt: validatedData.excerpt,
+          post_type: 'conteudo',
           category_id: validatedData.category_id,
           tags: validatedData.tags,
           author_id: user.id,
@@ -210,26 +211,9 @@ const WikiNew = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <Label htmlFor="post_type">Tipo</Label>
-                    <Select
-                      value={formData.post_type}
-                      onValueChange={(value: any) => setFormData(prev => ({ ...prev, post_type: value }))}
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="conteudo">Conteúdo</SelectItem>
-                        <SelectItem value="como_fazer">Como fazer</SelectItem>
-                        <SelectItem value="aplicacao_pratica">Aplicação prática</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
                     <Label htmlFor="category">Categoria</Label>
                     <Select
-                      value={formData.category_id}
+                      value={formData.category_id || ''}
                       onValueChange={(value) => setFormData(prev => ({ ...prev, category_id: value }))}
                     >
                       <SelectTrigger>
@@ -238,11 +222,24 @@ const WikiNew = () => {
                       <SelectContent>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
-                            {category.name}
+                            {category.icon} {category.name}
                           </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                  </div>
+
+                  <div>
+                    <Label htmlFor="tags">Tags</Label>
+                    <Input
+                      id="tags"
+                      value={formData.tags?.join(', ') || ''}
+                      onChange={(e) => {
+                        const tags = e.target.value.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
+                        setFormData(prev => ({ ...prev, tags }));
+                      }}
+                      placeholder="Separar por vírgulas"
+                    />
                   </div>
 
                   <div className="flex items-center space-x-2">

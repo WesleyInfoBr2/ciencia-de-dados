@@ -1005,7 +1005,7 @@ export type Database = {
           excerpt: string | null
           id: string
           is_published: boolean | null
-          post_type: Database["public"]["Enums"]["wiki_post_type"]
+          post_type: Database["public"]["Enums"]["wiki_post_type"] | null
           published_at: string | null
           slug: string
           tags: string[] | null
@@ -1021,7 +1021,7 @@ export type Database = {
           excerpt?: string | null
           id?: string
           is_published?: boolean | null
-          post_type: Database["public"]["Enums"]["wiki_post_type"]
+          post_type?: Database["public"]["Enums"]["wiki_post_type"] | null
           published_at?: string | null
           slug: string
           tags?: string[] | null
@@ -1037,7 +1037,7 @@ export type Database = {
           excerpt?: string | null
           id?: string
           is_published?: boolean | null
-          post_type?: Database["public"]["Enums"]["wiki_post_type"]
+          post_type?: Database["public"]["Enums"]["wiki_post_type"] | null
           published_at?: string | null
           slug?: string
           tags?: string[] | null
