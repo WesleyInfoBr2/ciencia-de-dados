@@ -1,35 +1,36 @@
-import React, { useMemo } from 'react'
+import React from 'react'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Mathematics from '@tiptap/extension-mathematics'
-import CodeBlock from '@tiptap/extension-code-block'
-import { Table } from '@tiptap/extension-table'
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
+import { lowlight } from 'lowlight/lib/common'
+import Table from '@tiptap/extension-table'
 import TableRow from '@tiptap/extension-table-row'
 import TableHeader from '@tiptap/extension-table-header'
 import TableCell from '@tiptap/extension-table-cell'
 import TaskList from '@tiptap/extension-task-list'
 import TaskItem from '@tiptap/extension-task-item'
+import Underline from '@tiptap/extension-underline'
+import Highlight from '@tiptap/extension-highlight'
+import TextStyle from '@tiptap/extension-text-style'
+import Color from '@tiptap/extension-color'
 import { generateHTML } from '@tiptap/html'
 import DOMPurify from 'dompurify'
-
 import 'katex/dist/katex.min.css'
 
 type WikiViewerProps = {
-  content: any // ProseMirror JSON salvo no banco
-  mode?: 'tiptap' | 'html' // padrão: 'tiptap'
+  content: any
+  mode?: 'tiptap' | 'html'
 }
 
 const extensionsList = [
   StarterKit.configure({ codeBlock: false }),
   Link.configure({ openOnClick: true }),
   Image,
-  CodeBlock.configure({
-    HTMLAttributes: {
-      class: 'rounded-lg bg-gray-100 p-4 font-mono text-sm',
-    },
-  }),
+  TextStyle, Color, Underline, Highlight,
+  CodeBlockLowlight.configure({ lowlight }),
   Table.configure({ resizable: true }),
   TableRow, TableHeader, TableCell,
   TaskList, TaskItem.configure({ nested: true }),
@@ -38,7 +39,6 @@ const extensionsList = [
 
 export default function WikiViewer({ content, mode = 'tiptap' }: WikiViewerProps) {
   if (mode === 'html') {
-    // ---- B) Gerar HTML (útil para SSR/SEO) ----
     const raw = generateHTML(content, extensionsList)
     const clean = DOMPurify.sanitize(raw, {
       ADD_TAGS: [
@@ -50,16 +50,14 @@ export default function WikiViewer({ content, mode = 'tiptap' }: WikiViewerProps
     return <div className="prose prose-neutral max-w-none" dangerouslySetInnerHTML={{ __html: clean }} />
   }
 
-  // ---- A) Tiptap read-only ----
   const editor = useEditor({
     editable: false,
     content,
     extensions: extensionsList,
-    editorProps: {
-      attributes: { class: 'prose prose-neutral max-w-none' },
-    },
+    editorProps: { attributes: { class: 'prose prose-neutral max-w-none' } },
   })
 
   if (!editor) return null
   return <EditorContent editor={editor} />
 }
+
