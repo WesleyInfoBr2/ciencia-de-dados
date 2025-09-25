@@ -5,7 +5,7 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Mathematics from '@tiptap/extension-mathematics'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import * as lowlight from 'lowlight'
+import { createLowlight } from 'lowlight'
 import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
@@ -25,17 +25,23 @@ type WikiViewerProps = {
   mode?: 'tiptap' | 'html'
 }
 
-const extensionsList = [
-  StarterKit.configure({ codeBlock: false }),
-  Link.configure({ openOnClick: true }),
-  Image,
-  TextStyle, Color, Underline, Highlight,
-  CodeBlockLowlight.configure({ lowlight }),
-  Table.configure({ resizable: true }),
-  TableRow, TableHeader, TableCell,
-  TaskList, TaskItem.configure({ nested: true }),
-  Mathematics.configure({ katexOptions: { throwOnError: false } }),
-]
+const extensionsList = (() => {
+  const lowlight = createLowlight()
+  return [
+    StarterKit.configure({ 
+      codeBlock: false,
+      link: false // disable to avoid duplicate
+    }),
+    Link.configure({ openOnClick: true }),
+    Image,
+    TextStyle, Color, Underline, Highlight,
+    CodeBlockLowlight.configure({ lowlight }),
+    Table.configure({ resizable: true }),
+    TableRow, TableHeader, TableCell,
+    TaskList, TaskItem.configure({ nested: true }),
+    Mathematics.configure({ katexOptions: { throwOnError: false } }),
+  ]
+})()
 
 export default function WikiViewer({ content, mode = 'tiptap' }: WikiViewerProps) {
   if (mode === 'html') {

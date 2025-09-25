@@ -5,7 +5,7 @@ import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
 import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
-import * as lowlight from 'lowlight'
+import { createLowlight } from 'lowlight'
 import { Table } from '@tiptap/extension-table'
 import { TableRow } from '@tiptap/extension-table-row'
 import { TableHeader } from '@tiptap/extension-table-header'
@@ -48,32 +48,39 @@ export default function WikiEditor({
   const dirtyRef = useRef(false)
   const autosaveTimer = useRef<number | null>(null)
 
-  const extensions = useMemo(() => [
-    StarterKit.configure({ heading: { levels: [1, 2, 3] }, codeBlock: false }),
-    Link.configure({ openOnClick: true, autolink: true }),
-    Image.extend({
-      addAttributes() {
-        return {
-          src: { default: null },
-          alt: { default: null },
-          title: { default: null },
-          width: { default: null },
-          height: { default: null },
-        }
-      },
-    }),
-    // estilos de texto
-    TextStyle, Color, Underline, Highlight,
-    // código com highlight
-    CodeBlockLowlight.configure({ lowlight }),
-    // tabela
-    Table.configure({ resizable: true }),
-    TableRow, TableHeader, TableCell,
-    // listas de tarefas
-    TaskList, TaskItem.configure({ nested: true }),
-    // matemática
-    MathInputRules.configure({ katexOptions: { throwOnError: false } }),
-  ], [])
+  const extensions = useMemo(() => {
+    const lowlight = createLowlight()
+    return [
+      StarterKit.configure({ 
+        heading: { levels: [1, 2, 3] }, 
+        codeBlock: false,
+        link: false // disable to avoid duplicate
+      }),
+      Link.configure({ openOnClick: true, autolink: true }),
+      Image.extend({
+        addAttributes() {
+          return {
+            src: { default: null },
+            alt: { default: null },
+            title: { default: null },
+            width: { default: null },
+            height: { default: null },
+          }
+        },
+      }),
+      // estilos de texto
+      TextStyle, Color, Underline, Highlight,
+      // código com highlight
+      CodeBlockLowlight.configure({ lowlight }),
+      // tabela
+      Table.configure({ resizable: true }),
+      TableRow, TableHeader, TableCell,
+      // listas de tarefas
+      TaskList, TaskItem.configure({ nested: true }),
+      // matemática
+      MathInputRules.configure({ katexOptions: { throwOnError: false } }),
+    ]
+  }, [])
 
   const editor = useEditor({
     extensions,
