@@ -45,6 +45,9 @@ export default function WikiEditor({
 }: WikiEditorProps) {
   const [saving, setSaving] = useState(false)
   const [lastDraftAt, setLastDraftAt] = useState<Date | null>(null)
+  const [showTableOptions, setShowTableOptions] = useState(false)
+  const [tableRows, setTableRows] = useState(3)
+  const [tableCols, setTableCols] = useState(3)
   const dirtyRef = useRef(false)
   const autosaveTimer = useRef<number | null>(null)
 
@@ -132,6 +135,24 @@ export default function WikiEditor({
     return () => window.removeEventListener('beforeunload', beforeUnload)
   }, [navigationGuard])
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      if (!target.closest('.table-options-dropdown')) {
+        setShowTableOptions(false)
+      }
+    }
+
+    if (showTableOptions) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [showTableOptions])
+
   const handleSave = async () => {
     if (!editor || !onSave) return
     try {
@@ -150,8 +171,33 @@ export default function WikiEditor({
     editor.chain().focus().setImage({ src: url, alt: file.name }).run()
   }
 
-  const insertTable = () => {
-    editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+  const insertTable = (rows: number = tableRows, cols: number = tableCols) => {
+    editor?.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run()
+    setShowTableOptions(false)
+  }
+
+  const setBorderStyle = (style: string) => {
+    editor?.chain().focus().run()
+    // Apply border style to selected table
+    if (editor?.isActive('table')) {
+      const tableElement = document.querySelector('.ProseMirror table')
+      if (tableElement) {
+        switch (style) {
+          case 'thin':
+            (tableElement as HTMLElement).style.border = '1px solid hsl(var(--border))'
+            break
+          case 'thick':
+            (tableElement as HTMLElement).style.border = '2px solid hsl(var(--border))'
+            break
+          case 'dashed':
+            (tableElement as HTMLElement).style.border = '1px dashed hsl(var(--border))'
+            break
+          case 'none':
+            (tableElement as HTMLElement).style.border = 'none'
+            break
+        }
+      }
+    }
   }
 
   const tableCmd = (cmd: () => void) => () => editor?.chain().focus() && cmd()
@@ -178,7 +224,66 @@ export default function WikiEditor({
         <button type="button" onClick={() => editor?.chain().focus().setHorizontalRule().run()} className="px-2 py-1 rounded bg-gray-100">─</button>
         <div className="h-6 w-px bg-gray-300 mx-1" />
         {/* TABLE */}
-        <button type="button" onClick={insertTable} className="px-2 py-1 rounded bg-gray-100">Tabela 3×3</button>
+        <div className="relative table-options-dropdown">
+          <button 
+            type="button" 
+            onClick={() => setShowTableOptions(!showTableOptions)} 
+            className="px-2 py-1 rounded bg-gray-100"
+          >
+            Tabela ▼
+          </button>
+          {showTableOptions && (
+            <div className="absolute top-full left-0 mt-1 p-3 bg-white border rounded-lg shadow-lg z-50 min-w-64">
+              <div className="space-y-3">
+                <div>
+                  <label className="text-sm font-medium">Tamanho:</label>
+                  <div className="flex gap-2 mt-1">
+                    <div>
+                      <label className="text-xs">Linhas:</label>
+                      <input 
+                        type="number" 
+                        min="2" 
+                        max="10" 
+                        value={tableRows}
+                        onChange={(e) => setTableRows(Number(e.target.value))}
+                        className="w-16 px-1 py-1 border rounded text-sm"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs">Colunas:</label>
+                      <input 
+                        type="number" 
+                        min="2" 
+                        max="10" 
+                        value={tableCols}
+                        onChange={(e) => setTableCols(Number(e.target.value))}
+                        className="w-16 px-1 py-1 border rounded text-sm"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  type="button"
+                  onClick={() => insertTable()}
+                  className="w-full px-3 py-2 bg-blue-600 text-white rounded text-sm hover:bg-blue-700"
+                >
+                  Inserir Tabela {tableRows}×{tableCols}
+                </button>
+                {editor?.isActive('table') && (
+                  <div>
+                    <label className="text-sm font-medium">Bordas:</label>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      <button type="button" onClick={() => setBorderStyle('thin')} className="px-2 py-1 text-xs bg-gray-100 rounded">Fina</button>
+                      <button type="button" onClick={() => setBorderStyle('thick')} className="px-2 py-1 text-xs bg-gray-100 rounded">Grossa</button>
+                      <button type="button" onClick={() => setBorderStyle('dashed')} className="px-2 py-1 text-xs bg-gray-100 rounded">Tracejada</button>
+                      <button type="button" onClick={() => setBorderStyle('none')} className="px-2 py-1 text-xs bg-gray-100 rounded">Sem borda</button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
         <div className="flex gap-1">
           <button type="button" onClick={tableCmd(() => editor!.chain().addColumnBefore().run())} className="px-2 py-1 rounded bg-gray-100">+ Col ←</button>
           <button type="button" onClick={tableCmd(() => editor!.chain().addColumnAfter().run())} className="px-2 py-1 rounded bg-gray-100">+ Col →</button>

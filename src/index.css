@@ -173,4 +173,24 @@
   .tiptap-content blockquote { border-left: 4px solid hsl(var(--primary)); padding-left: 1rem; color: hsl(var(--muted-foreground)); }
   .tiptap-content pre { background: hsl(var(--muted)); padding: 0.75rem; border-radius: 0.5rem; overflow-x: auto; }
   .tiptap-content hr { border-color: hsl(var(--border)); margin: 1rem 0; }
+
+  /* Table styles */
+  .tiptap-content table { 
+    border-collapse: collapse; 
+    margin: 1rem 0; 
+    width: 100%; 
+    border: 1px solid hsl(var(--border)); 
+  }
+  .tiptap-content th, .tiptap-content td { 
+    border: 1px solid hsl(var(--border)); 
+    padding: 0.5rem; 
+    text-align: left; 
+  }
+  .tiptap-content th { 
+    background-color: hsl(var(--muted)); 
+    font-weight: 600; 
+  }
+  .tiptap-content tr:nth-child(even) { 
+    background-color: hsl(var(--muted) / 0.3); 
+  }
 }
