@@ -32,7 +32,8 @@ const extensionsList = (() => {
   return [
     StarterKit.configure({ 
       codeBlock: false,
-      link: false // disable to avoid duplicate
+      link: false, // disable to avoid duplicate
+      underline: false // disable to avoid duplicate - will add it explicitly
     }),
     Link.configure({ openOnClick: true }),
     Image.extend({
@@ -53,7 +54,7 @@ const extensionsList = (() => {
     TextStyle, 
     Color, 
     FontFamily,
-    Underline, 
+    Underline, // Explicitly add to avoid duplication warning
     Highlight,
     TextAlign.configure({
       types: ['heading', 'paragraph'],
@@ -76,17 +77,165 @@ export default function WikiViewer({ content, mode = 'tiptap' }: WikiViewerProps
       ],
       ADD_ATTR: ['class','style','aria-hidden','role','display','xmlns','data-align','data-text-align']
     })
-    return <div className="prose prose-neutral max-w-none" dangerouslySetInnerHTML={{ __html: clean }} />
+    return (
+      <div className="wiki-viewer prose prose-neutral max-w-none">
+        <div dangerouslySetInnerHTML={{ __html: clean }} />
+        <style dangerouslySetInnerHTML={{
+          __html: `
+            /* WikiViewer específico styles */
+            .wiki-viewer [data-align="left"] {
+              text-align: left;
+            }
+            .wiki-viewer [data-align="center"] {
+              text-align: center;
+            }
+            .wiki-viewer [data-align="right"] {
+              text-align: right;
+            }
+            .wiki-viewer img[data-align="left"] {
+              float: left;
+              margin: 0 1rem 1rem 0;
+            }
+            .wiki-viewer img[data-align="center"] {
+              display: block;
+              margin: 1rem auto;
+            }
+            .wiki-viewer img[data-align="right"] {
+              float: right;
+              margin: 0 0 1rem 1rem;
+            }
+            .wiki-viewer table {
+              border-collapse: collapse;
+              width: 100%;
+              margin: 1rem 0;
+              border: 1px solid hsl(var(--border));
+            }
+            .wiki-viewer th, .wiki-viewer td {
+              border: 1px solid hsl(var(--border));
+              padding: 0.5rem;
+              text-align: left;
+            }
+            .wiki-viewer th {
+              background-color: hsl(var(--muted));
+              font-weight: 600;
+            }
+            .wiki-viewer ul[data-type="taskList"] {
+              list-style: none;
+              padding-left: 0;
+            }
+            .wiki-viewer li[data-type="taskItem"] {
+              display: flex;
+              align-items: flex-start;
+              gap: 0.5rem;
+            }
+            .wiki-viewer pre {
+              background-color: hsl(var(--muted));
+              padding: 1rem;
+              border-radius: 0.5rem;
+              overflow-x: auto;
+              margin: 1rem 0;
+            }
+            .wiki-viewer code {
+              background-color: hsl(var(--muted));
+              padding: 0.125rem 0.25rem;
+              border-radius: 0.25rem;
+              font-size: 0.875rem;
+              font-family: monospace;
+            }
+            .wiki-viewer pre code {
+              background: none;
+              padding: 0;
+            }
+          `
+        }} />
+      </div>
+    )
   }
 
   const editor = useEditor({
     editable: false,
     content,
     extensions: extensionsList,
-    editorProps: { attributes: { class: 'prose prose-neutral max-w-none' } },
+    editorProps: { 
+      attributes: { 
+        class: 'wiki-viewer prose prose-neutral max-w-none' 
+      } 
+    },
   })
 
   if (!editor) return null
-  return <EditorContent editor={editor} />
+  return (
+    <>
+      <EditorContent editor={editor} />
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          /* WikiViewer EditorContent styles */
+          .wiki-viewer [data-align="left"] {
+            text-align: left;
+          }
+          .wiki-viewer [data-align="center"] {
+            text-align: center;
+          }
+          .wiki-viewer [data-align="right"] {
+            text-align: right;
+          }
+          .wiki-viewer img[data-align="left"] {
+            float: left;
+            margin: 0 1rem 1rem 0;
+          }
+          .wiki-viewer img[data-align="center"] {
+            display: block;
+            margin: 1rem auto;
+          }
+          .wiki-viewer img[data-align="right"] {
+            float: right;
+            margin: 0 0 1rem 1rem;
+          }
+          .wiki-viewer table {
+            border-collapse: collapse;
+            width: 100%;
+            margin: 1rem 0;
+            border: 1px solid hsl(var(--border));
+          }
+          .wiki-viewer th, .wiki-viewer td {
+            border: 1px solid hsl(var(--border));
+            padding: 0.5rem;
+            text-align: left;
+          }
+          .wiki-viewer th {
+            background-color: hsl(var(--muted));
+            font-weight: 600;
+          }
+          .wiki-viewer ul[data-type="taskList"] {
+            list-style: none;
+            padding-left: 0;
+          }
+          .wiki-viewer li[data-type="taskItem"] {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.5rem;
+          }
+          .wiki-viewer pre {
+            background-color: hsl(var(--muted));
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+          }
+          .wiki-viewer code {
+            background-color: hsl(var(--muted));
+            padding: 0.125rem 0.25rem;
+            border-radius: 0.25rem;
+            font-size: 0.875rem;
+            font-family: monospace;
+          }
+          .wiki-viewer pre code {
+            background: none;
+            padding: 0;
+          }
+        `
+      }} />
+    </>
+  )
 }
 
