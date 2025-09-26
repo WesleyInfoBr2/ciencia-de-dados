@@ -16,6 +16,8 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import { FontFamily } from '@tiptap/extension-font-family'
+import { TextAlign } from '@tiptap/extension-text-align'
 import { generateHTML } from '@tiptap/html'
 import DOMPurify from 'dompurify'
 import 'katex/dist/katex.min.css'
@@ -33,8 +35,29 @@ const extensionsList = (() => {
       link: false // disable to avoid duplicate
     }),
     Link.configure({ openOnClick: true }),
-    Image,
-    TextStyle, Color, Underline, Highlight,
+    Image.extend({
+      addAttributes() {
+        return {
+          ...this.parent?.(),
+          align: { 
+            default: null,
+            parseHTML: element => element.getAttribute('data-align'),
+            renderHTML: attributes => {
+              if (!attributes.align) return {}
+              return { 'data-align': attributes.align }
+            }
+          },
+        }
+      },
+    }),
+    TextStyle, 
+    Color, 
+    FontFamily,
+    Underline, 
+    Highlight,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+    }),
     CodeBlockLowlight.configure({ lowlight }),
     Table.configure({ resizable: true }),
     TableRow, TableHeader, TableCell,
@@ -51,7 +74,7 @@ export default function WikiViewer({ content, mode = 'tiptap' }: WikiViewerProps
         'math','mrow','mi','mo','mn','msup','mfrac','msqrt','mtable','mtr','mtd',
         'semantics','annotation','span'
       ],
-      ADD_ATTR: ['class','style','aria-hidden','role','display','xmlns']
+      ADD_ATTR: ['class','style','aria-hidden','role','display','xmlns','data-align','data-text-align']
     })
     return <div className="prose prose-neutral max-w-none" dangerouslySetInnerHTML={{ __html: clean }} />
   }
