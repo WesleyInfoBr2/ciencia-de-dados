@@ -1006,10 +1006,13 @@ export type Database = {
           cover_image_url: string | null
           created_at: string | null
           excerpt: string | null
+          icon: string | null
           id: string
           is_published: boolean | null
           post_type: Database["public"]["Enums"]["wiki_post_type"] | null
+          properties: Json | null
           published_at: string | null
+          reading_time: number | null
           slug: string
           tags: string[] | null
           title: string
@@ -1022,10 +1025,13 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           excerpt?: string | null
+          icon?: string | null
           id?: string
           is_published?: boolean | null
           post_type?: Database["public"]["Enums"]["wiki_post_type"] | null
+          properties?: Json | null
           published_at?: string | null
+          reading_time?: number | null
           slug: string
           tags?: string[] | null
           title: string
@@ -1038,10 +1044,13 @@ export type Database = {
           cover_image_url?: string | null
           created_at?: string | null
           excerpt?: string | null
+          icon?: string | null
           id?: string
           is_published?: boolean | null
           post_type?: Database["public"]["Enums"]["wiki_post_type"] | null
+          properties?: Json | null
           published_at?: string | null
+          reading_time?: number | null
           slug?: string
           tags?: string[] | null
           title?: string
@@ -1060,6 +1069,38 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "wiki_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_revisions: {
+        Row: {
+          content: Json
+          created_at: string | null
+          created_by: string | null
+          id: string
+          post_id: string
+        }
+        Insert: {
+          content: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          post_id: string
+        }
+        Update: {
+          content?: Json
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_revisions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_posts"
             referencedColumns: ["id"]
           },
         ]
