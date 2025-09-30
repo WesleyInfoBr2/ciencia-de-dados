@@ -255,6 +255,32 @@ export default function WikiViewerV2({
             margin-bottom: 1rem;
           }
 
+          .wiki-content ul,
+          .wiki-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+          }
+
+          .wiki-content ul {
+            list-style-type: disc;
+          }
+
+          .wiki-content ol {
+            list-style-type: decimal;
+          }
+
+          .wiki-content li {
+            margin-bottom: 0.5rem;
+          }
+
+          .wiki-content ul ul {
+            list-style-type: circle;
+          }
+
+          .wiki-content ol ol {
+            list-style-type: lower-alpha;
+          }
+
           .wiki-content img {
             max-width: 100%;
             height: auto;

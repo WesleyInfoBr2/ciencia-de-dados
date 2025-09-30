@@ -20,6 +20,8 @@ import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Dropcursor } from '@tiptap/extension-dropcursor'
 import { Gapcursor } from '@tiptap/extension-gapcursor'
+import { Extension } from '@tiptap/core'
+import Suggestion from '@tiptap/suggestion'
 import { slashCommandsConfig } from './editor/SlashCommands'
 import { Callout } from './editor/extensions/Callout'
 import { Toggle } from './editor/extensions/Toggle'
@@ -27,9 +29,9 @@ import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, 
-  AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  Palette, Highlighter, Link as LinkIcon, Image as ImageIcon,
-  Table2, Plus, Trash2, Save, Copy
+  List, ListOrdered, CheckSquare, Heading1, Heading2, Heading3,
+  Quote, Code2, Calculator, Table2, Image as ImageIcon, Save,
+  Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -97,6 +99,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       StarterKit.configure({
         heading: { levels: [1, 2, 3] }
       }),
+      BubbleMenu.configure({
+        element: document.createElement('div')
+      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -139,17 +144,21 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         katexOptions: { throwOnError: false }
       }),
       Placeholder.configure({
-        placeholder: placeholder || 'Digite "/" para comandos...'
+        placeholder: placeholder || 'Digite "/" para comandos ou comece a escrever...'
       }),
       Dropcursor,
       Gapcursor,
       Callout,
-      Toggle
+      Toggle,
+      Suggestion.extend({
+        name: 'slash-commands',
+        ...slashCommandsConfig(insertImage)
+      })
     ],
     content,
     editorProps: {
       attributes: {
-        class: 'wiki-editor-v2 prose prose-neutral max-w-none focus:outline-none'
+        class: 'wiki-editor-v2 prose prose-neutral max-w-none focus:outline-none min-h-[400px] p-8'
       }
     },
     onUpdate: ({ editor }) => {
@@ -217,9 +226,230 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         className="hidden"
       />
 
-      {/* Toolbar simples no topo */}
-      <div className="editor-toolbar flex gap-2 p-4 border-b">
-        <div className="flex gap-1">
+      {/* Toolbar Completa */}
+      <div className="editor-toolbar flex flex-wrap gap-2 p-3 border-b bg-muted/30">
+        {/* Formatação de Texto */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            size="sm"
+            variant={editor.isActive('bold') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleBold().run()}
+            title="Negrito (Ctrl+B)"
+          >
+            <Bold className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('italic') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleItalic().run()}
+            title="Itálico (Ctrl+I)"
+          >
+            <Italic className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('underline') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            title="Sublinhado (Ctrl+U)"
+          >
+            <UnderlineIcon className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('strike') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
+            title="Tachado"
+          >
+            <Strikethrough className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('code') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleCode().run()}
+            title="Código Inline"
+          >
+            <Code className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+            title="Destacar"
+          >
+            <Highlighter className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Títulos */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            size="sm"
+            variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            title="Título 1"
+          >
+            <Heading1 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            title="Título 2"
+          >
+            <Heading2 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            title="Título 3"
+          >
+            <Heading3 className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Listas */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            size="sm"
+            variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            title="Lista com Marcadores"
+          >
+            <List className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            title="Lista Numerada"
+          >
+            <ListOrdered className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('taskList') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            title="Lista de Tarefas"
+          >
+            <CheckSquare className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Alinhamento */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            size="sm"
+            variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            title="Alinhar à Esquerda"
+          >
+            <AlignLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            title="Centralizar"
+          >
+            <AlignCenter className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            title="Alinhar à Direita"
+          >
+            <AlignRight className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Blocos Especiais */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            size="sm"
+            variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            title="Citação"
+          >
+            <Quote className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('codeBlock') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            title="Bloco de Código"
+          >
+            <Code2 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              const latex = prompt('Digite a equação LaTeX (ex: E = mc^2):')
+              if (latex) {
+                editor.chain().focus().insertContent({ type: 'math_inline', attrs: { latex } }).run()
+              }
+            }}
+            title="Equação Matemática"
+          >
+            <Calculator className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Mídia */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={insertImage}
+            title="Inserir Imagem"
+          >
+            <ImageIcon className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run()}
+            title="Inserir Tabela"
+          >
+            <Table2 className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              const url = prompt('Digite a URL:')
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run()
+              }
+            }}
+            title="Inserir Link"
+          >
+            <LinkIcon className="w-4 h-4" />
+          </Button>
+        </div>
+
+        {/* Salvar */}
+        <div className="flex gap-1 ml-auto">
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving}
+          >
+            <Save className="w-4 h-4 mr-2" />
+            {isSaving ? 'Salvando...' : 'Salvar'}
+          </Button>
+        </div>
+      </div>
+
+      {/* BubbleMenu para seleção de texto */}
+      {editor && (
+        <TiptapBubbleMenu
+          editor={editor}
+          tippyOptions={{ duration: 100 }}
+          className="bubble-menu-wrapper flex gap-1 p-1 bg-popover border rounded-lg shadow-lg"
+        >
           <Button
             size="sm"
             variant={editor.isActive('bold') ? 'default' : 'ghost'}
@@ -241,36 +471,41 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           >
             <UnderlineIcon className="w-4 h-4" />
           </Button>
-        </div>
-        
-        <div className="flex gap-1">
           <Button
             size="sm"
-            variant="ghost"
-            onClick={insertImage}
+            variant={editor.isActive('strike') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleStrike().run()}
           >
-            <ImageIcon className="w-4 h-4" />
+            <Strikethrough className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('code') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleCode().run()}
+          >
+            <Code className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
+            onClick={() => editor.chain().focus().toggleHighlight().run()}
+          >
+            <Highlighter className="w-4 h-4" />
           </Button>
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run()}
+            onClick={() => {
+              const url = prompt('Digite a URL:')
+              if (url) {
+                editor.chain().focus().setLink({ href: url }).run()
+              }
+            }}
           >
-            <Table2 className="w-4 h-4" />
+            <LinkIcon className="w-4 h-4" />
           </Button>
-        </div>
-
-        <div className="flex gap-1 ml-auto">
-          <Button
-            size="sm"
-            onClick={handleSave}
-            disabled={isSaving}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </div>
-      </div>
+        </TiptapBubbleMenu>
+      )}
 
       <EditorContent editor={editor} />
 
