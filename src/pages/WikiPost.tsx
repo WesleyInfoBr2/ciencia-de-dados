@@ -7,7 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Calendar, User, Edit, BookOpen, Clock, ChevronRight } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import WikiViewer from "@/components/WikiViewer";
+import WikiViewerV2 from "@/components/WikiViewerV2";
+import { ReadingProgress } from "@/components/ReadingProgress";
 import { TableOfContents } from "@/components/TableOfContents";
 import { updatePageMetadata, generateStructuredData, calculateReadingTime } from "@/utils/seo";
 import Header from "@/components/Header";
@@ -24,6 +25,8 @@ interface WikiPostData {
   created_at: string;
   updated_at: string;
   tags: string[] | null;
+  icon: string | null;
+  cover_image_url: string | null;
   profiles: {
     full_name: string;
     username: string;
@@ -79,6 +82,8 @@ const WikiPost = () => {
         created_at,
         updated_at,
         tags,
+        icon,
+        cover_image_url,
         profiles!wiki_posts_author_id_fkey (
           full_name,
           username,
@@ -243,7 +248,9 @@ const WikiPost = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
+    <>
+      <ReadingProgress />
+      <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
       <Header />
       <main className="max-w-7xl mx-auto px-4 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
@@ -283,64 +290,17 @@ const WikiPost = () => {
               )}
             </div>
 
-            {/* Article Header */}
-            <article className="bg-card rounded-lg shadow-sm">
-              <header className="p-8 border-b">
-                {post.wiki_categories && (
-                  <Badge variant="secondary" className={`mb-4 ${getCategoryColor(post.wiki_categories.color)}`}>
-                    {post.wiki_categories.name}
-                  </Badge>
-                )}
-
-                {post.tags && post.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-4">
-                    {post.tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-
-                <h1 className="text-4xl font-bold mb-4 leading-tight">
-                  {post.title}
-                </h1>
-
-                {post.excerpt && (
-                  <p className="text-xl text-muted-foreground mb-6">
-                    {post.excerpt}
-                  </p>
-                )}
-
-                <div className="flex flex-wrap items-center gap-6 text-muted-foreground text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" aria-hidden="true" />
-                    <span>
-                      {post.profiles?.full_name || post.profiles?.username || 'Autor'}
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" aria-hidden="true" />
-                    <time dateTime={post.published_at || post.created_at}>
-                      {formatDate(post.published_at || post.created_at)}
-                    </time>
-                  </div>
-                  {readingTime > 0 && (
-                    <div className="flex items-center gap-2">
-                      <Clock className="h-4 w-4" aria-hidden="true" />
-                      <span>{readingTime} min de leitura</span>
-                    </div>
-                  )}
-                </div>
-              </header>
-
-              {/* Article Content */}
-              <div className="p-8">
-                <WikiViewer 
-                  content={post.content}
-                  mode="tiptap"
-                />
-              </div>
+            {/* Article */}
+            <article className="bg-card rounded-lg shadow-sm p-4">
+              <WikiViewerV2
+                content={post.content}
+                icon={post.icon || undefined}
+                coverImage={post.cover_image_url || undefined}
+                title={post.title}
+                author={post.profiles.full_name}
+                publishedAt={post.published_at}
+                tags={post.tags || undefined}
+              />
             </article>
 
             {/* Related Posts */}
@@ -403,6 +363,7 @@ const WikiPost = () => {
         </div>
       </main>
     </div>
+    </>
   );
 };
 

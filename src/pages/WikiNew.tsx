@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import WikiEditor from "@/components/WikiEditor";
+import WikiEditorV2 from "@/components/WikiEditorV2";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
@@ -37,6 +37,8 @@ const WikiNew = () => {
     category_id: undefined,
     tags: [],
     is_published: false,
+    icon: "📝",
+    cover_image_url: "",
   });
 
   useEffect(() => {
@@ -109,6 +111,8 @@ const WikiNew = () => {
           author_id: user.id,
           is_published: validatedData.is_published,
           published_at: validatedData.is_published ? new Date().toISOString() : null,
+          icon: formData.icon || "📝",
+          cover_image_url: formData.cover_image_url || null,
         });
 
       if (error) throw error;
@@ -187,6 +191,29 @@ const WikiNew = () => {
                       rows={3}
                     />
                   </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="icon">Ícone (Emoji)</Label>
+                      <Input
+                        id="icon"
+                        value={formData.icon}
+                        onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                        placeholder="📝"
+                        maxLength={2}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="cover_image">URL da Capa (opcional)</Label>
+                      <Input
+                        id="cover_image"
+                        value={formData.cover_image_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
@@ -195,8 +222,9 @@ const WikiNew = () => {
                   <CardTitle>Conteúdo</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <WikiEditor
-                    initialContent={formData.content}
+                  <WikiEditorV2
+                    content={formData.content}
+                    onSave={(content) => setFormData(prev => ({ ...prev, content }))}
                     onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
                   />
                 </CardContent>

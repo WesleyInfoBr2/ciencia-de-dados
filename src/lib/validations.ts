@@ -9,6 +9,8 @@ export const wikiPostSchema = z.object({
   category_id: z.string().uuid().optional(),
   is_published: z.boolean().default(false),
   tags: z.array(z.string()).optional(),
+  icon: z.string().optional(),
+  cover_image_url: z.string().url().optional().or(z.literal('')),
 })
 
 export type WikiPostFormData = z.infer<typeof wikiPostSchema>

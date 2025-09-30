@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { ArrowLeft, Save, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
-import WikiEditor from "@/components/WikiEditor";
+import WikiEditorV2 from "@/components/WikiEditorV2";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 interface WikiCategory {
@@ -51,7 +51,9 @@ const WikiEdit = () => {
     content: { type: 'doc', content: [] },
     category_id: '',
     tags: [] as string[],
-    is_published: false
+    is_published: false,
+    icon: '📝',
+    cover_image_url: ''
   });
 
   useEffect(() => {
@@ -126,7 +128,9 @@ const WikiEdit = () => {
       content: content,
       category_id: data.category_id || '',
       tags: data.tags || [],
-      is_published: data.is_published
+      is_published: data.is_published,
+      icon: data.icon || '📝',
+      cover_image_url: data.cover_image_url || ''
     });
     setLoading(false);
   };
@@ -320,11 +324,33 @@ const WikiEdit = () => {
                     />
                   </div>
 
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="icon">Ícone (Emoji)</Label>
+                      <Input
+                        id="icon"
+                        value={formData.icon}
+                        onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
+                        placeholder="📝"
+                        maxLength={2}
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="cover_image">URL da Capa</Label>
+                      <Input
+                        id="cover_image"
+                        value={formData.cover_image_url}
+                        onChange={(e) => setFormData(prev => ({ ...prev, cover_image_url: e.target.value }))}
+                        placeholder="https://..."
+                      />
+                    </div>
+                  </div>
+
                   <div>
                     <Label htmlFor="content">Conteúdo *</Label>
-                     <WikiEditor
-                       initialContent={formData.content}
-                       onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
+                     <WikiEditorV2
+                       content={formData.content}
                        onSave={async (docJSON) => {
                          try {
                            setSaving(true)
@@ -334,14 +360,15 @@ const WikiEdit = () => {
                              .eq('id', post!.id)
                            if (error) throw error
                            setFormData(prev => ({ ...prev, content: docJSON }))
-                           toast({ title: 'Rascunho salvo', description: 'Conteúdo salvo com sucesso.' })
+                           toast({ title: 'Salvo', description: 'Conteúdo salvo com sucesso.' })
                          } catch (e) {
-                           console.error('Erro ao salvar rascunho:', e)
-                           toast({ title: 'Erro', description: 'Não foi possível salvar o rascunho.', variant: 'destructive' })
+                           console.error('Erro ao salvar:', e)
+                           toast({ title: 'Erro', description: 'Não foi possível salvar.', variant: 'destructive' })
                          } finally {
                            setSaving(false)
                          }
                        }}
+                       onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
                      />
                     <p className="text-sm text-muted-foreground mt-2">
                       <strong>Dicas:</strong>
