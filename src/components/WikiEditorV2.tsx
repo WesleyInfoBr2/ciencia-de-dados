@@ -99,9 +99,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       StarterKit.configure({
         heading: { levels: [1, 2, 3] }
       }),
-      BubbleMenu.configure({
-        element: document.createElement('div')
-      }),
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
@@ -150,9 +147,16 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       Gapcursor,
       Callout,
       Toggle,
-      Suggestion.extend({
+      Extension.create({
         name: 'slash-commands',
-        ...slashCommandsConfig(insertImage)
+        addProseMirrorPlugins() {
+          return [
+            Suggestion({
+              editor: this.editor,
+              ...slashCommandsConfig(insertImage)
+            })
+          ]
+        }
       })
     ],
     content,
@@ -442,70 +446,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           </Button>
         </div>
       </div>
-
-      {/* BubbleMenu para seleção de texto */}
-      {editor && (
-        <TiptapBubbleMenu
-          editor={editor}
-          tippyOptions={{ duration: 100 }}
-          className="bubble-menu-wrapper flex gap-1 p-1 bg-popover border rounded-lg shadow-lg"
-        >
-          <Button
-            size="sm"
-            variant={editor.isActive('bold') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleBold().run()}
-          >
-            <Bold className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={editor.isActive('italic') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
-          >
-            <Italic className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={editor.isActive('underline') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
-          >
-            <UnderlineIcon className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={editor.isActive('strike') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
-          >
-            <Strikethrough className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={editor.isActive('code') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleCode().run()}
-          >
-            <Code className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant={editor.isActive('highlight') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
-          >
-            <Highlighter className="w-4 h-4" />
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              const url = prompt('Digite a URL:')
-              if (url) {
-                editor.chain().focus().setLink({ href: url }).run()
-              }
-            }}
-          >
-            <LinkIcon className="w-4 h-4" />
-          </Button>
-        </TiptapBubbleMenu>
-      )}
 
       <EditorContent editor={editor} />
 
