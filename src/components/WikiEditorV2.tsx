@@ -15,33 +15,86 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
-import { FontFamily } from '@tiptap/extension-font-family'
 import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Dropcursor } from '@tiptap/extension-dropcursor'
-import { Gapcursor } from '@tiptap/extension-gapcursor'
 import { Extension } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
-import { slashCommandsConfig } from './editor/SlashCommands'
-import { Callout } from './editor/extensions/Callout'
-import { Toggle } from './editor/extensions/Toggle'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
 import { 
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, 
   List, ListOrdered, CheckSquare, Heading1, Heading2, Heading3,
   Quote, Code2, Calculator, Table2, Image as ImageIcon, Save,
-  Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight
+  Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight,
+  AlignJustify
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { ReactRenderer } from '@tiptap/react'
+import tippy, { Instance as TippyInstance } from 'tippy.js'
 import 'katex/dist/katex.min.css'
+import 'tippy.js/dist/tippy.css'
 
 interface WikiEditorV2Props {
   content: any
   onSave: (content: any) => void
   onAutoSave?: (content: any) => void
   placeholder?: string
+}
+
+interface CommandItemProps {
+  title: string
+  command: () => void
+}
+
+const CommandsList = ({ items, command }: any) => {
+  const [selectedIndex, setSelectedIndex] = useState(0)
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'ArrowUp') {
+        event.preventDefault()
+        setSelectedIndex((prevIndex) => 
+          prevIndex > 0 ? prevIndex - 1 : items.length - 1
+        )
+      }
+      if (event.key === 'ArrowDown') {
+        event.preventDefault()
+        setSelectedIndex((prevIndex) => 
+          prevIndex < items.length - 1 ? prevIndex + 1 : 0
+        )
+      }
+      if (event.key === 'Enter') {
+        event.preventDefault()
+        items[selectedIndex]?.command()
+      }
+    }
+
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [selectedIndex, items, command])
+
+  return (
+    <div className="slash-commands-menu bg-popover border rounded-lg shadow-lg p-2 max-w-xs">
+      {items.length > 0 ? (
+        items.map((item: CommandItemProps, index: number) => (
+          <button
+            key={index}
+            onClick={item.command}
+            className={`w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors ${
+              index === selectedIndex ? 'bg-accent' : ''
+            }`}
+          >
+            <div className="font-medium text-sm">{item.title}</div>
+          </button>
+        ))
+      ) : (
+        <div className="px-3 py-2 text-sm text-muted-foreground">
+          Nenhum resultado
+        </div>
+      )}
+    </div>
+  )
 }
 
 export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder }: WikiEditorV2Props) {
@@ -58,7 +111,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       const fileName = `${Math.random()}.${fileExt}`
       const filePath = `${fileName}`
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('wiki-images')
         .upload(filePath, file)
 
@@ -94,35 +147,165 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
     }
   }
 
+  // Configuração do slash command
+  const slashCommandExtension = Extension.create({
+    name: 'slashCommands',
+    addProseMirrorPlugins() {
+      return [
+        Suggestion({
+          editor: this.editor,
+          char: '/',
+          command: ({ editor, range, props }) => {
+            props.command({ editor, range })
+          },
+          items: ({ query }: { query: string }) => {
+            const items = [
+              {
+                title: 'Título 1',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run()
+                }
+              },
+              {
+                title: 'Título 2',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run()
+                }
+              },
+              {
+                title: 'Título 3',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run()
+                }
+              },
+              {
+                title: 'Lista com marcadores',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).toggleBulletList().run()
+                }
+              },
+              {
+                title: 'Lista numerada',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).toggleOrderedList().run()
+                }
+              },
+              {
+                title: 'Lista de tarefas',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).toggleTaskList().run()
+                }
+              },
+              {
+                title: 'Tabela',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                }
+              },
+              {
+                title: 'Bloco de código',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
+                }
+              },
+              {
+                title: 'Citação',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).toggleBlockquote().run()
+                }
+              },
+              {
+                title: 'Linha horizontal',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).setHorizontalRule().run()
+                }
+              },
+              {
+                title: 'Imagem',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).run()
+                  insertImage()
+                }
+              }
+            ]
+
+            return items.filter(item => 
+              item.title.toLowerCase().includes(query.toLowerCase())
+            )
+          },
+          render: () => {
+            let component: ReactRenderer
+            let popup: TippyInstance[]
+
+            return {
+              onStart: (props: any) => {
+                component = new ReactRenderer(CommandsList, {
+                  props,
+                  editor: props.editor,
+                })
+
+                popup = tippy('body', {
+                  getReferenceClientRect: props.clientRect,
+                  appendTo: () => document.body,
+                  content: component.element,
+                  showOnCreate: true,
+                  interactive: true,
+                  trigger: 'manual',
+                  placement: 'bottom-start',
+                })
+              },
+              onUpdate(props: any) {
+                component.updateProps(props)
+
+                popup[0].setProps({
+                  getReferenceClientRect: props.clientRect,
+                })
+              },
+              onKeyDown(props: any) {
+                if (props.event.key === 'Escape') {
+                  popup[0].hide()
+                  return true
+                }
+                return false
+              },
+              onExit() {
+                popup[0].destroy()
+                component.destroy()
+              },
+            }
+          },
+        })
+      ]
+    },
+  })
+
+  // Extensão customizada de Mathematics com input rules
+  const MathExtension = Mathematics
+
   const editor = useEditor({
+    editable: true,
     extensions: [
       StarterKit.configure({
+        codeBlock: false,
         heading: { levels: [1, 2, 3] }
       }),
+      Placeholder.configure({
+        placeholder: placeholder || 'Digite / para inserções rápidas ou comece a escrever...'
+      }),
       Link.configure({
-        openOnClick: false,
+        openOnClick: true,
+        autolink: true,
         HTMLAttributes: {
           class: 'wiki-link'
         }
       }),
-      Image.extend({
-        addAttributes() {
-          return {
-            ...this.parent?.(),
-            align: {
-              default: null,
-              parseHTML: element => element.getAttribute('data-align'),
-              renderHTML: attributes => {
-                if (!attributes.align) return {}
-                return { 'data-align': attributes.align }
-              }
-            }
-          }
+      Image.configure({
+        HTMLAttributes: {
+          class: 'wiki-image'
         }
       }),
       TextStyle,
       Color,
-      FontFamily,
       Underline,
       Highlight.configure({
         multicolor: true
@@ -130,39 +313,44 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       TextAlign.configure({
         types: ['heading', 'paragraph']
       }),
-      CodeBlockLowlight.configure({ lowlight }),
-      Table.configure({ resizable: true }),
+      CodeBlockLowlight.configure({ 
+        lowlight,
+        HTMLAttributes: {
+          class: 'wiki-code-block'
+        }
+      }),
+      Table.configure({ 
+        resizable: true,
+        HTMLAttributes: {
+          class: 'wiki-table'
+        }
+      }),
       TableRow,
       TableHeader,
       TableCell,
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Mathematics.configure({
-        katexOptions: { throwOnError: false }
-      }),
-      Placeholder.configure({
-        placeholder: placeholder || 'Digite "/" para comandos ou comece a escrever...'
-      }),
-      Dropcursor,
-      Gapcursor,
-      Callout,
-      Toggle,
-      Extension.create({
-        name: 'slash-commands',
-        addProseMirrorPlugins() {
-          return [
-            Suggestion({
-              editor: this.editor,
-              ...slashCommandsConfig(insertImage)
-            })
-          ]
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'wiki-task-list'
         }
-      })
+      }),
+      TaskItem.configure({ 
+        nested: true,
+        HTMLAttributes: {
+          class: 'wiki-task-item'
+        }
+      }),
+      MathExtension.configure({
+        katexOptions: { 
+          throwOnError: false,
+          displayMode: false
+        }
+      }),
+      slashCommandExtension,
     ],
     content,
     editorProps: {
       attributes: {
-        class: 'wiki-editor-v2 prose prose-neutral max-w-none focus:outline-none min-h-[400px] p-8'
+        class: 'wiki-editor-v2 prose prose-neutral dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-8'
       }
     },
     onUpdate: ({ editor }) => {
@@ -237,7 +425,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('bold') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleBold().run()}
+            onClick={() => editor?.chain().focus().toggleBold().run()}
             title="Negrito (Ctrl+B)"
           >
             <Bold className="w-4 h-4" />
@@ -245,7 +433,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('italic') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleItalic().run()}
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
             title="Itálico (Ctrl+I)"
           >
             <Italic className="w-4 h-4" />
@@ -253,7 +441,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('underline') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleUnderline().run()}
+            onClick={() => editor?.chain().focus().toggleUnderline().run()}
             title="Sublinhado (Ctrl+U)"
           >
             <UnderlineIcon className="w-4 h-4" />
@@ -261,7 +449,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('strike') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleStrike().run()}
+            onClick={() => editor?.chain().focus().toggleStrike().run()}
             title="Tachado"
           >
             <Strikethrough className="w-4 h-4" />
@@ -269,7 +457,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('code') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleCode().run()}
+            onClick={() => editor?.chain().focus().toggleCode().run()}
             title="Código Inline"
           >
             <Code className="w-4 h-4" />
@@ -277,7 +465,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('highlight') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleHighlight().run()}
+            onClick={() => editor?.chain().focus().toggleHighlight().run()}
             title="Destacar"
           >
             <Highlighter className="w-4 h-4" />
@@ -289,7 +477,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
             title="Título 1"
           >
             <Heading1 className="w-4 h-4" />
@@ -297,7 +485,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
             title="Título 2"
           >
             <Heading2 className="w-4 h-4" />
@@ -305,7 +493,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
             title="Título 3"
           >
             <Heading3 className="w-4 h-4" />
@@ -317,7 +505,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleBulletList().run()}
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
             title="Lista com Marcadores"
           >
             <List className="w-4 h-4" />
@@ -325,7 +513,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleOrderedList().run()}
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
             title="Lista Numerada"
           >
             <ListOrdered className="w-4 h-4" />
@@ -333,7 +521,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('taskList') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleTaskList().run()}
+            onClick={() => editor?.chain().focus().toggleTaskList().run()}
             title="Lista de Tarefas"
           >
             <CheckSquare className="w-4 h-4" />
@@ -345,7 +533,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().setTextAlign('left').run()}
+            onClick={() => editor?.chain().focus().setTextAlign('left').run()}
             title="Alinhar à Esquerda"
           >
             <AlignLeft className="w-4 h-4" />
@@ -353,7 +541,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().setTextAlign('center').run()}
+            onClick={() => editor?.chain().focus().setTextAlign('center').run()}
             title="Centralizar"
           >
             <AlignCenter className="w-4 h-4" />
@@ -361,10 +549,18 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().setTextAlign('right').run()}
+            onClick={() => editor?.chain().focus().setTextAlign('right').run()}
             title="Alinhar à Direita"
           >
             <AlignRight className="w-4 h-4" />
+          </Button>
+          <Button
+            size="sm"
+            variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
+            onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
+            title="Justificar"
+          >
+            <AlignJustify className="w-4 h-4" />
           </Button>
         </div>
 
@@ -373,7 +569,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleBlockquote().run()}
+            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
             title="Citação"
           >
             <Quote className="w-4 h-4" />
@@ -381,7 +577,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant={editor.isActive('codeBlock') ? 'default' : 'ghost'}
-            onClick={() => editor.chain().focus().toggleCodeBlock().run()}
+            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
             title="Bloco de Código"
           >
             <Code2 className="w-4 h-4" />
@@ -390,12 +586,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
             size="sm"
             variant="ghost"
             onClick={() => {
-              const latex = prompt('Digite a equação LaTeX (ex: E = mc^2):')
-              if (latex) {
-                editor.chain().focus().insertContent({ type: 'math_inline', attrs: { latex } }).run()
+              const latex = prompt('Digite a equação LaTeX (ex: E = mc^2 ou x^2 + y^2 = z^2):')
+              if (latex && editor) {
+                editor.chain().focus().insertContent(`$${latex}$`).run()
               }
             }}
-            title="Equação Matemática"
+            title="Equação Matemática (ou digite $...$)"
           >
             <Calculator className="w-4 h-4" />
           </Button>
@@ -414,7 +610,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           <Button
             size="sm"
             variant="ghost"
-            onClick={() => editor.chain().focus().insertTable({ rows: 3, cols: 3 }).run()}
+            onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
             title="Inserir Tabela"
           >
             <Table2 className="w-4 h-4" />
@@ -424,7 +620,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
             variant="ghost"
             onClick={() => {
               const url = prompt('Digite a URL:')
-              if (url) {
+              if (url && editor) {
                 editor.chain().focus().setLink({ href: url }).run()
               }
             }}
@@ -451,7 +647,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
 
       {/* Status de salvamento */}
       {lastSaved && (
-        <div className="editor-status">
+        <div className="editor-status text-xs text-muted-foreground px-8 py-2">
           Salvo {lastSaved.toLocaleTimeString()}
         </div>
       )}

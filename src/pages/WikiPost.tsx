@@ -109,6 +109,21 @@ const WikiPost = () => {
       });
       navigate('/wiki');
     } else {
+      // Tratar content: pode vir string (erro antigo) ou JSON
+      if (typeof data.content === 'string') {
+        try {
+          data.content = JSON.parse(data.content)
+        } catch {
+          // Se não for JSON válido, criar estrutura básica
+          data.content = {
+            type: 'doc',
+            content: data.content ? [{
+              type: 'paragraph',
+              content: [{ type: 'text', text: data.content }]
+            }] : []
+          }
+        }
+      }
       setPost(data);
     }
     setLoading(false);

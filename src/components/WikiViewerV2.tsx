@@ -1,4 +1,5 @@
-import { generateHTML } from '@tiptap/html'
+import { useMemo } from 'react'
+import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
@@ -15,13 +16,8 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
-import { FontFamily } from '@tiptap/extension-font-family'
 import { TextAlign } from '@tiptap/extension-text-align'
-import { Callout } from './editor/extensions/Callout'
-import { Toggle } from './editor/extensions/Toggle'
-import DOMPurify from 'dompurify'
 import 'katex/dist/katex.min.css'
-import { useMemo } from 'react'
 import { calculateReadingTime } from '@/utils/readingTime'
 
 interface WikiViewerV2Props {
@@ -35,46 +31,69 @@ interface WikiViewerV2Props {
   className?: string
 }
 
-const extensionsList = (() => {
+// Mesmas extensões do editor
+const createExtensions = () => {
   const lowlight = createLowlight()
   return [
-    StarterKit,
-    Link.configure({ openOnClick: true }),
-    Image.extend({
-      addAttributes() {
-        return {
-          ...this.parent?.(),
-          align: {
-            default: null,
-            parseHTML: element => element.getAttribute('data-align'),
-            renderHTML: attributes => {
-              if (!attributes.align) return {}
-              return { 'data-align': attributes.align }
-            }
-          }
-        }
+    StarterKit.configure({
+      codeBlock: false,
+      heading: { levels: [1, 2, 3] }
+    }),
+    Link.configure({
+      openOnClick: true,
+      HTMLAttributes: {
+        class: 'wiki-link',
+        target: '_blank',
+        rel: 'noopener noreferrer'
+      }
+    }),
+    Image.configure({
+      HTMLAttributes: {
+        class: 'wiki-image'
       }
     }),
     TextStyle,
     Color,
-    FontFamily,
     Underline,
-    Highlight,
+    Highlight.configure({
+      multicolor: true
+    }),
     TextAlign.configure({
       types: ['heading', 'paragraph']
     }),
-    CodeBlockLowlight.configure({ lowlight }),
-    Table.configure({ resizable: true }),
+    CodeBlockLowlight.configure({ 
+      lowlight,
+      HTMLAttributes: {
+        class: 'wiki-code-block'
+      }
+    }),
+    Table.configure({ 
+      resizable: false,
+      HTMLAttributes: {
+        class: 'wiki-table'
+      }
+    }),
     TableRow,
     TableHeader,
     TableCell,
-    TaskList,
-    TaskItem.configure({ nested: true }),
-    Mathematics.configure({ katexOptions: { throwOnError: false } }),
-    Callout,
-    Toggle
+    TaskList.configure({
+      HTMLAttributes: {
+        class: 'wiki-task-list'
+      }
+    }),
+    TaskItem.configure({ 
+      nested: true,
+      HTMLAttributes: {
+        class: 'wiki-task-item'
+      }
+    }),
+    Mathematics.configure({
+      katexOptions: { 
+        throwOnError: false
+      }
+    })
   ]
-})()
+}
 
 export default function WikiViewerV2({
   content,
@@ -86,24 +105,31 @@ export default function WikiViewerV2({
   tags,
   className
 }: WikiViewerV2Props) {
-  const readingTime = useMemo(() => calculateReadingTime(content), [content])
+  const readingTime = useMemo(() => {
+    if (!content) return 0
+    
+    const extractText = (node: any): string => {
+      if (node.type === 'text') return node.text || ''
+      if (node.content) {
+        return node.content.map(extractText).join(' ')
+      }
+      return ''
+    }
 
-  const html = useMemo(() => {
-    if (!content) return ''
+    const text = extractText(content)
+    return calculateReadingTime(text)
+  }, [content])
 
-    const raw = generateHTML(content, extensionsList)
-    return DOMPurify.sanitize(raw, {
-      ADD_TAGS: [
-        'math', 'mrow', 'mi', 'mo', 'mn', 'msup', 'mfrac', 'msqrt', 
-        'mtable', 'mtr', 'mtd', 'semantics', 'annotation', 'span',
-        'details', 'summary'
-      ],
-      ADD_ATTR: [
-        'class', 'style', 'aria-hidden', 'role', 'display', 'xmlns',
-        'data-align', 'data-text-align', 'data-type', 'data-variant',
-        'data-emoji', 'data-open', 'data-summary', 'open'
-      ]
-    })
+  // Usar o editor do Tiptap em modo read-only para renderizar corretamente
+  const editor = useEditor({
+    editable: false,
+    extensions: createExtensions(),
+    content: content || { type: 'doc', content: [] },
+    editorProps: {
+      attributes: {
+        class: 'wiki-viewer-v2-content prose prose-neutral dark:prose-invert max-w-none'
+      }
+    }
   }, [content])
 
   return (
@@ -148,10 +174,9 @@ export default function WikiViewerV2({
       </header>
 
       {/* Conteúdo */}
-      <div 
-        className="wiki-content prose prose-neutral max-w-[72ch] mx-auto"
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <div className="wiki-content prose prose-neutral max-w-[72ch] mx-auto">
+        {editor && <EditorContent editor={editor} />}
+      </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `

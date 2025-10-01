@@ -100,25 +100,25 @@ const WikiEdit = () => {
 
     setPost(data);
     
-    // Convert content to proper format for Tiptap
+    // Tratar content: pode vir string (erro antigo) ou JSON
     let content;
     if (typeof data.content === 'string') {
-      // HTML content - convert to basic ProseMirror JSON structure
-      const htmlContent = data.content;
-      content = {
-        type: 'doc',
-        content: htmlContent ? [{
-          type: 'paragraph',
-          content: [{
-            type: 'text',
-            text: htmlContent.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim()
-          }]
-        }] : []
-      };
+      try {
+        content = JSON.parse(data.content)
+      } catch {
+        // Se não for JSON válido, criar estrutura básica
+        content = {
+          type: 'doc',
+          content: data.content ? [{
+            type: 'paragraph',
+            content: [{ type: 'text', text: data.content }]
+          }] : []
+        }
+      }
     } else if (typeof data.content === 'object' && data.content !== null) {
-      content = data.content as any;
+      content = data.content
     } else {
-      content = { type: 'doc', content: [] };
+      content = { type: 'doc', content: [] }
     }
     
     setFormData({
