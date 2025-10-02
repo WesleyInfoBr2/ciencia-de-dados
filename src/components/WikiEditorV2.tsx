@@ -75,14 +75,15 @@ const CommandsList = ({ items, command }: any) => {
   }, [selectedIndex, items, command])
 
   return (
-    <div className="slash-commands-menu bg-popover border rounded-lg shadow-lg p-2 max-w-xs">
+    <div className="slash-commands-menu bg-popover text-popover-foreground border rounded-lg shadow-lg p-2 max-w-xs">
       {items.length > 0 ? (
         items.map((item: CommandItemProps, index: number) => (
           <button
             key={index}
+            type="button"
             onClick={item.command}
-            className={`w-full text-left px-3 py-2 rounded hover:bg-accent transition-colors ${
-              index === selectedIndex ? 'bg-accent' : ''
+            className={`w-full text-left px-3 py-2 rounded hover:bg-accent hover:text-accent-foreground transition-colors ${
+              index === selectedIndex ? 'bg-accent text-accent-foreground' : ''
             }`}
           >
             <div className="font-medium text-sm">{item.title}</div>
@@ -279,9 +280,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
     },
   })
 
-  // Extensão customizada de Mathematics com input rules
-  const MathExtension = Mathematics
-
   const editor = useEditor({
     editable: true,
     extensions: [
@@ -339,7 +337,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           class: 'wiki-task-item'
         }
       }),
-      MathExtension.configure({
+      Mathematics.configure({
         katexOptions: { 
           throwOnError: false,
           displayMode: false
@@ -361,9 +359,8 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       autoSaveTimeoutRef.current = setTimeout(() => {
         if (onAutoSave) {
           onAutoSave(editor.getJSON())
-          setLastSaved(new Date())
         }
-      }, 800)
+      }, 2000)
     }
   })
 
@@ -423,49 +420,79 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Formatação de Texto */}
         <div className="flex gap-1 border-r pr-2">
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('bold') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleBold().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleBold().run()
+            }}
             title="Negrito (Ctrl+B)"
           >
             <Bold className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('italic') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleItalic().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleItalic().run()
+            }}
             title="Itálico (Ctrl+I)"
           >
             <Italic className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('underline') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleUnderline().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleUnderline().run()
+            }}
             title="Sublinhado (Ctrl+U)"
           >
             <UnderlineIcon className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('strike') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleStrike().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleStrike().run()
+            }}
             title="Tachado"
           >
             <Strikethrough className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('code') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleCode().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleCode().run()
+            }}
             title="Código Inline"
           >
             <Code className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('highlight') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleHighlight().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleHighlight().run()
+            }}
             title="Destacar"
           >
             <Highlighter className="w-4 h-4" />
@@ -475,25 +502,40 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Títulos */}
         <div className="flex gap-1 border-r pr-2">
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('heading', { level: 1 }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleHeading({ level: 1 }).run()
+            }}
             title="Título 1"
           >
             <Heading1 className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('heading', { level: 2 }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleHeading({ level: 2 }).run()
+            }}
             title="Título 2"
           >
             <Heading2 className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('heading', { level: 3 }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleHeading({ level: 3 }).run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleHeading({ level: 3 }).run()
+            }}
             title="Título 3"
           >
             <Heading3 className="w-4 h-4" />
@@ -503,25 +545,40 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Listas */}
         <div className="flex gap-1 border-r pr-2">
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('bulletList') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleBulletList().run()
+            }}
             title="Lista com Marcadores"
           >
             <List className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('orderedList') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleOrderedList().run()
+            }}
             title="Lista Numerada"
           >
             <ListOrdered className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('taskList') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleTaskList().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleTaskList().run()
+            }}
             title="Lista de Tarefas"
           >
             <CheckSquare className="w-4 h-4" />
@@ -531,33 +588,53 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Alinhamento */}
         <div className="flex gap-1 border-r pr-2">
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('left').run()
+            }}
             title="Alinhar à Esquerda"
           >
             <AlignLeft className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('center').run()
+            }}
             title="Centralizar"
           >
             <AlignCenter className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().setTextAlign('right').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('right').run()
+            }}
             title="Alinhar à Direita"
           >
             <AlignRight className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('justify').run()
+            }}
             title="Justificar"
           >
             <AlignJustify className="w-4 h-4" />
@@ -567,25 +644,38 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Blocos Especiais */}
         <div className="flex gap-1 border-r pr-2">
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('blockquote') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleBlockquote().run()
+            }}
             title="Citação"
           >
             <Quote className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant={editor.isActive('codeBlock') ? 'default' : 'ghost'}
-            onClick={() => editor?.chain().focus().toggleCodeBlock().run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().toggleCodeBlock().run()
+            }}
             title="Bloco de Código"
           >
             <Code2 className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant="ghost"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
               const latex = prompt('Digite a equação LaTeX (ex: E = mc^2 ou x^2 + y^2 = z^2):')
               if (latex && editor) {
                 editor.chain().focus().insertContent(`$${latex}$`).run()
@@ -600,25 +690,38 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Mídia */}
         <div className="flex gap-1 border-r pr-2">
           <Button
+            type="button"
             size="sm"
             variant="ghost"
-            onClick={insertImage}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              insertImage()
+            }}
             title="Inserir Imagem"
           >
             <ImageIcon className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant="ghost"
-            onClick={() => editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+            }}
             title="Inserir Tabela"
           >
             <Table2 className="w-4 h-4" />
           </Button>
           <Button
+            type="button"
             size="sm"
             variant="ghost"
-            onClick={() => {
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
               const url = prompt('Digite a URL:')
               if (url && editor) {
                 editor.chain().focus().setLink({ href: url }).run()
@@ -633,8 +736,13 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         {/* Salvar */}
         <div className="flex gap-1 ml-auto">
           <Button
+            type="button"
             size="sm"
-            onClick={handleSave}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              handleSave()
+            }}
             disabled={isSaving}
           >
             <Save className="w-4 h-4 mr-2" />
