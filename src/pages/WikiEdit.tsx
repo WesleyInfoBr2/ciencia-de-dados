@@ -106,14 +106,8 @@ const WikiEdit = () => {
       try {
         content = JSON.parse(data.content)
       } catch {
-        // Se não for JSON válido, criar estrutura básica
-        content = {
-          type: 'doc',
-          content: data.content ? [{
-            type: 'paragraph',
-            content: [{ type: 'text', text: data.content }]
-          }] : []
-        }
+        // Se não for JSON válido, tentar usar HTML diretamente (Tiptap converte para doc)
+        content = data.content
       }
     } else if (typeof data.content === 'object' && data.content !== null) {
       content = data.content

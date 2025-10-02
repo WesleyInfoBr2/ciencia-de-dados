@@ -17,7 +17,7 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Extension } from '@tiptap/core'
+import { Extension, InputRule } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -66,7 +66,7 @@ const CommandsList = ({ items, command }: any) => {
       }
       if (event.key === 'Enter') {
         event.preventDefault()
-        items[selectedIndex]?.command()
+        command(items[selectedIndex])
       }
     }
 
@@ -81,7 +81,7 @@ const CommandsList = ({ items, command }: any) => {
           <button
             key={index}
             type="button"
-            onClick={item.command}
+            onClick={() => command(item)}
             className={`w-full text-left px-3 py-2 rounded hover:bg-accent hover:text-accent-foreground transition-colors ${
               index === selectedIndex ? 'bg-accent text-accent-foreground' : ''
             }`}
@@ -147,6 +147,38 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       editor.chain().focus().setImage({ src: url }).run()
     }
   }
+
+  // Regras de entrada para matemática ($...$ e $$...$$)
+  const MathIR = Mathematics.extend({
+    addInputRules() {
+      return [
+        new InputRule({
+          find: /(?:^|\s)\$(.+?)\$/,
+          handler: ({ chain, range, match }) => {
+            const latex = match[1]
+            const from = match[0].startsWith(' ') ? range.from + 1 : range.from
+            chain()
+              .focus()
+              .deleteRange({ from, to: range.to })
+              .insertContent({ type: 'mathInline', attrs: { latex } })
+              .run()
+          },
+        }),
+        new InputRule({
+          find: /^\$\$(.+?)\$\$$/,
+          handler: ({ editor, range, match }) => {
+            const latex = match[1]
+            editor
+              .chain()
+              .focus()
+              .deleteRange(range)
+              .insertContent({ type: 'mathBlock', attrs: { latex } })
+              .run()
+          },
+        }),
+      ]
+    },
+  })
 
   // Configuração do slash command
   const slashCommandExtension = Extension.create({
@@ -337,7 +369,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           class: 'wiki-task-item'
         }
       }),
-      Mathematics.configure({
+      MathIR.configure({
         katexOptions: { 
           throwOnError: false,
           displayMode: false
@@ -362,7 +394,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         }
       }, 2000)
     }
-  })
+  }, [content])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
