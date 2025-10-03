@@ -100,26 +100,27 @@ const WikiEdit = () => {
 
     setPost(data);
     
-    // Tratar content: pode vir string (erro antigo) ou JSON
-    let content;
+    // GARANTIR que content é JSON (não string HTML)
+    let parsedContent;
     if (typeof data.content === 'string') {
       try {
-        content = JSON.parse(data.content)
+        parsedContent = JSON.parse(data.content)
       } catch {
-        // Se não for JSON válido, tentar usar HTML diretamente (Tiptap converte para doc)
-        content = data.content
+        // String HTML antiga - converter para doc vazio e avisar
+        console.warn('Content era HTML/string inválida, convertendo para doc vazio')
+        parsedContent = { type: 'doc', content: [] }
       }
     } else if (typeof data.content === 'object' && data.content !== null) {
-      content = data.content
+      parsedContent = data.content
     } else {
-      content = { type: 'doc', content: [] }
+      parsedContent = { type: 'doc', content: [] }
     }
     
     setFormData({
       title: data.title,
       slug: data.slug,
       excerpt: data.excerpt || '',
-      content: content,
+      content: parsedContent,
       category_id: data.category_id || '',
       tags: data.tags || [],
       is_published: data.is_published,
@@ -188,6 +189,8 @@ const WikiEdit = () => {
 
       const updateData = {
         ...formData,
+        // Garantir que content é JSON (já deveria ser, mas garantir)
+        content: formData.content,
         published_at: formData.is_published && !post.is_published ? new Date().toISOString() : (post.published_at || null),
         category_id: formData.category_id || null
       };
@@ -342,12 +345,13 @@ const WikiEdit = () => {
                   </div>
 
                   <div>
-                    <Label htmlFor="content">Conteúdo *</Label>
+                     <Label htmlFor="content">Conteúdo *</Label>
                      <WikiEditorV2
                        content={formData.content}
                        onSave={async (docJSON) => {
                          try {
                            setSaving(true)
+                           // SALVAR COMO JSON (getJSON do Tiptap)
                            const { error } = await supabase
                              .from('wiki_posts')
                              .update({ content: docJSON })

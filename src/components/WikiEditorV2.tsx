@@ -15,9 +15,8 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
-import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Extension, InputRule } from '@tiptap/core'
+import { Extension } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -25,8 +24,7 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, 
   List, ListOrdered, CheckSquare, Heading1, Heading2, Heading3,
   Quote, Code2, Calculator, Table2, Image as ImageIcon, Save,
-  Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight,
-  AlignJustify
+  Link as LinkIcon, Highlighter
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -148,36 +146,69 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
     }
   }
 
-  // Regras de entrada para matemática ($...$ e $$...$$)
-  const MathIR = Mathematics.extend({
-    addInputRules() {
-      return [
-        new InputRule({
-          find: /(?:^|\s)\$(.+?)\$/,
-          handler: ({ chain, range, match }) => {
-            const latex = match[1]
-            const from = match[0].startsWith(' ') ? range.from + 1 : range.from
-            chain()
-              .focus()
-              .deleteRange({ from, to: range.to })
-              .insertContent({ type: 'mathInline', attrs: { latex } })
-              .run()
-          },
-        }),
-        new InputRule({
-          find: /^\$\$(.+?)\$\$$/,
-          handler: ({ chain, range, match }) => {
-            const latex = match[1]
-            chain()
-              .focus()
-              .deleteRange(range)
-              .insertContent({ type: 'mathBlock', attrs: { latex } })
-              .run()
-          },
-        }),
-      ]
-    },
-  })
+  // CRITICAL: Usar as MESMAS extensões do WikiViewerV2
+  // Remover TextAlign pois não está no viewer
+  const createEditorExtensions = () => {
+    return [
+      StarterKit.configure({
+        codeBlock: false,
+        heading: { levels: [1, 2, 3] }
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || 'Digite / para inserções rápidas ou comece a escrever...'
+      }),
+      Link.configure({
+        openOnClick: true,
+        autolink: true,
+        HTMLAttributes: {
+          class: 'wiki-link'
+        }
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'wiki-image'
+        }
+      }),
+      TextStyle,
+      Color,
+      Underline,
+      Highlight.configure({
+        multicolor: true
+      }),
+      CodeBlockLowlight.configure({ 
+        lowlight,
+        HTMLAttributes: {
+          class: 'wiki-code-block'
+        }
+      }),
+      Table.configure({ 
+        resizable: true,
+        HTMLAttributes: {
+          class: 'wiki-table'
+        }
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'wiki-task-list'
+        }
+      }),
+      TaskItem.configure({ 
+        nested: true,
+        HTMLAttributes: {
+          class: 'wiki-task-item'
+        }
+      }),
+      Mathematics.configure({
+        katexOptions: { 
+          throwOnError: false
+        }
+      }),
+      slashCommandExtension,
+    ]
+  }
 
   // Configuração do slash command
   const slashCommandExtension = Extension.create({
@@ -313,69 +344,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
 
   const editor = useEditor({
     editable: true,
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false,
-        heading: { levels: [1, 2, 3] }
-      }),
-      Placeholder.configure({
-        placeholder: placeholder || 'Digite / para inserções rápidas ou comece a escrever...'
-      }),
-      Link.configure({
-        openOnClick: true,
-        autolink: true,
-        HTMLAttributes: {
-          class: 'wiki-link'
-        }
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'wiki-image'
-        }
-      }),
-      TextStyle,
-      Color,
-      Underline,
-      Highlight.configure({
-        multicolor: true
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph']
-      }),
-      CodeBlockLowlight.configure({ 
-        lowlight,
-        HTMLAttributes: {
-          class: 'wiki-code-block'
-        }
-      }),
-      Table.configure({ 
-        resizable: true,
-        HTMLAttributes: {
-          class: 'wiki-table'
-        }
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      TaskList.configure({
-        HTMLAttributes: {
-          class: 'wiki-task-list'
-        }
-      }),
-      TaskItem.configure({ 
-        nested: true,
-        HTMLAttributes: {
-          class: 'wiki-task-item'
-        }
-      }),
-      MathIR.configure({
-        katexOptions: { 
-          throwOnError: false,
-          displayMode: false
-        }
-      }),
-      slashCommandExtension,
-    ],
+    extensions: createEditorExtensions(),
     content,
     editorProps: {
       attributes: {
@@ -616,61 +585,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
           </Button>
         </div>
 
-        {/* Alinhamento */}
-        <div className="flex gap-1 border-r pr-2">
-          <Button
-            type="button"
-            size="sm"
-            variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              editor?.chain().focus().setTextAlign('left').run()
-            }}
-            title="Alinhar à Esquerda"
-          >
-            <AlignLeft className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              editor?.chain().focus().setTextAlign('center').run()
-            }}
-            title="Centralizar"
-          >
-            <AlignCenter className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              editor?.chain().focus().setTextAlign('right').run()
-            }}
-            title="Alinhar à Direita"
-          >
-            <AlignRight className="w-4 h-4" />
-          </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              editor?.chain().focus().setTextAlign('justify').run()
-            }}
-            title="Justificar"
-          >
-            <AlignJustify className="w-4 h-4" />
-          </Button>
-        </div>
 
         {/* Blocos Especiais */}
         <div className="flex gap-1 border-r pr-2">
