@@ -166,10 +166,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         }),
         new InputRule({
           find: /^\$\$(.+?)\$\$$/,
-          handler: ({ editor, range, match }) => {
+          handler: ({ chain, range, match }) => {
             const latex = match[1]
-            editor
-              .chain()
+            chain()
               .focus()
               .deleteRange(range)
               .insertContent({ type: 'mathBlock', attrs: { latex } })
