@@ -15,6 +15,7 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import { Extension } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
@@ -104,6 +105,15 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
 
   const lowlight = createLowlight()
 
+  // DIAGNÓSTICO: logar payload recebido quando o content mudar
+  useEffect(() => {
+    console.group('[WikiEditorV2] Diagnóstico de content')
+    console.log('typeof content =', typeof content)
+    console.log('isArray content.content?', Array.isArray(content?.content))
+    console.log('sample:', typeof content === 'object' ? JSON.stringify(content).slice(0, 200) : String(content).slice(0, 200))
+    console.groupEnd()
+  }, [content])
+
   const handleImageUpload = useCallback(async (file: File) => {
     try {
       const fileExt = file.name.split('.').pop()
@@ -146,71 +156,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
     }
   }
 
-  // CRITICAL: Usar as MESMAS extensões do WikiViewerV2
-  // Remover TextAlign pois não está no viewer
-  const createEditorExtensions = () => {
-    return [
-      StarterKit.configure({
-        codeBlock: false,
-        heading: { levels: [1, 2, 3] }
-      }),
-      Placeholder.configure({
-        placeholder: placeholder || 'Digite / para inserções rápidas ou comece a escrever...'
-      }),
-      Link.configure({
-        openOnClick: true,
-        autolink: true,
-        HTMLAttributes: {
-          class: 'wiki-link'
-        }
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'wiki-image'
-        }
-      }),
-      TextStyle,
-      Color,
-      Underline,
-      Highlight.configure({
-        multicolor: true
-      }),
-      CodeBlockLowlight.configure({ 
-        lowlight,
-        HTMLAttributes: {
-          class: 'wiki-code-block'
-        }
-      }),
-      Table.configure({ 
-        resizable: true,
-        HTMLAttributes: {
-          class: 'wiki-table'
-        }
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      TaskList.configure({
-        HTMLAttributes: {
-          class: 'wiki-task-list'
-        }
-      }),
-      TaskItem.configure({ 
-        nested: true,
-        HTMLAttributes: {
-          class: 'wiki-task-item'
-        }
-      }),
-      Mathematics.configure({
-        katexOptions: { 
-          throwOnError: false
-        }
-      }),
-      slashCommandExtension,
-    ]
-  }
-
-  // Configuração do slash command
+  // Configuração do slash command ANTES de criar as extensões
   const slashCommandExtension = Extension.create({
     name: 'slashCommands',
     addProseMirrorPlugins() {
@@ -341,6 +287,72 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       ]
     },
   })
+
+  // CRITICAL: Usar EXATAMENTE as mesmas extensões do WikiViewerV2
+  const createEditorExtensions = () => {
+    return [
+      StarterKit.configure({
+        codeBlock: false,
+        heading: { levels: [1, 2, 3] }
+      }),
+      Placeholder.configure({
+        placeholder: placeholder || 'Digite / para inserções rápidas ou comece a escrever...'
+      }),
+      Link.configure({
+        openOnClick: true,
+        autolink: true,
+        HTMLAttributes: {
+          class: 'wiki-link'
+        }
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: 'wiki-image'
+        }
+      }),
+      TextStyle,
+      Color,
+      Underline,
+      Highlight.configure({
+        multicolor: true
+      }),
+      TextAlign.configure({
+        types: ['heading', 'paragraph']
+      }),
+      CodeBlockLowlight.configure({ 
+        lowlight,
+        HTMLAttributes: {
+          class: 'wiki-code-block'
+        }
+      }),
+      Table.configure({ 
+        resizable: true,
+        HTMLAttributes: {
+          class: 'wiki-table'
+        }
+      }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      TaskList.configure({
+        HTMLAttributes: {
+          class: 'wiki-task-list'
+        }
+      }),
+      TaskItem.configure({ 
+        nested: true,
+        HTMLAttributes: {
+          class: 'wiki-task-item'
+        }
+      }),
+      Mathematics.configure({
+        katexOptions: { 
+          throwOnError: false
+        }
+      }),
+      slashCommandExtension,
+    ]
+  }
 
   const editor = useEditor({
     editable: true,
