@@ -17,7 +17,7 @@ import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
 import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
-import { Extension } from '@tiptap/core'
+import { Extension, textInputRule } from '@tiptap/core'
 import Suggestion from '@tiptap/suggestion'
 import { supabase } from '@/integrations/supabase/client'
 import { toast } from '@/hooks/use-toast'
@@ -289,6 +289,24 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
   })
 
   // CRITICAL: Usar EXATAMENTE as mesmas extensões do WikiViewerV2
+  // Regras de entrada para $...$ e $$...$$
+  const MathIR = Mathematics.extend({
+    addInputRules() {
+      return [
+        this.editor.inputRule(/(?:^|[\s])\$(.+?)\$$/, ({ range, match }) => {
+          const [, latex] = match
+          this.editor.chain().deleteRange(range).insertContent({ type: 'mathInline', attrs: { latex } }).run()
+          return null
+        }),
+        this.editor.inputRule(/^\$\$(.+?)\$\$$/, ({ range, match }) => {
+          const [, latex] = match
+          this.editor.chain().deleteRange(range).insertContent({ type: 'mathBlock', attrs: { latex } }).run()
+          return null
+        }),
+      ]
+    },
+  })
+
   const createEditorExtensions = () => {
     return [
       StarterKit.configure({
