@@ -33,12 +33,15 @@ import { ReactRenderer } from '@tiptap/react'
 import tippy, { Instance as TippyInstance } from 'tippy.js'
 import 'katex/dist/katex.min.css'
 import 'tippy.js/dist/tippy.css'
+import type { Editor as TiptapEditor } from '@tiptap/react'
+import { normalizeWikiContent } from './normalizeWikiContent'
 
 interface WikiEditorV2Props {
   content: any
   onSave: (content: any) => void
   onAutoSave?: (content: any) => void
   placeholder?: string
+  onEditorReady?: (editor: TiptapEditor) => void
 }
 
 interface CommandItemProps {
@@ -104,15 +107,17 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const lowlight = createLowlight()
+  const normalized = normalizeWikiContent(content)
 
   // DIAGNÓSTICO: logar payload recebido quando o content mudar
   useEffect(() => {
     console.group('[WikiEditorV2] Diagnóstico de content')
-    console.log('typeof content =', typeof content)
-    console.log('isArray content.content?', Array.isArray(content?.content))
-    console.log('sample:', typeof content === 'object' ? JSON.stringify(content).slice(0, 200) : String(content).slice(0, 200))
+    console.log('typeof raw content =', typeof content)
+    console.log('typeof normalized =', typeof normalized, 'is doc?', normalized?.type === 'doc')
+    console.log('isArray normalized.content?', Array.isArray((normalized as any)?.content))
+    console.log('sample:', typeof normalized === 'object' ? JSON.stringify(normalized).slice(0, 200) : String(content).slice(0, 200))
     console.groupEnd()
-  }, [content])
+  }, [content, normalized])
 
   const handleImageUpload = useCallback(async (file: File) => {
     try {
@@ -291,7 +296,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
   // CRITICAL: Usar EXATAMENTE as mesmas extensões do WikiViewerV2
 
   const createEditorExtensions = () => {
-    return [
+    const exts = [
       StarterKit.configure({
         codeBlock: false,
         heading: { levels: [1, 2, 3] }
@@ -353,12 +358,21 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
       }),
       slashCommandExtension,
     ]
+    // Deduplicar por nome de extensão para evitar avisos de duplicata
+    const seen = new Set<string>()
+    return exts.filter((e: any) => {
+      const name = e?.name
+      if (!name) return true
+      if (seen.has(name)) return false
+      seen.add(name)
+      return true
+    })
   }
 
   const editor = useEditor({
     editable: true,
     extensions: createEditorExtensions(),
-    content,
+    content: normalized,
     editorProps: {
       attributes: {
         class: 'wiki-editor-v2 prose prose-neutral dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-8'
@@ -375,7 +389,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
         }
       }, 2000)
     }
-  }, [content])
+  }, [JSON.stringify(normalized)])
+
+  useEffect(() => { if (editor && onEditorReady) onEditorReady(editor) }, [editor])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -597,7 +613,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
             <CheckSquare className="w-4 h-4" />
           </Button>
         </div>
-
 
         {/* Blocos Especiais */}
         <div className="flex gap-1 border-r pr-2">
