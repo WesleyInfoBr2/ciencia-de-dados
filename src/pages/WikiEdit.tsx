@@ -12,7 +12,10 @@ import { ArrowLeft, Save, Eye, Trash2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { Link } from "react-router-dom";
 import WikiEditorV2 from "@/components/WikiEditorV2";
+import { WikiDoctor } from "@/components/WikiDoctor";
+import { normalizeWikiContent } from "@/components/normalizeWikiContent";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import type { Editor } from "@tiptap/react";
 
 interface WikiCategory {
   id: string;
@@ -44,6 +47,7 @@ const WikiEdit = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [post, setPost] = useState<WikiPost | null>(null);
+  const [editor, setEditor] = useState<Editor | null>(null);
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -367,7 +371,16 @@ const WikiEdit = () => {
                          }
                        }}
                        onAutoSave={(content) => setFormData(prev => ({ ...prev, content }))}
+                       onEditorReady={(editorInstance) => setEditor(editorInstance)}
                      />
+                     
+                     {/* Painel de diagnóstico temporário */}
+                     <WikiDoctor 
+                       raw={post?.content}
+                       normalized={normalizeWikiContent(post?.content)}
+                       editor={editor}
+                     />
+                     
                     <p className="text-sm text-muted-foreground mt-2">
                       <strong>Dicas:</strong>
                       <br />• Use o botão de fórmula (∑) para adicionar equações matemáticas
