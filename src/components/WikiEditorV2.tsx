@@ -100,7 +100,7 @@ const CommandsList = ({ items, command }: any) => {
   )
 }
 
-export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder }: WikiEditorV2Props) {
+export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder, onEditorReady }: WikiEditorV2Props) {
   const [lastSaved, setLastSaved] = useState<Date | null>(null)
   const [isSaving, setIsSaving] = useState(false)
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>()
