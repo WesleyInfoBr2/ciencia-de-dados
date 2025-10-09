@@ -289,23 +289,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder 
   })
 
   // CRITICAL: Usar EXATAMENTE as mesmas extensões do WikiViewerV2
-  // Regras de entrada para $...$ e $$...$$
-  const MathIR = Mathematics.extend({
-    addInputRules() {
-      return [
-        this.editor.inputRule(/(?:^|[\s])\$(.+?)\$$/, ({ range, match }) => {
-          const [, latex] = match
-          this.editor.chain().deleteRange(range).insertContent({ type: 'mathInline', attrs: { latex } }).run()
-          return null
-        }),
-        this.editor.inputRule(/^\$\$(.+?)\$\$$/, ({ range, match }) => {
-          const [, latex] = match
-          this.editor.chain().deleteRange(range).insertContent({ type: 'mathBlock', attrs: { latex } }).run()
-          return null
-        }),
-      ]
-    },
-  })
 
   const createEditorExtensions = () => {
     return [
