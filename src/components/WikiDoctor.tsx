@@ -7,9 +7,10 @@ export function WikiDoctor({ raw, normalized, editor }:{
 }) {
   const typ = typeof raw
   const okJson = isPMDoc(normalized)
-  const hasMath = !!editor?.extensionManager.extensions.find(e => e.name === 'mathematics')
-  const hasTable = !!editor?.extensionManager.extensions.find(e => e.name === 'table')
-  const hasStarter = !!editor?.extensionManager.extensions.find(e => e.name === 'starterKit')
+  const names = editor?.extensionManager.extensions.map(e => e.name) || []
+  const hasMath = names.some(n => ['mathematics','Mathematics','mathInline','inlineMath','mathBlock','blockMath'].includes(String(n)))
+  const hasTable = names.includes('table')
+  const hasStarter = names.includes('starterKit')
 
   const okCls = 'text-primary'
   const badCls = 'text-destructive'
