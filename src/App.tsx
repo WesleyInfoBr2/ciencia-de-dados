@@ -14,6 +14,7 @@ import WikiNew from "./pages/WikiNew";
 import WikiEdit from "./pages/WikiEdit";
 import WikiImport from "./pages/WikiImport";
 import NotFound from "./pages/NotFound";
+import DevTiptap from "./pages/DevTiptap";
 
 const queryClient = new QueryClient();
 
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/wiki/edit/:slug" element={<WikiEdit />} />
             <Route path="/wiki/import" element={<WikiImport />} />
             <Route path="/wiki/:slug" element={<WikiPost />} />
+            <Route path="/dev/tiptap" element={<DevTiptap />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

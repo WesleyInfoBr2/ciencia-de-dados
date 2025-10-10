@@ -19,6 +19,7 @@ import { Color } from '@tiptap/extension-color'
 import { TextAlign } from '@tiptap/extension-text-align'
 import 'katex/dist/katex.min.css'
 import { calculateReadingTime } from '@/utils/readingTime'
+import { wikiBaseExtensions } from '@/lib/wiki/extensions'
 
 interface WikiViewerV2Props {
   content: any
@@ -31,69 +32,8 @@ interface WikiViewerV2Props {
   className?: string
 }
 
-// Mesmas extensões do editor
-const createExtensions = () => {
-  const lowlight = createLowlight()
-  return [
-    StarterKit.configure({
-      codeBlock: false,
-      heading: { levels: [1, 2, 3] }
-    }),
-    Link.configure({
-      openOnClick: true,
-      HTMLAttributes: {
-        class: 'wiki-link',
-        target: '_blank',
-        rel: 'noopener noreferrer'
-      }
-    }),
-    Image.configure({
-      HTMLAttributes: {
-        class: 'wiki-image'
-      }
-    }),
-    TextStyle,
-    Color,
-    Underline,
-    Highlight.configure({
-      multicolor: true
-    }),
-    TextAlign.configure({
-      types: ['heading', 'paragraph']
-    }),
-    CodeBlockLowlight.configure({ 
-      lowlight,
-      HTMLAttributes: {
-        class: 'wiki-code-block'
-      }
-    }),
-    Table.configure({ 
-      resizable: false,
-      HTMLAttributes: {
-        class: 'wiki-table'
-      }
-    }),
-    TableRow,
-    TableHeader,
-    TableCell,
-    TaskList.configure({
-      HTMLAttributes: {
-        class: 'wiki-task-list'
-      }
-    }),
-    TaskItem.configure({ 
-      nested: true,
-      HTMLAttributes: {
-        class: 'wiki-task-item'
-      }
-    }),
-    Mathematics.configure({
-      katexOptions: { 
-        throwOnError: false
-      }
-    })
-  ]
-}
+// Use shared base extensions for consistency with the editor
+const createExtensions = () => wikiBaseExtensions()
 
 export default function WikiViewerV2({
   content,

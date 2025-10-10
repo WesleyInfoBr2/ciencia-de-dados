@@ -35,6 +35,7 @@ import 'katex/dist/katex.min.css'
 import 'tippy.js/dist/tippy.css'
 import type { Editor as TiptapEditor } from '@tiptap/react'
 import { normalizeWikiContent } from './normalizeWikiContent'
+import { wikiBaseExtensions } from '@/lib/wiki/extensions'
 
 interface WikiEditorV2Props {
   content: any
@@ -106,7 +107,6 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>()
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const lowlight = createLowlight()
   const normalized = normalizeWikiContent(content)
 
   // DIAGNÓSTICO: logar payload recebido quando o content mudar
@@ -295,83 +295,16 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
 
   // CRITICAL: Usar EXATAMENTE as mesmas extensões do WikiViewerV2
 
-  const createEditorExtensions = () => {
-    const exts = [
-      StarterKit.configure({
-        codeBlock: false,
-        heading: { levels: [1, 2, 3] }
-      }),
-      Placeholder.configure({
-        placeholder: placeholder || 'Digite / para inserções rápidas ou comece a escrever...'
-      }),
-      Link.configure({
-        openOnClick: true,
-        autolink: true,
-        HTMLAttributes: {
-          class: 'wiki-link'
-        }
-      }),
-      Image.configure({
-        HTMLAttributes: {
-          class: 'wiki-image'
-        }
-      }),
-      TextStyle,
-      Color,
-      Underline,
-      Highlight.configure({
-        multicolor: true
-      }),
-      TextAlign.configure({
-        types: ['heading', 'paragraph']
-      }),
-      CodeBlockLowlight.configure({ 
-        lowlight,
-        HTMLAttributes: {
-          class: 'wiki-code-block'
-        }
-      }),
-      Table.configure({ 
-        resizable: true,
-        HTMLAttributes: {
-          class: 'wiki-table'
-        }
-      }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      TaskList.configure({
-        HTMLAttributes: {
-          class: 'wiki-task-list'
-        }
-      }),
-      TaskItem.configure({ 
-        nested: true,
-        HTMLAttributes: {
-          class: 'wiki-task-item'
-        }
-      }),
-      Mathematics.configure({
-        katexOptions: { 
-          throwOnError: false
-        }
-      }),
+  const buildExtensions = () => {
+    return [
+      ...wikiBaseExtensions(placeholder || 'Digite / para inserções rápidas ou comece a escrever...'),
       slashCommandExtension,
     ]
-    // Deduplicar por nome de extensão para evitar avisos de duplicata
-    const seen = new Set<string>()
-    return exts.filter((e: any) => {
-      const name = e?.name
-      if (!name) return true
-      if (seen.has(name)) return false
-      seen.add(name)
-      return true
-    })
   }
 
   const editor = useEditor({
     editable: true,
-    extensions: createEditorExtensions(),
+    extensions: buildExtensions(),
     content: normalized,
     editorProps: {
       attributes: {
@@ -392,6 +325,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
   }, [JSON.stringify(normalized)])
 
   useEffect(() => { if (editor && onEditorReady) onEditorReady(editor) }, [editor])
+
+  useEffect(() => {
+    if (!editor) return
+    console.log('[Wiki] extensions =', editor.extensionManager.extensions.map(e => e.name))
+    console.log('[Wiki] getHTML =', editor.getHTML()?.slice(0, 120))
+  }, [editor])
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
