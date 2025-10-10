@@ -22,13 +22,15 @@ import 'katex/dist/katex.min.css'
 const MathIR = Mathematics.extend({
   addInputRules() {
     const inline = nodeInputRule({
-      find: /(?:^|[\s])\$(.+?)\$$/,
-      type: this.editor?.schema.nodes.mathInline,
+      find: /\$(.+?)\$/,
+      // Tiptap Mathematics registers inline node as 'inlineMath'
+      type: this.editor?.schema.nodes.inlineMath,
       getAttributes: (match) => ({ latex: match[1] }),
     })
     const block = nodeInputRule({
       find: /^\$\$(.+?)\$\$$/,
-      type: this.editor?.schema.nodes.mathBlock,
+      // Tiptap Mathematics registers block node as 'blockMath'
+      type: this.editor?.schema.nodes.blockMath,
       getAttributes: (match) => ({ latex: match[1] }),
     })
     return [inline, block]

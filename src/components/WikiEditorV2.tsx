@@ -170,7 +170,14 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
           editor: this.editor,
           char: '/',
           command: ({ editor, range, props }) => {
-            props.command({ editor, range })
+            try {
+              editor.chain().focus().deleteRange(range).run()
+              if (props && typeof (props as any).command === 'function') {
+                ;(props as any).command({ editor, range })
+              }
+            } catch (e) {
+              console.error('[Slash] command error', e)
+            }
           },
           items: ({ query }: { query: string }) => {
             const items = [
