@@ -19,23 +19,7 @@ import { nodeInputRule } from '@tiptap/core'
 import 'katex/dist/katex.min.css'
 
 // Mathematics with input rules for $...$ and $$...$$
-const MathIR = Mathematics.extend({
-  addInputRules() {
-    const inline = nodeInputRule({
-      find: /\$(.+?)\$/,
-      // Tiptap Mathematics registers inline node as 'inlineMath'
-      type: this.editor?.schema.nodes.inlineMath,
-      getAttributes: (match) => ({ latex: match[1] }),
-    })
-    const block = nodeInputRule({
-      find: /^\$\$(.+?)\$\$$/,
-      // Tiptap Mathematics registers block node as 'blockMath'
-      type: this.editor?.schema.nodes.blockMath,
-      getAttributes: (match) => ({ latex: match[1] }),
-    })
-    return [inline, block]
-  },
-})
+const MathIR = Mathematics
 
 export function wikiBaseExtensions(placeholderText = 'Digite / para comandos…') {
   const lowlight = createLowlight()

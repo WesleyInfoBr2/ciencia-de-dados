@@ -250,6 +250,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
                   insertImage()
                 }
               },
+              {
+                title: 'Equação',
+                command: ({ editor, range }: any) => {
+                  editor.chain().focus().deleteRange(range).insertInlineMath({ latex: '' }).run()
+                }
+              },
             ]
 
             return items.filter(item => 
