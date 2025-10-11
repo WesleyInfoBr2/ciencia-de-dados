@@ -324,7 +324,19 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
         class: 'wiki-editor-v2 prose prose-neutral dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-8'
       }
     },
+    onCreate: ({ editor }) => {
+      try {
+        migrateMathStrings(editor)
+      } catch (e) {
+        console.warn('[Wiki] migrateMathStrings onCreate failed', e)
+      }
+    },
     onUpdate: ({ editor }) => {
+      try {
+        migrateMathStrings(editor)
+      } catch (e) {
+        console.warn('[Wiki] migrateMathStrings onUpdate failed', e)
+      }
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current)
       }
