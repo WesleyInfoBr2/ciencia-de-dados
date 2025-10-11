@@ -2,7 +2,7 @@ import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import Link from '@tiptap/extension-link'
 import Image from '@tiptap/extension-image'
-import Mathematics from '@tiptap/extension-mathematics'
+import Mathematics, { migrateMathStrings } from '@tiptap/extension-mathematics'
 import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight'
 import { createLowlight } from 'lowlight'
 import { Table } from '@tiptap/extension-table'
@@ -171,7 +171,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
           char: '/',
           command: ({ editor, range, props }) => {
             try {
+              // Remove apenas uma vez o texto digitado ("/" + consulta)
               editor.chain().focus().deleteRange(range).run()
+              // Executa o comando do item selecionado
               if (props && typeof (props as any).command === 'function') {
                 ;(props as any).command({ editor, range })
               }
@@ -183,71 +185,71 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             const items = [
               {
                 title: 'Título 1',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setHeading({ level: 1 }).run()
                 }
               },
               {
                 title: 'Título 2',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setHeading({ level: 2 }).run()
                 }
               },
               {
                 title: 'Título 3',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setHeading({ level: 3 }).run()
                 }
               },
               {
                 title: 'Lista com marcadores',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).toggleBulletList().run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().toggleBulletList().run()
                 }
               },
               {
                 title: 'Lista numerada',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).toggleOrderedList().run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().toggleOrderedList().run()
                 }
               },
               {
                 title: 'Lista de tarefas',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).toggleTaskList().run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().toggleTaskList().run()
                 }
               },
               {
                 title: 'Tabela',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
                 }
               },
               {
                 title: 'Bloco de código',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).toggleCodeBlock().run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().toggleCodeBlock().run()
                 }
               },
               {
                 title: 'Citação',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).toggleBlockquote().run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().toggleBlockquote().run()
                 }
               },
               {
                 title: 'Linha horizontal',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).setHorizontalRule().run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setHorizontalRule().run()
                 }
               },
               {
                 title: 'Imagem',
-                command: ({ editor, range }: any) => {
-                  editor.chain().focus().deleteRange(range).run()
+                command: ({ editor }: any) => {
+                  editor.chain().focus().run()
                   insertImage()
                 }
-              }
+              },
             ]
 
             return items.filter(item => 
@@ -283,8 +285,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
                 })
               },
               onKeyDown(props: any) {
-                if (props.event.key === 'Escape') {
-                  popup[0].hide()
+                // Intercepta teclas para evitar submit do formulário da página
+                const k = props.event.key
+                if (k === 'Enter' || k === 'ArrowUp' || k === 'ArrowDown' || k === 'Tab' || k === 'Escape') {
+                  if (k === 'Escape') popup[0].hide()
+                  props.event.preventDefault()
+                  props.event.stopPropagation()
                   return true
                 }
                 return false
