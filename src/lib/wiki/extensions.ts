@@ -13,6 +13,7 @@ import { Underline } from '@tiptap/extension-underline'
 import { Highlight } from '@tiptap/extension-highlight'
 import { TextStyle } from '@tiptap/extension-text-style'
 import { Color } from '@tiptap/extension-color'
+import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mathematics from '@tiptap/extension-mathematics'
 import { nodeInputRule } from '@tiptap/core'
@@ -27,11 +28,21 @@ export function wikiBaseExtensions(placeholderText = 'Digite / para comandos…'
     StarterKit.configure({ codeBlock: false, heading: { levels: [1, 2, 3] } }),
     Placeholder.configure({ placeholder: placeholderText }),
     Link.configure({ autolink: true, openOnClick: true }),
-    Image,
+    Image.configure({
+      inline: true,
+      allowBase64: true,
+      HTMLAttributes: {
+        class: 'wiki-image',
+      },
+    }),
     TextStyle,
     Color,
     Underline,
     Highlight,
+    TextAlign.configure({
+      types: ['heading', 'paragraph'],
+      alignments: ['left', 'center', 'right', 'justify'],
+    }),
     CodeBlockLowlight.configure({ lowlight }),
     Table.configure({ resizable: true }),
     TableRow,

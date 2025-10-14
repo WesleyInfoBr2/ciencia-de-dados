@@ -246,6 +246,41 @@
     margin: 1rem auto;
   }
 
+  .tiptap-content img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  /* ProseMirror Editor Styles */
+  .ProseMirror {
+    outline: none;
+  }
+
+  .ProseMirror h1 {
+    @apply text-3xl font-bold mt-6 mb-4;
+  }
+
+  .ProseMirror h2 {
+    @apply text-2xl font-semibold mt-5 mb-3;
+  }
+
+  .ProseMirror h3 {
+    @apply text-xl font-semibold mt-4 mb-2;
+  }
+
+  .ProseMirror img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 0.5rem;
+    cursor: pointer;
+  }
+
+  .ProseMirror img.ProseMirror-selectednode {
+    outline: 3px solid hsl(var(--primary));
+  }
+
   /* Wiki Editor V2 */
   .wiki-editor-v2-container {
     min-height: 60vh;

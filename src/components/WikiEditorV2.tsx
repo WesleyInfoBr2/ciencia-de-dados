@@ -25,7 +25,8 @@ import {
   Bold, Italic, Underline as UnderlineIcon, Strikethrough, Code, 
   List, ListOrdered, CheckSquare, Heading1, Heading2, Heading3,
   Quote, Code2, Calculator, Table2, Image as ImageIcon, Save,
-  Link as LinkIcon, Highlighter
+  Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify,
+  ZoomIn, ZoomOut
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -630,6 +631,62 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
           </Button>
         </div>
 
+        {/* Alinhamento */}
+        <div className="flex gap-1 border-r pr-2">
+          <Button
+            type="button"
+            size="sm"
+            variant={editor.isActive({ textAlign: 'left' }) ? 'default' : 'ghost'}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('left').run()
+            }}
+            title="Alinhar à Esquerda"
+          >
+            <AlignLeft className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={editor.isActive({ textAlign: 'center' }) ? 'default' : 'ghost'}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('center').run()
+            }}
+            title="Centralizar"
+          >
+            <AlignCenter className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={editor.isActive({ textAlign: 'right' }) ? 'default' : 'ghost'}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('right').run()
+            }}
+            title="Alinhar à Direita"
+          >
+            <AlignRight className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={editor.isActive({ textAlign: 'justify' }) ? 'default' : 'ghost'}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setTextAlign('justify').run()
+            }}
+            title="Justificar"
+          >
+            <AlignJustify className="w-4 h-4" />
+          </Button>
+        </div>
+
         {/* Mídia */}
         <div className="flex gap-1 border-r pr-2">
           <Button
@@ -675,6 +732,34 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             <LinkIcon className="w-4 h-4" />
           </Button>
         </div>
+
+        {/* Controles de Imagem */}
+        {editor.isActive('image') && (
+          <div className="flex gap-1 border-r pr-2">
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                const { src, alt } = editor.getAttributes('image')
+                const width = prompt('Largura da imagem (em pixels):', '400')
+                if (width) {
+                  editor.chain().focus().updateAttributes('image', { 
+                    src, 
+                    alt,
+                    width: `${width}px`,
+                    style: `width: ${width}px; height: auto;`
+                  }).run()
+                }
+              }}
+              title="Redimensionar Imagem"
+            >
+              <ZoomIn className="w-4 h-4" />
+            </Button>
+          </div>
+        )}
 
         {/* Salvar */}
         <div className="flex gap-1 ml-auto">
