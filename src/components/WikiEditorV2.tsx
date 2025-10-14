@@ -733,9 +733,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
           </Button>
         </div>
 
-        {/* Controles de Imagem */}
+        {/* Controles de Imagem (aparecem quando imagem selecionada) */}
         {editor.isActive('image') && (
-          <div className="flex gap-1 border-r pr-2">
+          <div className="flex gap-1 border-r pr-2 bg-primary/10">
             <Button
               type="button"
               size="sm"
@@ -743,20 +743,56 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                const { src, alt } = editor.getAttributes('image')
-                const width = prompt('Largura da imagem (em pixels):', '400')
+                const width = prompt('Largura da imagem (em pixels, ex: 400):', '400')
                 if (width) {
                   editor.chain().focus().updateAttributes('image', { 
-                    src, 
-                    alt,
                     width: `${width}px`,
-                    style: `width: ${width}px; height: auto;`
+                    height: 'auto'
                   }).run()
                 }
               }}
               title="Redimensionar Imagem"
             >
               <ZoomIn className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={editor.getAttributes('image').align === 'left' ? 'default' : 'ghost'}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                editor.chain().focus().updateAttributes('image', { align: 'left' }).run()
+              }}
+              title="Alinhar Imagem à Esquerda"
+            >
+              <AlignLeft className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={editor.getAttributes('image').align === 'center' ? 'default' : 'ghost'}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                editor.chain().focus().updateAttributes('image', { align: 'center' }).run()
+              }}
+              title="Centralizar Imagem"
+            >
+              <AlignCenter className="w-4 h-4" />
+            </Button>
+            <Button
+              type="button"
+              size="sm"
+              variant={editor.getAttributes('image').align === 'right' ? 'default' : 'ghost'}
+              onClick={(e) => {
+                e.preventDefault()
+                e.stopPropagation()
+                editor.chain().focus().updateAttributes('image', { align: 'right' }).run()
+              }}
+              title="Alinhar Imagem à Direita"
+            >
+              <AlignRight className="w-4 h-4" />
             </Button>
           </div>
         )}

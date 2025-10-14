@@ -229,27 +229,35 @@
   }
 
   /* Image alignment styles */
-  .tiptap-content img[data-align="left"] {
+  .tiptap-content img[data-align="left"],
+  .ProseMirror img[data-align="left"] {
+    display: block;
+    margin: 0.5rem 1rem 0.5rem 0;
     float: left;
-    margin-right: 1rem;
-    margin-bottom: 0.5rem;
   }
 
-  .tiptap-content img[data-align="right"] {
+  .tiptap-content img[data-align="right"],
+  .ProseMirror img[data-align="right"] {
+    display: block;
+    margin: 0.5rem 0 0.5rem 1rem;
     float: right;
-    margin-left: 1rem;
-    margin-bottom: 0.5rem;
   }
 
-  .tiptap-content img[data-align="center"] {
+  .tiptap-content img[data-align="center"],
+  .ProseMirror img[data-align="center"] {
     display: block;
     margin: 1rem auto;
   }
 
-  .tiptap-content img {
+  .tiptap-content img,
+  .ProseMirror img {
     max-width: 100%;
     height: auto;
     border-radius: 0.5rem;
+  }
+  
+  .tiptap-content img.wiki-image,
+  .ProseMirror img.wiki-image {
     cursor: pointer;
   }
 
@@ -270,15 +278,9 @@
     @apply text-xl font-semibold mt-4 mb-2;
   }
 
-  .ProseMirror img {
-    max-width: 100%;
-    height: auto;
-    border-radius: 0.5rem;
-    cursor: pointer;
-  }
-
   .ProseMirror img.ProseMirror-selectednode {
     outline: 3px solid hsl(var(--primary));
+    outline-offset: 2px;
   }
 
   /* Wiki Editor V2 */
