@@ -107,6 +107,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
   const [isSaving, setIsSaving] = useState(false)
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  // Track image selection to refresh toolbar on selection changes
+  const [isImageSelected, setIsImageSelected] = useState(false)
+  const [imageAlign, setImageAlign] = useState<string | undefined>(undefined)
 
   const normalized = normalizeWikiContent(content)
 
@@ -364,6 +367,31 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
     console.log('[Wiki] getHTML =', editor.getHTML()?.slice(0, 120))
   }, [editor])
 
+  // Re-render toolbar on selection changes and track image selection/attrs
+  useEffect(() => {
+    if (!editor) return
+    const updateSelectionState = () => {
+      try {
+        const sel: any = editor.state.selection as any
+        const node = sel?.node
+        const selected = !!node && node.type?.name === 'image'
+        setIsImageSelected(selected)
+        setImageAlign(selected ? (node?.attrs?.align ?? editor.getAttributes('image')?.align) : undefined)
+      } catch (e) {
+        // noop
+      }
+    }
+    editor.on('selectionUpdate', updateSelectionState)
+    editor.on('transaction', updateSelectionState)
+    // Run once initially
+    updateSelectionState()
+    return () => {
+      editor.off('selectionUpdate', updateSelectionState)
+      editor.off('transaction', updateSelectionState)
+    }
+  }, [editor])
+
+  // Keyboard shortcut for save
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 's') {
@@ -734,7 +762,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
         </div>
 
         {/* Controles de Imagem (aparecem quando imagem selecionada) */}
-        {editor.isActive('image') && (
+        {isImageSelected && (
           <div className="flex gap-1 border-r pr-2 bg-primary/10">
             <Button
               type="button"
@@ -745,7 +773,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
                 e.stopPropagation()
                 const width = prompt('Largura da imagem (em pixels, ex: 400):', '400')
                 if (width) {
-                  editor.chain().focus().updateAttributes('image', { 
+                  editor.chain().focus().updateAttributes('image', {
                     width: `${width}px`,
                     height: 'auto'
                   }).run()
@@ -758,11 +786,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             <Button
               type="button"
               size="sm"
-              variant={editor.getAttributes('image').align === 'left' ? 'default' : 'ghost'}
+              variant={imageAlign === 'left' ? 'default' : 'ghost'}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 editor.chain().focus().updateAttributes('image', { align: 'left' }).run()
+                setImageAlign('left')
               }}
               title="Alinhar Imagem à Esquerda"
             >
@@ -771,11 +800,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             <Button
               type="button"
               size="sm"
-              variant={editor.getAttributes('image').align === 'center' ? 'default' : 'ghost'}
+              variant={imageAlign === 'center' ? 'default' : 'ghost'}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 editor.chain().focus().updateAttributes('image', { align: 'center' }).run()
+                setImageAlign('center')
               }}
               title="Centralizar Imagem"
             >
@@ -784,11 +814,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             <Button
               type="button"
               size="sm"
-              variant={editor.getAttributes('image').align === 'right' ? 'default' : 'ghost'}
+              variant={imageAlign === 'right' ? 'default' : 'ghost'}
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
                 editor.chain().focus().updateAttributes('image', { align: 'right' }).run()
+                setImageAlign('right')
               }}
               title="Alinhar Imagem à Direita"
             >
