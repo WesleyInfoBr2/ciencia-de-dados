@@ -3,8 +3,11 @@ import { ArrowRight, BookOpen, Users, Zap } from "lucide-react";
 import heroImage from "@/assets/hero-data-science.jpg";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const HeroSection = () => {
+  const navigate = useNavigate();
+  
   // Buscar contagem de usuários
   const { data: usersCount } = useQuery({
     queryKey: ['users-count'],
@@ -76,13 +79,13 @@ const HeroSection = () => {
 
           {/* CTAs */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
-            <Button variant="hero" size="xl" className="w-full sm:w-auto">
-              Explore a Comunidade
+            <Button variant="hero" size="xl" className="w-full sm:w-auto" onClick={() => navigate('/wiki')}>
+              Explore a Wiki
               <ArrowRight className="w-5 h-5" />
             </Button>
-            <Button variant="outline" size="xl" className="w-full sm:w-auto">
+            <Button variant="outline" size="xl" className="w-full sm:w-auto" onClick={() => navigate('/libraries')}>
               <BookOpen className="w-5 h-5" />
-              Ver Conteúdos
+              Ver Biblioteca
             </Button>
           </div>
 

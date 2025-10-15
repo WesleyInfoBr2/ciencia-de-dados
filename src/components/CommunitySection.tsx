@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
   BookOpen, 
@@ -13,8 +12,11 @@ import {
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const CommunitySection = () => {
+  const navigate = useNavigate();
+  
   // Buscar contagens por tipo de post
   const { data: conteudoCount } = useQuery({
     queryKey: ['wiki-posts-conteudo'],
@@ -114,21 +116,24 @@ const CommunitySection = () => {
       description: "Artigos e insights sobre ciência de dados",
       icon: FileText,
       count: conteudoCount,
-      color: "text-blue-600"
+      color: "text-blue-600",
+      filterType: "conteudo"
     },
     {
       title: "Como Fazer",
       description: "Tutoriais práticos e guias passo a passo",
       icon: Lightbulb,
       count: comoFazerCount,
-      color: "text-green-600"
+      color: "text-green-600",
+      filterType: "como_fazer"
     },
     {
       title: "Aplicação Prática",
       description: "Cases reais e projetos implementados",
       icon: Settings,
       count: aplicacaoPraticaCount,
-      color: "text-purple-600"
+      color: "text-purple-600",
+      filterType: "aplicacao_pratica"
     }
   ];
 
@@ -197,7 +202,11 @@ const CommunitySection = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {contentTypes.map((type, index) => (
-              <Card key={index} className="shadow-card hover:shadow-elegant transition-smooth group cursor-pointer">
+              <Card 
+                key={index} 
+                className="shadow-card hover:shadow-elegant transition-smooth group cursor-pointer"
+                onClick={() => navigate(`/wiki?type=${type.filterType}`)}
+              >
                 <CardHeader className="text-center pb-4">
                   <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-muted flex items-center justify-center group-hover:scale-110 transition-bounce">
                     <type.icon className={`w-6 h-6 ${type.color}`} />
@@ -222,7 +231,11 @@ const CommunitySection = () => {
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {libraries.map((library, index) => (
-              <Card key={index} className="shadow-card hover:shadow-elegant transition-smooth group cursor-pointer">
+              <Card 
+                key={index} 
+                className="shadow-card hover:shadow-elegant transition-smooth group cursor-pointer"
+                onClick={() => navigate(`/libraries?category=${library.category}`)}
+              >
                 <CardHeader>
                   <div className="flex items-center space-x-3">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-smooth">
@@ -244,15 +257,6 @@ const CommunitySection = () => {
           </div>
         </div>
 
-        {/* CTA */}
-        <div className="text-center">
-          <Button variant="hero" size="lg" className="mr-4">
-            Explorar Wiki
-          </Button>
-          <Button variant="outline" size="lg">
-            Contribuir Conteúdo
-          </Button>
-        </div>
       </div>
 
       {/* Background Elements */}
