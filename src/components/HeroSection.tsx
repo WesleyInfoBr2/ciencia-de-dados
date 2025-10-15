@@ -1,8 +1,44 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, BookOpen, Users, Zap } from "lucide-react";
 import heroImage from "@/assets/hero-data-science.jpg";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const HeroSection = () => {
+  // Buscar contagem de usuários
+  const { data: usersCount } = useQuery({
+    queryKey: ['users-count'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+      return count || 0;
+    }
+  });
+
+  // Buscar contagem de posts publicados
+  const { data: postsCount } = useQuery({
+    queryKey: ['wiki-posts-count'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('wiki_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true);
+      return count || 0;
+    }
+  });
+
+  // Buscar contagem de itens de biblioteca
+  const { data: libraryItemsCount } = useQuery({
+    queryKey: ['library-items-count'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('library_items')
+        .select('*', { count: 'exact', head: true });
+      return count || 0;
+    }
+  });
+
   return (
     <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
@@ -53,15 +89,21 @@ const HeroSection = () => {
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">5.000+</div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                {usersCount !== undefined ? usersCount.toLocaleString('pt-BR') : '-'}
+              </div>
               <div className="text-sm text-muted-foreground">Membros Ativos</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">200+</div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                {postsCount !== undefined ? postsCount.toLocaleString('pt-BR') : '-'}
+              </div>
               <div className="text-sm text-muted-foreground">Conteúdos Publicados</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-primary mb-2">50+</div>
+              <div className="text-3xl font-bold text-primary mb-2">
+                {libraryItemsCount !== undefined ? libraryItemsCount.toLocaleString('pt-BR') : '-'}
+              </div>
               <div className="text-sm text-muted-foreground">Ferramentas Catalogadas</div>
             </div>
           </div>

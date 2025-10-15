@@ -11,28 +11,123 @@ import {
   FileText,
   Wrench
 } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 const CommunitySection = () => {
+  // Buscar contagens por tipo de post
+  const { data: conteudoCount } = useQuery({
+    queryKey: ['wiki-posts-conteudo'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('wiki_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true)
+        .eq('post_type', 'conteudo');
+      return count || 0;
+    }
+  });
+
+  const { data: comoFazerCount } = useQuery({
+    queryKey: ['wiki-posts-como-fazer'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('wiki_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true)
+        .eq('post_type', 'como_fazer');
+      return count || 0;
+    }
+  });
+
+  const { data: aplicacaoPraticaCount } = useQuery({
+    queryKey: ['wiki-posts-aplicacao-pratica'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('wiki_posts')
+        .select('*', { count: 'exact', head: true })
+        .eq('is_published', true)
+        .eq('post_type', 'aplicacao_pratica');
+      return count || 0;
+    }
+  });
+
+  // Buscar contagens por categoria de biblioteca
+  const { data: toolsCount } = useQuery({
+    queryKey: ['library-items-tools'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('library_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', 'tools');
+      return count || 0;
+    }
+  });
+
+  const { data: coursesCount } = useQuery({
+    queryKey: ['library-items-courses'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('library_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', 'courses');
+      return count || 0;
+    }
+  });
+
+  const { data: codesCount } = useQuery({
+    queryKey: ['library-items-codes'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('library_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', 'codes');
+      return count || 0;
+    }
+  });
+
+  const { data: sourcesCount } = useQuery({
+    queryKey: ['library-items-sources'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('library_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', 'sources');
+      return count || 0;
+    }
+  });
+
+  const { data: datasetsCount } = useQuery({
+    queryKey: ['library-items-datasets'],
+    queryFn: async () => {
+      const { count } = await supabase
+        .from('library_items')
+        .select('*', { count: 'exact', head: true })
+        .eq('category', 'datasets');
+      return count || 0;
+    }
+  });
+
   const contentTypes = [
     {
       title: "Conteúdo",
       description: "Artigos e insights sobre ciência de dados",
       icon: FileText,
-      count: "120+ artigos",
+      count: conteudoCount,
       color: "text-blue-600"
     },
     {
       title: "Como Fazer",
       description: "Tutoriais práticos e guias passo a passo",
       icon: Lightbulb,
-      count: "80+ tutoriais",
+      count: comoFazerCount,
       color: "text-green-600"
     },
     {
       title: "Aplicação Prática",
       description: "Cases reais e projetos implementados",
       icon: Settings,
-      count: "45+ cases",
+      count: aplicacaoPraticaCount,
       color: "text-purple-600"
     }
   ];
@@ -42,31 +137,36 @@ const CommunitySection = () => {
       title: "Ferramentas Digitais",
       description: "Softwares e plataformas essenciais",
       icon: Wrench,
-      count: "50+ ferramentas"
+      count: toolsCount,
+      category: "tools"
     },
     {
       title: "Formações Digitais",
       description: "Cursos e trilhas de aprendizagem",
       icon: GraduationCap,
-      count: "30+ formações"
+      count: coursesCount,
+      category: "courses"
     },
     {
       title: "Livros e Materiais",
       description: "E-books e recursos educacionais",
       icon: BookOpen,
-      count: "40+ materiais"
+      count: sourcesCount,
+      category: "sources"
     },
     {
       title: "Códigos e Pacotes",
       description: "Bibliotecas Python e snippets úteis",
       icon: Code,
-      count: "25+ códigos"
+      count: codesCount,
+      category: "codes"
     },
     {
       title: "Bancos de Dados",
       description: "Datasets públicos e bases de dados",
       icon: Database,
-      count: "15+ bancos"
+      count: datasetsCount,
+      category: "datasets"
     }
   ];
 
@@ -103,7 +203,9 @@ const CommunitySection = () => {
                     <type.icon className={`w-6 h-6 ${type.color}`} />
                   </div>
                   <CardTitle className="text-xl font-semibold">{type.title}</CardTitle>
-                  <div className="text-sm text-secondary font-medium">{type.count}</div>
+                  <div className="text-sm text-secondary font-medium">
+                    {type.count !== undefined ? `${type.count.toLocaleString('pt-BR')} ${type.count === 1 ? 'item' : 'itens'}` : '-'}
+                  </div>
                 </CardHeader>
                 <CardContent className="text-center">
                   <CardDescription>{type.description}</CardDescription>
@@ -128,7 +230,9 @@ const CommunitySection = () => {
                     </div>
                     <div>
                       <CardTitle className="text-lg">{library.title}</CardTitle>
-                      <div className="text-xs text-secondary font-medium">{library.count}</div>
+                      <div className="text-xs text-secondary font-medium">
+                        {library.count !== undefined ? `${library.count.toLocaleString('pt-BR')} ${library.count === 1 ? 'item' : 'itens'}` : '-'}
+                      </div>
                     </div>
                   </div>
                 </CardHeader>
