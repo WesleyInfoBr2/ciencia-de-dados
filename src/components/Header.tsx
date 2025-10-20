@@ -74,12 +74,12 @@ const Header = () => {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-          <a
-            href="#precos"
+          <Link
+            to="/precos"
             className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
           >
             Preços
-          </a>
+          </Link>
         </nav>
 
         {/* Actions */}

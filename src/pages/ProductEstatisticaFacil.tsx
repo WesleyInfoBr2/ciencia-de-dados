@@ -43,39 +43,51 @@ const ProductEstatisticaFacil = () => {
 
   const comparisonData = [
     {
-      feature: "Análises Descritivas",
-      free: "5 por mês",
-      limited: "50 por mês",
+      feature: "Análises por Mês",
+      free: "10",
+      limited: "Ilimitado",
       unlimited: "Ilimitado"
     },
     {
-      feature: "Testes Estatísticos",
+      feature: "Tipos de Testes",
       free: "Básicos",
-      limited: "Avançados",
-      unlimited: "Todos + IA"
+      limited: "Todos",
+      unlimited: "Todos"
+    },
+    {
+      feature: "Tamanho do Dataset",
+      free: "1.000 linhas",
+      limited: "Sem limite",
+      unlimited: "Sem limite"
+    },
+    {
+      feature: "Exportação de Resultados",
+      free: "PDF",
+      limited: "PDF, Word, Excel",
+      unlimited: "PDF, Word, Excel"
     },
     {
       feature: "Visualizações",
-      free: "Padrão",
-      limited: "Personalizadas",
-      unlimited: "Customizadas"
+      free: "Básicas",
+      limited: "Avançadas",
+      unlimited: "Avançadas"
     },
     {
-      feature: "Exportação de Relatórios",
-      free: "PDF simples",
-      limited: "PDF + Word",
-      unlimited: "Todos formatos"
+      feature: "Relatórios Personalizados",
+      free: "❌",
+      limited: "✅",
+      unlimited: "✅"
     },
     {
-      feature: "Armazenamento de Dados",
-      free: "100 MB",
-      limited: "5 GB",
-      unlimited: "Ilimitado"
+      feature: "API de Integração",
+      free: "❌",
+      limited: "✅",
+      unlimited: "✅"
     },
     {
       feature: "Histórico de Análises",
       free: "7 dias",
-      limited: "1 ano",
+      limited: "Permanente",
       unlimited: "Permanente"
     },
     {
@@ -83,18 +95,6 @@ const ProductEstatisticaFacil = () => {
       free: "Comunidade",
       limited: "E-mail",
       unlimited: "Prioritário"
-    },
-    {
-      feature: "Colaboração em Equipe",
-      free: "❌",
-      limited: "3 membros",
-      unlimited: "Ilimitado"
-    },
-    {
-      feature: "API de Integração",
-      free: "❌",
-      limited: "❌",
-      unlimited: "✅"
     }
   ];
 
@@ -207,8 +207,18 @@ const ProductEstatisticaFacil = () => {
                     <TableRow className="bg-muted/50">
                       <TableCell className="font-bold">Preço Mensal</TableCell>
                       <TableCell className="text-center font-bold text-green-600">R$ 0</TableCell>
-                      <TableCell className="text-center font-bold text-blue-600">R$ 49</TableCell>
-                      <TableCell className="text-center font-bold text-purple-600">R$ 149</TableCell>
+                      <TableCell className="text-center font-bold text-blue-600">R$ 79</TableCell>
+                      <TableCell className="text-center font-bold text-purple-600">
+                        R$ 149*
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-xs text-muted-foreground">
+                        * O plano Ilimitado dá acesso completo a todos os produtos por R$ 149/mês.{" "}
+                        <a href="/precos" className="text-primary hover:underline">
+                          Saiba mais sobre os planos
+                        </a>
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

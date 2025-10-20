@@ -46,43 +46,43 @@ const ProductDadosBrasil = () => {
       feature: "Requisições por Mês",
       free: "1.000",
       limited: "50.000",
-      unlimited: "Ilimitado"
+      unlimited: "50.000"
     },
     {
       feature: "Fontes de Dados",
       free: "IBGE básico",
       limited: "Todas públicas",
-      unlimited: "Públicas + Premium"
+      unlimited: "Todas públicas"
     },
     {
       feature: "Histórico de Dados",
       free: "5 anos",
       limited: "20 anos",
-      unlimited: "Completo"
+      unlimited: "20 anos"
     },
     {
       feature: "Downloads Simultâneos",
       free: "1",
       limited: "10",
-      unlimited: "Ilimitado"
+      unlimited: "10"
     },
     {
       feature: "Formato de Exportação",
       free: "CSV, JSON",
       limited: "+ Excel, Parquet",
-      unlimited: "Todos formatos"
+      unlimited: "+ Excel, Parquet"
     },
     {
       feature: "Cache de Consultas",
       free: "❌",
       limited: "24 horas",
-      unlimited: "Personalizado"
+      unlimited: "24 horas"
     },
     {
       feature: "Webhooks",
       free: "❌",
       limited: "5",
-      unlimited: "Ilimitado"
+      unlimited: "5"
     },
     {
       feature: "Suporte Técnico",
@@ -94,7 +94,7 @@ const ProductDadosBrasil = () => {
       feature: "SLA de Disponibilidade",
       free: "95%",
       limited: "99%",
-      unlimited: "99.9%"
+      unlimited: "99%"
     }
   ];
 
@@ -208,7 +208,17 @@ const ProductDadosBrasil = () => {
                       <TableCell className="font-bold">Preço Mensal</TableCell>
                       <TableCell className="text-center font-bold text-green-600">R$ 0</TableCell>
                       <TableCell className="text-center font-bold text-blue-600">R$ 79</TableCell>
-                      <TableCell className="text-center font-bold text-purple-600">R$ 249</TableCell>
+                      <TableCell className="text-center font-bold text-purple-600">
+                        R$ 149*
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-xs text-muted-foreground">
+                        * O plano Ilimitado dá acesso completo a todos os produtos por R$ 149/mês.{" "}
+                        <a href="/precos" className="text-primary hover:underline">
+                          Saiba mais sobre os planos
+                        </a>
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>

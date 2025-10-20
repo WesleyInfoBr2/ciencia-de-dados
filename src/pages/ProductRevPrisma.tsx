@@ -208,7 +208,17 @@ const ProductRevPrisma = () => {
                       <TableCell className="font-bold">Preço Mensal</TableCell>
                       <TableCell className="text-center font-bold text-green-600">R$ 0</TableCell>
                       <TableCell className="text-center font-bold text-blue-600">R$ 99</TableCell>
-                      <TableCell className="text-center font-bold text-purple-600">R$ 299</TableCell>
+                      <TableCell className="text-center font-bold text-purple-600">
+                        R$ 149*
+                      </TableCell>
+                    </TableRow>
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-xs text-muted-foreground">
+                        * O plano Ilimitado dá acesso completo a todos os produtos por R$ 149/mês.{" "}
+                        <a href="/precos" className="text-primary hover:underline">
+                          Saiba mais sobre os planos
+                        </a>
+                      </TableCell>
                     </TableRow>
                   </TableBody>
                 </Table>
