@@ -690,35 +690,97 @@ export type Database = {
           },
         ]
       }
+      product_access: {
+        Row: {
+          access_type: string
+          expires_at: string | null
+          granted_at: string | null
+          id: string
+          is_active: boolean | null
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          access_type: string
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          access_type?: string
+          expires_at?: string | null
+          granted_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_access_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       products: {
         Row: {
           base_url: string | null
           created_at: string | null
+          custom_domain: string | null
           description: string | null
+          features: Json | null
+          github_repo_url: string | null
           id: string
+          is_available: boolean | null
           is_public: boolean | null
+          launch_date: string | null
           name: string
+          pricing: Json | null
           slug: string
+          status: string | null
+          supabase_project_id: string | null
           updated_at: string | null
         }
         Insert: {
           base_url?: string | null
           created_at?: string | null
+          custom_domain?: string | null
           description?: string | null
+          features?: Json | null
+          github_repo_url?: string | null
           id?: string
+          is_available?: boolean | null
           is_public?: boolean | null
+          launch_date?: string | null
           name: string
+          pricing?: Json | null
           slug: string
+          status?: string | null
+          supabase_project_id?: string | null
           updated_at?: string | null
         }
         Update: {
           base_url?: string | null
           created_at?: string | null
+          custom_domain?: string | null
           description?: string | null
+          features?: Json | null
+          github_repo_url?: string | null
           id?: string
+          is_available?: boolean | null
           is_public?: boolean | null
+          launch_date?: string | null
           name?: string
+          pricing?: Json | null
           slug?: string
+          status?: string | null
+          supabase_project_id?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -965,6 +1027,27 @@ export type Database = {
         }
         Relationships: []
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
       wiki_categories: {
         Row: {
           color: string | null
@@ -1142,6 +1225,13 @@ export type Database = {
       gtrgm_out: {
         Args: { "": unknown }
         Returns: unknown
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
       is_org_member: {
         Args: { _org_id: string; _user_id: string }

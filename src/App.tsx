@@ -18,6 +18,7 @@ import DevTiptap from "./pages/DevTiptap";
 import ProductEstatisticaFacil from "./pages/ProductEstatisticaFacil";
 import ProductRevPrisma from "./pages/ProductRevPrisma";
 import ProductDadosBrasil from "./pages/ProductDadosBrasil";
+import Admin from "./pages/Admin";
 import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/produtos/revprisma" element={<ProductRevPrisma />} />
             <Route path="/produtos/dadosbrasil" element={<ProductDadosBrasil />} />
             <Route path="/precos" element={<Pricing />} />
+            <Route path="/admin" element={<Admin />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

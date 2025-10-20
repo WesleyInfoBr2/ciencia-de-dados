@@ -1,8 +1,9 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Menu, User, LogIn, LogOut, ChevronDown } from "lucide-react";
+import { Menu, User, LogIn, LogOut, ChevronDown, Shield } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
+import { useAdmin } from "@/hooks/useAdmin";
 import logoCD from "@/assets/logo-cd.png";
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 
 const Header = () => {
   const { user, signOut } = useAuth();
+  const { isAdmin } = useAdmin();
 
   const handleAuthAction = async () => {
     if (user) {
@@ -86,6 +88,19 @@ const Header = () => {
         <div className="flex items-center space-x-4">
           {user ? (
             <>
+              {isAdmin && (
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="hidden md:flex"
+                  asChild
+                >
+                  <Link to="/admin">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Admin
+                  </Link>
+                </Button>
+              )}
               <span className="hidden md:block text-sm text-muted-foreground">
                 Olá, {user.email}
               </span>
