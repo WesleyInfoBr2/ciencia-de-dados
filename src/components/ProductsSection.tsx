@@ -1,15 +1,18 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, BarChart3, FileSpreadsheet, Globe, Lock, Star, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, FileSpreadsheet, Globe, Star, Zap } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ProductsSection = () => {
+  const navigate = useNavigate();
+  
   const products = [
     {
       name: "EstatísticaFácil",
       slug: "estatisticafacil",
       description: "Plataforma completa para análises estatísticas intuitivas e relatórios automatizados",
-      status: "beta",
+      status: "development",
       features: ["Análises Descritivas", "Testes Estatísticos", "Visualizações", "Relatórios PDF"],
       icon: BarChart3,
       color: "from-blue-500 to-cyan-500",
@@ -29,7 +32,7 @@ const ProductsSection = () => {
       name: "DadosBrasil",
       slug: "dadosbrasil",
       description: "Acesso centralizado aos principais datasets e indicadores públicos brasileiros",
-      status: "alpha",
+      status: "development",
       features: ["APIs Unificadas", "Dados IBGE", "Indicadores Sociais", "Séries Temporais"],
       icon: Globe,
       color: "from-green-500 to-emerald-500",
@@ -108,18 +111,14 @@ const ProductsSection = () => {
                 </div>
                 
                 <div className="pt-4 flex space-x-2">
-                  <Button variant="default" size="sm" className="flex-1" disabled={product.status === 'development'}>
-                    {product.status === 'development' ? (
-                      <>
-                        <Lock className="w-4 h-4" />
-                        Em Breve
-                      </>
-                    ) : (
-                      <>
-                        Acessar
-                        <ArrowRight className="w-4 h-4" />
-                      </>
-                    )}
+                  <Button 
+                    variant="default" 
+                    size="sm" 
+                    className="flex-1" 
+                    onClick={() => navigate(`/produtos/${product.slug}`)}
+                  >
+                    Saiba Mais
+                    <ArrowRight className="w-4 h-4" />
                   </Button>
                   <Button variant="ghost" size="sm">
                     <Star className="w-4 h-4" />

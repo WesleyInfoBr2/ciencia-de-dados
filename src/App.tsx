@@ -15,6 +15,9 @@ import WikiEdit from "./pages/WikiEdit";
 import WikiImport from "./pages/WikiImport";
 import NotFound from "./pages/NotFound";
 import DevTiptap from "./pages/DevTiptap";
+import ProductEstatisticaFacil from "./pages/ProductEstatisticaFacil";
+import ProductRevPrisma from "./pages/ProductRevPrisma";
+import ProductDadosBrasil from "./pages/ProductDadosBrasil";
 
 const queryClient = new QueryClient();
 
@@ -37,6 +40,9 @@ const App = () => (
             <Route path="/wiki/import" element={<WikiImport />} />
             <Route path="/wiki/:slug" element={<WikiPost />} />
             <Route path="/dev/tiptap" element={<DevTiptap />} />
+            <Route path="/produtos/estatisticafacil" element={<ProductEstatisticaFacil />} />
+            <Route path="/produtos/revprisma" element={<ProductRevPrisma />} />
+            <Route path="/produtos/dadosbrasil" element={<ProductDadosBrasil />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

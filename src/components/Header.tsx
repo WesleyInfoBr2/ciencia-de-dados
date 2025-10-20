@@ -1,9 +1,15 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Menu, User, LogIn, LogOut } from "lucide-react";
+import { Menu, User, LogIn, LogOut, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import logoCD from "@/assets/logo-cd.png";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Header = () => {
   const { user, signOut } = useAuth();
@@ -45,12 +51,29 @@ const Header = () => {
           >
             Bibliotecas
           </Link>
-          <a
-            href="#produtos"
-            className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
-          >
-            Produtos
-          </a>
+          <DropdownMenu>
+            <DropdownMenuTrigger className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth flex items-center gap-1">
+              Produtos
+              <ChevronDown className="w-3 h-3" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent>
+              <DropdownMenuItem asChild>
+                <Link to="/produtos/estatisticafacil" className="cursor-pointer">
+                  EstatísticaFácil
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/produtos/revprisma" className="cursor-pointer">
+                  RevPrisma
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
+                <Link to="/produtos/dadosbrasil" className="cursor-pointer">
+                  DadosBrasil
+                </Link>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
           <a
             href="#precos"
             className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth"
