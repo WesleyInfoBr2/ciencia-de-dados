@@ -60,7 +60,7 @@ export const isProductAvailable = async (
 };
 
 /**
- * Verifica se o usuário tem acesso a um produto específico
+ * Verifica o acesso do usuário a um produto específico usando a função do banco
  */
 export const checkProductAccess = async (
   userId: string | undefined,
@@ -68,69 +68,65 @@ export const checkProductAccess = async (
 ): Promise<{
   hasAccess: boolean;
   accessType: string | null;
+  usageLimit?: number | null;
+  usageCount?: number;
   reason?: string;
 }> => {
-  // Se não há usuário logado
+  // Se não estiver autenticado, retorna acesso básico gratuito
   if (!userId) {
-    return { hasAccess: false, accessType: null, reason: "not_authenticated" };
+    return { 
+      hasAccess: true, 
+      accessType: "gratuito",
+      usageLimit: 100,
+      usageCount: 0,
+      reason: "not_authenticated" 
+    };
   }
 
   try {
-    // Busca o produto
-    const { data: product, error: productError } = await supabase
-      .from("products")
-      .select("id, is_available, is_public")
-      .eq("slug", productSlug)
-      .single();
+    // Usa a função do banco para verificar acesso baseado em assinatura
+    const { data, error } = await supabase.rpc("check_product_access", {
+      _user_id: userId,
+      _product_slug: productSlug,
+    });
 
-    if (productError || !product) {
-      return { hasAccess: false, accessType: null, reason: "product_not_found" };
+    if (error) {
+      console.error("Error checking product access:", error);
+      return { 
+        hasAccess: true, 
+        accessType: "gratuito",
+        usageLimit: 100,
+        usageCount: 0,
+        reason: "error" 
+      };
     }
 
-    // Verifica se o produto está disponível
-    if (!product.is_available) {
-      return { hasAccess: false, accessType: null, reason: "product_unavailable" };
+    if (data && data.length > 0) {
+      const access = data[0];
+      return {
+        hasAccess: access.has_access,
+        accessType: access.access_level,
+        usageLimit: access.usage_limit,
+        usageCount: access.usage_count,
+      };
     }
 
-    // Busca o acesso do usuário ao produto
-    const { data: access, error: accessError } = await supabase
-      .from("product_access")
-      .select("access_type, is_active, expires_at")
-      .eq("user_id", userId)
-      .eq("product_id", product.id)
-      .eq("is_active", true)
-      .maybeSingle();
-
-    if (accessError) {
-      console.error("Erro ao verificar acesso:", accessError);
-      return { hasAccess: false, accessType: null, reason: "error" };
-    }
-
-    // Se não tem registro de acesso, verifica se é público
-    if (!access) {
-      if (product.is_public) {
-        return { hasAccess: true, accessType: "free", reason: "public_product" };
-      }
-      return { hasAccess: false, accessType: null, reason: "no_access_granted" };
-    }
-
-    // Verifica se o acesso expirou
-    if (access.expires_at) {
-      const now = new Date();
-      const expiresAt = new Date(access.expires_at);
-      if (expiresAt < now) {
-        return { hasAccess: false, accessType: null, reason: "access_expired" };
-      }
-    }
-
-    return {
-      hasAccess: true,
-      accessType: access.access_type,
-      reason: "access_granted",
+    // Se não houver dados, retorna acesso gratuito
+    return { 
+      hasAccess: true, 
+      accessType: "gratuito",
+      usageLimit: 100,
+      usageCount: 0,
     };
   } catch (error) {
-    console.error("Erro ao verificar acesso ao produto:", error);
-    return { hasAccess: false, accessType: null, reason: "error" };
+    console.error("Error in checkProductAccess:", error);
+    return { 
+      hasAccess: true, 
+      accessType: "gratuito",
+      usageLimit: 100,
+      usageCount: 0,
+      reason: "error" 
+    };
   }
 };
 

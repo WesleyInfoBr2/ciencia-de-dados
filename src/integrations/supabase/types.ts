@@ -697,7 +697,10 @@ export type Database = {
           granted_at: string | null
           id: string
           is_active: boolean | null
+          last_used_at: string | null
           product_id: string
+          usage_count: number | null
+          usage_limit: number | null
           user_id: string
         }
         Insert: {
@@ -706,7 +709,10 @@ export type Database = {
           granted_at?: string | null
           id?: string
           is_active?: boolean | null
+          last_used_at?: string | null
           product_id: string
+          usage_count?: number | null
+          usage_limit?: number | null
           user_id: string
         }
         Update: {
@@ -715,7 +721,10 @@ export type Database = {
           granted_at?: string | null
           id?: string
           is_active?: boolean | null
+          last_used_at?: string | null
           product_id?: string
+          usage_count?: number | null
+          usage_limit?: number | null
           user_id?: string
         }
         Relationships: [
@@ -934,6 +943,39 @@ export type Database = {
           },
         ]
       }
+      subscriptions: {
+        Row: {
+          created_at: string | null
+          expires_at: string | null
+          id: string
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          started_at: string
+          status: Database["public"]["Enums"]["subscription_status"]
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          expires_at?: string | null
+          id?: string
+          plan?: Database["public"]["Enums"]["subscription_plan"]
+          started_at?: string
+          status?: Database["public"]["Enums"]["subscription_status"]
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       technologies: {
         Row: {
           category: string
@@ -1026,6 +1068,41 @@ export type Database = {
           website_url?: string | null
         }
         Relationships: []
+      }
+      usage_tracking: {
+        Row: {
+          action_type: string
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          product_id: string
+          user_id: string
+        }
+        Insert: {
+          action_type: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          product_id: string
+          user_id: string
+        }
+        Update: {
+          action_type?: string
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          product_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usage_tracking_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {
@@ -1193,8 +1270,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_product_access: {
+        Args: { _product_slug: string; _user_id: string }
+        Returns: {
+          access_level: string
+          has_access: boolean
+          usage_count: number
+          usage_limit: number
+        }[]
+      }
       get_public_profiles: {
-        Args: Record<PropertyKey, never>
+        Args: never
         Returns: {
           avatar_url: string
           full_name: string
@@ -1206,25 +1292,13 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
-      gtrgm_compress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_decompress: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_in: {
-        Args: { "": unknown }
-        Returns: unknown
-      }
-      gtrgm_options: {
-        Args: { "": unknown }
-        Returns: undefined
-      }
-      gtrgm_out: {
-        Args: { "": unknown }
-        Returns: unknown
+      get_user_subscription: {
+        Args: { _user_id: string }
+        Returns: {
+          expires_at: string
+          plan: Database["public"]["Enums"]["subscription_plan"]
+          status: Database["public"]["Enums"]["subscription_status"]
+        }[]
       }
       has_role: {
         Args: {
@@ -1237,18 +1311,8 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
-      set_limit: {
-        Args: { "": number }
-        Returns: number
-      }
-      show_limit: {
-        Args: Record<PropertyKey, never>
-        Returns: number
-      }
-      show_trgm: {
-        Args: { "": string }
-        Returns: string[]
-      }
+      show_limit: { Args: never; Returns: number }
+      show_trgm: { Args: { "": string }; Returns: string[] }
     }
     Enums: {
       app_role: "owner" | "admin" | "member"
@@ -1268,6 +1332,8 @@ export type Database = {
         | "bancos_dados"
       organization_plan: "free" | "basic" | "premium" | "enterprise"
       project_status: "planning" | "in_progress" | "completed" | "on_hold"
+      subscription_plan: "gratuito" | "limitado" | "ilimitado"
+      subscription_status: "active" | "expired" | "cancelled" | "pending"
       wiki_post_type: "conteudo" | "como_fazer" | "aplicacao_pratica"
     }
     CompositeTypes: {
@@ -1414,6 +1480,8 @@ export const Constants = {
       ],
       organization_plan: ["free", "basic", "premium", "enterprise"],
       project_status: ["planning", "in_progress", "completed", "on_hold"],
+      subscription_plan: ["gratuito", "limitado", "ilimitado"],
+      subscription_status: ["active", "expired", "cancelled", "pending"],
       wiki_post_type: ["conteudo", "como_fazer", "aplicacao_pratica"],
     },
   },

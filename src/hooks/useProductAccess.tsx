@@ -5,6 +5,8 @@ import { checkProductAccess, getAccessDeniedMessage } from "@/lib/sso";
 interface ProductAccessState {
   hasAccess: boolean;
   accessType: string | null;
+  usageLimit?: number | null;
+  usageCount?: number;
   isLoading: boolean;
   error: string | null;
 }
@@ -34,6 +36,8 @@ export const useProductAccess = (productSlug: string): ProductAccessState => {
         setState({
           hasAccess: result.hasAccess,
           accessType: result.accessType,
+          usageLimit: result.usageLimit,
+          usageCount: result.usageCount,
           isLoading: false,
           error: result.hasAccess ? null : getAccessDeniedMessage(result.reason),
         });

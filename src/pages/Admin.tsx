@@ -7,6 +7,8 @@ import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ProductsManagement } from "@/components/admin/ProductsManagement";
 import { UsersManagement } from "@/components/admin/UsersManagement";
+import { SubscriptionsManagement } from "@/components/admin/SubscriptionsManagement";
+import { ProductAccessManagement } from "@/components/admin/ProductAccessManagement";
 import { Loader2 } from "lucide-react";
 
 const Admin = () => {
@@ -50,9 +52,11 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue="products" className="space-y-6">
-            <TabsList>
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="products">Produtos</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
+              <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
+              <TabsTrigger value="access">Acessos</TabsTrigger>
             </TabsList>
 
             <TabsContent value="products" className="space-y-6">
@@ -61,6 +65,14 @@ const Admin = () => {
 
             <TabsContent value="users" className="space-y-6">
               <UsersManagement />
+            </TabsContent>
+
+            <TabsContent value="subscriptions" className="space-y-6">
+              <SubscriptionsManagement />
+            </TabsContent>
+
+            <TabsContent value="access" className="space-y-6">
+              <ProductAccessManagement />
             </TabsContent>
           </Tabs>
         </div>
