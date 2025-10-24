@@ -1,11 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, BarChart3, FileSpreadsheet, Globe, Star, Zap } from "lucide-react";
+import { ArrowRight, BarChart3, FileSpreadsheet, Globe, Star, Zap, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { redirectToProduct } from "@/lib/sso";
+import { useToast } from "@/hooks/use-toast";
 
 const ProductsSection = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const { toast } = useToast();
   
   const products = [
     {
@@ -39,6 +44,45 @@ const ProductsSection = () => {
       baseUrl: "dadosbrasil.cienciadedados.org"
     }
   ];
+
+  const handleAccessProduct = async (product: typeof products[0]) => {
+    if (!user) {
+      toast({
+        title: "Login necessário",
+        description: "Você precisa fazer login para acessar este produto.",
+        variant: "destructive",
+      });
+      navigate("/auth");
+      return;
+    }
+
+    if (product.status === "development") {
+      toast({
+        title: "Em desenvolvimento",
+        description: "Este produto ainda está em desenvolvimento e não está disponível para acesso.",
+      });
+      return;
+    }
+
+    toast({
+      title: "Verificando acesso...",
+      description: "Aguarde enquanto verificamos seu acesso ao produto.",
+    });
+
+    const success = await redirectToProduct(
+      product.slug,
+      product.baseUrl,
+      user.id
+    );
+
+    if (!success) {
+      toast({
+        title: "Acesso negado",
+        description: "Você não tem acesso a este produto. Entre em contato para solicitar acesso.",
+        variant: "destructive",
+      });
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -112,7 +156,7 @@ const ProductsSection = () => {
                 
                 <div className="pt-4 flex space-x-2">
                   <Button 
-                    variant="default" 
+                    variant="outline" 
                     size="sm" 
                     className="flex-1" 
                     onClick={() => navigate(`/produtos/${product.slug}`)}
@@ -120,8 +164,17 @@ const ProductsSection = () => {
                     Saiba Mais
                     <ArrowRight className="w-4 h-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
-                    <Star className="w-4 h-4" />
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => handleAccessProduct(product)}
+                    disabled={product.status === "development"}
+                  >
+                    {product.status === "development" ? (
+                      <Lock className="w-4 h-4" />
+                    ) : (
+                      <>Acessar</>
+                    )}
                   </Button>
                 </div>
               </CardContent>
