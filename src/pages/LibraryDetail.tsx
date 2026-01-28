@@ -642,9 +642,23 @@ export function LibraryDetail() {
                                   </a>
                                 </Button>
                               ))
-                            ) : (
-                              <span className="font-medium text-sm block">{attributes.arquivo}</span>
-                            )}
+                            ) : attributes.arquivo ? (
+                              <Button
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="w-full gap-2"
+                              >
+                                <a 
+                                  href={`${supabase.storage.from('library-files').getPublicUrl(attributes.arquivo).data.publicUrl}`}
+                                  target="_blank" 
+                                  rel="noopener noreferrer"
+                                >
+                                  <Download className="h-4 w-4" />
+                                  {attributes.arquivo}
+                                </a>
+                              </Button>
+                            ) : null}
                           </div>
                         </>
                       )}
