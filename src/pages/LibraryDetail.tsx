@@ -466,109 +466,223 @@ export function LibraryDetail() {
                     </Badge>
                   </div>
                   
-                  {/* Dynamic attributes */}
-                  {Object.entries(attributes).map(([key, value]) => {
-                    if (value === null || value === undefined || value === '') return null;
-                    
-                    // Format the key as label
-                    const labelMap: Record<string, string> = {
-                      language: 'Linguagem',
-                      open_source: 'Open Source',
-                      plataformas: 'Plataformas',
-                      'instituição': 'Instituição',
-                      instituicao: 'Instituição',
-                      'duração': 'Duração',
-                      duracao: 'Duração',
-                      certificado: 'Certificado',
-                      'método_acesso': 'Método de Acesso',
-                      metodo_acesso: 'Método de Acesso',
-                      'observações': 'Observações',
-                      observacoes: 'Observações',
-                      tema: 'Tema',
-                      'ano_referência': 'Ano de Referência',
-                      ano_referencia: 'Ano de Referência',
-                      'licença': 'Licença',
-                      licenca: 'Licença',
-                      fonte: 'Fonte',
-                      formato: 'Formato',
-                      tamanho_amostra: 'Tamanho da Amostra',
-                      tipo: 'Tipo de Variável',
-                      status: 'Status',
-                      version: 'Versão',
-                      license: 'Licença',
-                      platforms: 'Plataformas',
-                      provider: 'Provedor',
-                      duration: 'Duração',
-                      mode: 'Modalidade',
-                      certificate: 'Certificado',
-                      country: 'País',
-                      sector: 'Setor',
-                      theme: 'Tema',
-                      update_frequency: 'Atualização',
-                      year: 'Ano de Referência',
-                      format: 'Formato',
-                      variables: 'Tipos de Variáveis',
-                    };
-                    
-                    const label = labelMap[key] || key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
-                    
-                    // Handle different value types
-                    let displayValue: React.ReactNode;
-                    
-                    if (typeof value === 'boolean' || value === 'true' || value === 'false') {
-                      const boolVal = value === true || value === 'true';
-                      displayValue = (
-                        <Badge variant={boolVal ? "default" : "secondary"} className="text-xs">
-                          {boolVal ? "Sim" : "Não"}
-                        </Badge>
-                      );
-                    } else if (Array.isArray(value)) {
-                      displayValue = (
-                        <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
-                          {value.slice(0, 3).map((v, i) => (
-                            <Badge key={i} variant="outline" className="text-xs">{String(v)}</Badge>
-                          ))}
-                          {value.length > 3 && (
-                            <span className="text-xs text-muted-foreground">+{value.length - 3}</span>
-                          )}
-                        </div>
-                      );
-                    } else {
-                      displayValue = <span className="font-medium text-sm text-right max-w-[60%] truncate">{String(value)}</span>;
-                    }
-                    
-                    return (
-                      <div key={key}>
-                        <Separator />
-                        <div className="flex justify-between items-center pt-3">
-                          <span className="text-muted-foreground">{label}</span>
-                          {displayValue}
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* File download for datasets */}
-                  {item.category === 'datasets' && files.length > 0 && (
+                  {/* Category-specific attributes in order */}
+                  {item.category === 'codes' && (
                     <>
-                      <Separator />
-                      <div className="space-y-2 pt-3">
-                        <span className="text-muted-foreground">Arquivo</span>
-                        {files.map((file) => (
-                          <Button
-                            key={file.id}
-                            asChild
-                            variant="outline"
-                            size="sm"
-                            className="w-full gap-2"
-                          >
-                            <a href={file.file_url} target="_blank" rel="noopener noreferrer">
-                              <Download className="h-4 w-4" />
-                              {file.filename}
-                            </a>
-                          </Button>
-                        ))}
-                      </div>
+                      {attributes.language && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Linguagem</span>
+                            <span className="font-medium">{attributes.language}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.open_source !== undefined && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Open Source</span>
+                            <Badge variant={attributes.open_source === true || attributes.open_source === 'true' ? "default" : "secondary"} className="text-xs">
+                              {attributes.open_source === true || attributes.open_source === 'true' ? "Sim" : "Não"}
+                            </Badge>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'tools' && (
+                    <>
+                      {attributes.open_source !== undefined && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Open Source</span>
+                            <Badge variant={attributes.open_source === true || attributes.open_source === 'true' ? "default" : "secondary"} className="text-xs">
+                              {attributes.open_source === true || attributes.open_source === 'true' ? "Sim" : "Não"}
+                            </Badge>
+                          </div>
+                        </>
+                      )}
+                      {attributes.plataformas && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Plataformas</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.plataformas}</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'courses' && (
+                    <>
+                      {attributes.instituição && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Instituição</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.instituição}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.duração && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Duração</span>
+                            <span className="font-medium text-sm">{attributes.duração}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.certificado !== undefined && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Certificado</span>
+                            <Badge variant={attributes.certificado === true || attributes.certificado === 'true' ? "default" : "secondary"} className="text-xs">
+                              {attributes.certificado === true || attributes.certificado === 'true' ? "Sim" : "Não"}
+                            </Badge>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'sources' && (
+                    <>
+                      {attributes.método_acesso && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Método de Acesso</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.método_acesso}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.observações && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Observações</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.observações}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.tema && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Tema</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.tema}</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'datasets' && (
+                    <>
+                      {attributes.tema && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Tema</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.tema}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.ano_referência && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Ano de Referência</span>
+                            <span className="font-medium text-sm">{attributes.ano_referência}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.licença && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Licença</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.licença}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.fonte && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Fonte</span>
+                            <span className="font-medium text-sm text-right max-w-[60%]">{attributes.fonte}</span>
+                          </div>
+                        </>
+                      )}
+                      {/* Arquivo - with download link */}
+                      {(attributes.arquivo || files.length > 0) && (
+                        <>
+                          <Separator />
+                          <div className="space-y-2 pt-1">
+                            <span className="text-muted-foreground">Arquivo</span>
+                            {files.length > 0 ? (
+                              files.map((file) => (
+                                <Button
+                                  key={file.id}
+                                  asChild
+                                  variant="outline"
+                                  size="sm"
+                                  className="w-full gap-2"
+                                >
+                                  <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+                                    <Download className="h-4 w-4" />
+                                    {file.filename}
+                                  </a>
+                                </Button>
+                              ))
+                            ) : (
+                              <span className="font-medium text-sm block">{attributes.arquivo}</span>
+                            )}
+                          </div>
+                        </>
+                      )}
+                      {attributes.formato && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Formato do Arquivo</span>
+                            <Badge variant="outline" className="text-xs">{attributes.formato}</Badge>
+                          </div>
+                        </>
+                      )}
+                      {attributes.tamanho_amostra && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-center">
+                            <span className="text-muted-foreground">Tamanho da Amostra</span>
+                            <span className="font-medium text-sm">{attributes.tamanho_amostra}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.tipo && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-start">
+                            <span className="text-muted-foreground">Tipos das Variáveis</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                              {Array.isArray(attributes.tipo) ? (
+                                attributes.tipo.map((t: string, i: number) => (
+                                  <Badge key={i} variant="secondary" className="text-xs">{t}</Badge>
+                                ))
+                              ) : (
+                                <Badge variant="secondary" className="text-xs">{attributes.tipo}</Badge>
+                              )}
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </>
                   )}
                 </CardContent>
