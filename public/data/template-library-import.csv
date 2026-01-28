@@ -1,0 +1,7 @@
+categoria,nome,descrição,website_url,Preço,tags,destaques,status,atributo.linguagem,atributo.licenca,atributo.plataformas,atributo.open_source,atributo.provedor,atributo.duracao,atributo.modalidade,atributo.certificado,atributo.pais,atributo.setor,atributo.tema,atributo.frequencia_atualizacao,atributo.ano,atributo.formato,atributo.variaveis,atributo.arquivo
+codes,PyCaret,"Biblioteca de aprendizado de máquina de código aberto e baixo código em Python",https://github.com/pycaret/pycaret,Gratuito,machine learning;python,Sim,Ativo,Python,MIT,,Sim,,,,,,,,,,,,
+codes,geobr,"Pacote para download de conjuntos de dados espaciais do Brasil",https://ipeagit.github.io/geobr/,Gratuito,geoespacial;brasil;dados,Não,Ativo,R;Python,MIT,,Sim,,,,,,,,,,,,
+tools,ChatGPT,"Assistente de IA para diversas tarefas",https://chat.openai.com,Freemium,ia;chatbot;produtividade,Sim,Ativo,,,Web;Mobile;API,Não,,,,,,,,,,,,
+courses,Ciência de Dados com Python,"Curso completo de ciência de dados usando Python",https://exemplo.com/curso,Pago,python;data science;analytics,Não,Ativo,,,,,Coursera,40h,Online,Sim,,,,,,,,
+sources,Portal de Dados Abertos,"Portal oficial de dados abertos do governo brasileiro",https://dados.gov.br,Gratuito,governo;brasil;aberto,Sim,Ativo,,,,,,,,,Brasil,Governo,Diversos,Contínua,,,,
+datasets,IBGE Censo 2022,"Dados do Censo Demográfico 2022",https://ibge.gov.br,Gratuito,censo;população;brasil,Não,Ativo,,,,,,,,,Brasil,Demografia,População,Decenal,2022,CSV,"população;idade;sexo;renda",
