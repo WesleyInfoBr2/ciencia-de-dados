@@ -114,12 +114,16 @@ const Libraries = () => {
     [searchParams, setSearchParams],
   );
 
-  // Fetch featured items
+  // Fetch featured items (all featured items for carousel)
   useEffect(() => {
     const fetchFeatured = async () => {
       setLoadingFeatured(true);
       try {
-        const { data, error } = await supabase.from("library_items").select("*").eq("is_featured", true).limit(8);
+        const { data, error } = await supabase
+          .from("library_items")
+          .select("*")
+          .eq("is_featured", true)
+          .order("name", { ascending: true });
 
         if (error) throw error;
         setFeaturedItems(data || []);
