@@ -170,7 +170,7 @@ const Libraries = () => {
             } else if (key === "tags") {
               query = query.overlaps("tags", values);
             }
-            // Note: language filter now handled via attributes (client-side filtering may be needed)
+            // Note: attribute filters (attr_*) are handled client-side after fetch
           }
         });
 
@@ -186,20 +186,46 @@ const Libraries = () => {
             query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
         }
 
-        // Apply pagination
-        query = query.range(currentOffset, currentOffset + PAGE_SIZE);
+        // Only apply server-side pagination if no attribute filters
+        const hasAttrFilters = Object.keys(filters).some(key => key.startsWith('attr_') && filters[key].length > 0);
+        if (!hasAttrFilters) {
+          query = query.range(currentOffset, currentOffset + PAGE_SIZE);
+        }
 
         const { data, error } = await query;
 
         if (error) throw error;
 
-        const newItems = data || [];
-        setHasMore(newItems.length === PAGE_SIZE + 1);
+        let filteredData = data || [];
+        
+        // Apply client-side attribute filters
+        const attrFilters = Object.entries(filters).filter(([key]) => key.startsWith('attr_'));
+        if (attrFilters.length > 0) {
+          filteredData = filteredData.filter(item => {
+            const attrs = (item.attributes as Record<string, any>) || {};
+            return attrFilters.every(([key, values]) => {
+              if (values.length === 0) return true;
+              const attrKey = key.replace('attr_', '');
+              const itemValue = attrs[attrKey];
+              if (itemValue === undefined || itemValue === null) return false;
+              
+              // Handle array values (like tipo which can be multiple)
+              if (Array.isArray(itemValue)) {
+                return values.some(v => itemValue.includes(v));
+              }
+              
+              // Handle string values
+              return values.includes(String(itemValue));
+            });
+          });
+        }
+
+        setHasMore(filteredData.length > currentOffset + PAGE_SIZE);
 
         if (reset) {
-          setItems(newItems.slice(0, PAGE_SIZE));
+          setItems(filteredData.slice(0, PAGE_SIZE));
         } else {
-          setItems((prev) => [...prev, ...newItems.slice(0, PAGE_SIZE)]);
+          setItems((prev) => [...prev, ...filteredData.slice(currentOffset, currentOffset + PAGE_SIZE)]);
         }
 
         if (!reset) {
