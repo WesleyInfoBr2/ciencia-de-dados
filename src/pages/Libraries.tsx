@@ -49,7 +49,7 @@ const Libraries = () => {
   // Parse URL parameters
   const selectedCategory = (searchParams.get("category") as LibraryCategory | "all") || "all";
   const searchTerm = searchParams.get("q") || "";
-  const sortBy = searchParams.get("sort") || "name";
+  const sortBy = searchParams.get("sort") || "relevance";
 
   // Parse filters from URL
   const getFiltersFromURL = (): LibraryFilters => {
