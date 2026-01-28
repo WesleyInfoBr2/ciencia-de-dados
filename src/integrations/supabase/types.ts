@@ -562,45 +562,51 @@ export type Database = {
       library_items: {
         Row: {
           attributes: Json | null
-          category: Database["public"]["Enums"]["library_category"]
+          category: string
           created_at: string | null
           id: string
+          is_featured: boolean | null
           is_open_source: boolean | null
           language: string | null
           name: string
-          price: Database["public"]["Enums"]["library_price"] | null
+          price: string
           short_description: string | null
           slug: string
+          status: string | null
           tags: string[] | null
           updated_at: string | null
           website_url: string | null
         }
         Insert: {
           attributes?: Json | null
-          category: Database["public"]["Enums"]["library_category"]
+          category: string
           created_at?: string | null
           id?: string
+          is_featured?: boolean | null
           is_open_source?: boolean | null
           language?: string | null
           name: string
-          price?: Database["public"]["Enums"]["library_price"] | null
+          price?: string
           short_description?: string | null
           slug: string
+          status?: string | null
           tags?: string[] | null
           updated_at?: string | null
           website_url?: string | null
         }
         Update: {
           attributes?: Json | null
-          category?: Database["public"]["Enums"]["library_category"]
+          category?: string
           created_at?: string | null
           id?: string
+          is_featured?: boolean | null
           is_open_source?: boolean | null
           language?: string | null
           name?: string
-          price?: Database["public"]["Enums"]["library_price"] | null
+          price?: string
           short_description?: string | null
           slug?: string
+          status?: string | null
           tags?: string[] | null
           updated_at?: string | null
           website_url?: string | null
