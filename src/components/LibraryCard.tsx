@@ -3,10 +3,26 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Info, Star, Globe, Code, BookOpen, Database as DatabaseIcon, BarChart3 } from "lucide-react";
-import type { Database } from "@/integrations/supabase/types";
+import { ExternalLink, Info, Globe, Code, BookOpen, Database as DatabaseIcon, BarChart3, Star } from "lucide-react";
 
-type LibraryItem = Database['public']['Tables']['library_items']['Row'];
+// Interface para o item da biblioteca (compatível com a nova estrutura)
+interface LibraryItem {
+  id: string;
+  category: string;
+  name: string;
+  short_description: string | null;
+  website_url: string | null;
+  price: string | null;
+  tags: string[] | null;
+  is_featured: boolean | null;
+  status: string | null;
+  slug: string;
+  language: string | null;
+  is_open_source: boolean | null;
+  attributes: unknown;
+  created_at: string | null;
+  updated_at: string | null;
+}
 
 interface LibraryCardProps {
   item: LibraryItem;
@@ -25,11 +41,11 @@ const getCategoryIcon = (category: string) => {
 
 const getPriceColor = (price: string) => {
   switch (price) {
-    case 'free': return 'bg-green-500/10 text-green-700 dark:text-green-400';
-    case 'paid': return 'bg-orange-500/10 text-orange-700 dark:text-orange-400';
-    case 'freemium': return 'bg-blue-500/10 text-blue-700 dark:text-blue-400';
-    case 'subscription': return 'bg-purple-500/10 text-purple-700 dark:text-purple-400';
-    default: return 'bg-muted';
+    case 'free': return 'bg-accent/10 text-accent-foreground';
+    case 'paid': return 'bg-destructive/10 text-destructive';
+    case 'freemium': return 'bg-primary/10 text-primary';
+    case 'subscription': return 'bg-secondary text-secondary-foreground';
+    default: return 'bg-muted text-muted-foreground';
   }
 };
 
@@ -53,7 +69,14 @@ export function LibraryCard({ item }: LibraryCardProps) {
     : item.short_description;
 
   return (
-    <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-card/50 backdrop-blur-sm border-border/50 rounded-2xl overflow-hidden">
+    <Card className="group hover:shadow-lg transition-all duration-300 hover:scale-[1.02] bg-card/50 backdrop-blur-sm border-border/50 rounded-2xl overflow-hidden relative">
+      {/* Featured indicator */}
+      {item.is_featured && (
+        <div className="absolute top-2 right-2">
+          <Star className="h-4 w-4 text-accent fill-accent" />
+        </div>
+      )}
+      
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-2 flex-1">
@@ -90,19 +113,19 @@ export function LibraryCard({ item }: LibraryCardProps) {
         )}
 
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge className={getPriceColor(item.price)}>
-            {getPriceLabel(item.price)}
+          <Badge className={getPriceColor(item.price || 'free')}>
+            {getPriceLabel(item.price || 'free')}
           </Badge>
           
           {item.is_open_source && (
-            <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
+            <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/30">
               Open Source
             </Badge>
           )}
         </div>
 
         {item.tags && item.tags.length > 0 && (
-          <div className="flex flex-wrap gap-1 mb-4">
+          <div className="flex flex-wrap gap-1">
             {item.tags.slice(0, 3).map((tag, index) => (
               <Badge
                 key={index}
@@ -116,72 +139,6 @@ export function LibraryCard({ item }: LibraryCardProps) {
               <Badge variant="secondary" className="text-xs px-2 py-1 bg-muted/50">
                 +{item.tags.length - 3}
               </Badge>
-            )}
-          </div>
-        )}
-
-        {/* Category-specific attributes */}
-        {item.attributes && Object.keys(item.attributes).length > 0 && (
-          <div className="space-y-1 text-xs text-muted-foreground">
-            {item.category === 'tools' && (
-              <>
-                {(item.attributes as any).platforms && (
-                  <div>Plataformas: {(item.attributes as any).platforms.join(", ")}</div>
-                )}
-                {(item.attributes as any).license && (
-                  <div>Licença: {(item.attributes as any).license}</div>
-                )}
-              </>
-            )}
-            
-            {item.category === 'courses' && (
-              <>
-                {(item.attributes as any).provider && (
-                  <div>Provedor: {(item.attributes as any).provider}</div>
-                )}
-                {(item.attributes as any).duration && (
-                  <div>Duração: {(item.attributes as any).duration}</div>
-                )}
-                {(item.attributes as any).certificate && (
-                  <div className="flex items-center gap-1">
-                    <Star className="h-3 w-3" />
-                    Certificado incluído
-                  </div>
-                )}
-              </>
-            )}
-            
-            {item.category === 'codes' && (
-              <>
-                {(item.attributes as any).version && (
-                  <div>Versão: {(item.attributes as any).version}</div>
-                )}
-                {(item.attributes as any).status && (
-                  <div>Status: {(item.attributes as any).status}</div>
-                )}
-              </>
-            )}
-            
-            {item.category === 'sources' && (
-              <>
-                {(item.attributes as any).country && (
-                  <div>País: {(item.attributes as any).country}</div>
-                )}
-                {(item.attributes as any).update_frequency && (
-                  <div>Frequência: {(item.attributes as any).update_frequency}</div>
-                )}
-              </>
-            )}
-            
-            {item.category === 'datasets' && (
-              <>
-                {(item.attributes as any).year && (
-                  <div>Ano: {(item.attributes as any).year}</div>
-                )}
-                {(item.attributes as any).format && (
-                  <div>Formato: {(item.attributes as any).format}</div>
-                )}
-              </>
             )}
           </div>
         )}
