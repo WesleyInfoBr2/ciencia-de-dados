@@ -109,7 +109,7 @@ const Libraries = () => {
     setSearchParams(newParams);
   }, [searchParams, setSearchParams]);
 
-  // Fetch featured items
+  // Fetch ALL featured items (no limit for carousel)
   useEffect(() => {
     const fetchFeatured = async () => {
       setLoadingFeatured(true);
@@ -118,7 +118,7 @@ const Libraries = () => {
           .from('library_items')
           .select('*')
           .eq('is_featured', true)
-          .limit(8);
+          .order('name', { ascending: true });
 
         if (error) throw error;
         setFeaturedItems(data || []);
