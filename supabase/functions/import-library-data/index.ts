@@ -1,237 +1,174 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts"
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "jsr:@supabase/supabase-js@2";
+import { corsHeaders } from "../_shared/cors.ts";
 
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+interface LibraryItemData {
+  categoria: string;
+  nome: string;
+  descrição: string;
+  website_url: string;
+  Preço: string;
+  tags: string;
+  destaques: string;
+  status: string;
+  [key: string]: string | undefined;
 }
 
-interface LibraryRecord {
-  [key: string]: string
+function slugify(text: string): string {
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/(^-|-$)/g, '');
 }
 
-serve(async (req) => {
-  // Handle CORS preflight requests
+function mapCategory(cat: string): string {
+  const mapping: Record<string, string> = {
+    'codes': 'codes',
+    'tools': 'tools',
+    'courses': 'courses',
+    'sources': 'sources',
+    'datasets': 'datasets',
+  };
+  return mapping[cat.toLowerCase()] || cat.toLowerCase();
+}
+
+function mapPrice(price: string): string {
+  const p = price?.toLowerCase().trim() || 'free';
+  if (p.includes('gratu') || p === 'free') return 'free';
+  if (p.includes('pago') || p === 'paid') return 'paid';
+  if (p.includes('freemium')) return 'freemium';
+  if (p.includes('assin') || p.includes('subscr')) return 'subscription';
+  return 'free';
+}
+
+function parseTags(tagsStr: string): string[] {
+  if (!tagsStr) return [];
+  return tagsStr
+    .split(/[;,]/)
+    .map(t => t.trim())
+    .filter(Boolean);
+}
+
+function parseBoolean(val: string | undefined): boolean {
+  if (!val) return false;
+  const v = val.toLowerCase().trim();
+  return v === 'true' || v === 'sim' || v === 'yes' || v === '1';
+}
+
+function cleanUrl(url: string | undefined): string | null {
+  if (!url) return null;
+  // Remove escaped backslashes from markdown parsing
+  return url.replace(/\\/g, '');
+}
+
+Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
-    return new Response('ok', { headers: corsHeaders })
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseClient = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    )
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { library_type } = await req.json()
+    const { items } = await req.json() as { items: LibraryItemData[] };
 
-    if (!library_type) {
+    if (!items || !Array.isArray(items)) {
       return new Response(
-        JSON.stringify({ error: 'library_type is required' }),
-        { 
-          status: 400, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
+        JSON.stringify({ error: 'Invalid items array' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
-    let csvUrl: string
-    let tableName: string
-    let processor: (records: LibraryRecord[]) => any[]
+    const results = {
+      inserted: 0,
+      updated: 0,
+      errors: [] as string[],
+    };
 
-    switch (library_type) {
-      case 'tools':
-        csvUrl = `${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://').replace('.supabase.co', '.supabase.co')}/storage/v1/object/public/wiki-images/ferramentas.csv`
-        tableName = 'tools'
-        processor = (records) => records.map(record => ({
-          name: record['Ferramenta'] || record['﻿Ferramenta'],
-          description: record['Descrição'],
-          category: record['Área'],
-          is_free: record['Free']?.toLowerCase() === 'free',
-          is_online: record['Online']?.toLowerCase() === 'online',
-          status: record['Status']?.toLowerCase() || 'active',
-          website_url: record['link'],
-          added_date: record['Data adicionado'] ? new Date(record['Data adicionado'].replace(' (BRT)', '')) : new Date()
-        }))
-        break
+    for (const item of items) {
+      try {
+        const category = mapCategory(item.categoria);
+        const slug = slugify(item.nome);
 
-      case 'courses':
-        csvUrl = `${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://').replace('.supabase.co', '.supabase.co')}/storage/v1/object/public/wiki-images/formacoes.csv`
-        tableName = 'educational_courses'
-        processor = (records) => records.map(record => ({
-          name: record['Curso'] || record['﻿Curso'],
-          institution: record['Instituição'],
-          duration: record['CH'],
-          price: record['Valor'] || 'Gratuito',
-          access_url: record['Link de acesso'],
-          status: record['Status']?.toLowerCase() || 'active',
-          added_date: record['Data cadastro'] ? new Date(record['Data cadastro'].replace(' (BRT)', '')) : new Date()
-        }))
-        break
-
-      case 'code_python':
-        csvUrl = `${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://').replace('.supabase.co', '.supabase.co')}/storage/v1/object/public/wiki-images/codigos-python.csv`
-        tableName = 'code_packages'
-        processor = (records) => records.map(record => ({
-          name: record['Codigo'] || record['﻿Codigo'],
-          language: 'python',
-          description: record['Breve descrição'],
-          website_url: record['Endereço'],
-          status: record['Status']?.toLowerCase() || 'active',
-          added_date: record['Data cadastro'] ? new Date(record['Data cadastro'].replace(' (BRT)', '')) : new Date()
-        }))
-        break
-
-      case 'code_r':
-        csvUrl = `${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://').replace('.supabase.co', '.supabase.co')}/storage/v1/object/public/wiki-images/codigos-r.csv`
-        tableName = 'code_packages'
-        processor = (records) => records.map(record => ({
-          name: record['Codigo'] || record['﻿Codigo'],
-          language: 'r',
-          description: record['Breve descrição'],
-          website_url: record['Link'],
-          status: record['Status']?.toLowerCase() || 'active',
-          added_date: record['Data cadastro'] ? new Date(record['Data cadastro'].replace(' (BRT)', '')) : new Date()
-        }))
-        break
-
-      case 'data_sources':
-        csvUrl = `${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://').replace('.supabase.co', '.supabase.co')}/storage/v1/object/public/wiki-images/fontes-dados.csv`
-        tableName = 'data_sources'
-        processor = (records) => records.map(record => ({
-          name: record['Fonte'] || record['﻿Fonte'],
-          documentation_url: record['Documentação'],
-          example_data: record['Exemplos de dados'],
-          access_method: record['Forma de acesso'],
-          observations: record['Observações'],
-          category: record['Área']
-        }))
-        break
-
-      case 'datasets':
-        csvUrl = `${Deno.env.get('SUPABASE_URL')?.replace('https://', 'https://').replace('.supabase.co', '.supabase.co')}/storage/v1/object/public/wiki-images/bases-dados.csv`
-        tableName = 'datasets'
-        processor = (records) => records.map(record => ({
-          title: record['Tema'] || record['﻿Tema'],
-          description: record['Descrição'],
-          uploader_id: '00000000-0000-0000-0000-000000000000', // System user
-          format: 'csv',
-          license: record['Fonte'] || 'Unknown',
-          source: record['Fonte'],
-          category: 'Dados Acadêmicos',
-          file_url: null,
-          rows_count: parseInt(record['N respostas']) || null,
-          is_public: true,
-          slug: (record['Tema'] || record['﻿Tema'])?.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') || 'dataset'
-        }))
-        break
-
-      default:
-        return new Response(
-          JSON.stringify({ error: 'Invalid library_type' }),
-          { 
-            status: 400, 
-            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        // Extract attributes from fields starting with 'atributo.'
+        const attributes: Record<string, unknown> = {};
+        for (const [key, value] of Object.entries(item)) {
+          if (key.startsWith('atributo.') && value) {
+            const attrKey = key.replace('atributo.', '');
+            // Handle boolean values
+            if (attrKey === 'open_source' || attrKey === 'certificado') {
+              attributes[attrKey] = parseBoolean(value);
+            } else {
+              attributes[attrKey] = value;
+            }
           }
-        )
-    }
+        }
 
-    // Use the public CSV files we copied - get them from the origin server
-    const originUrl = req.url.replace('/functions/import-library-data', '')
-    const csvPath = library_type === 'tools' ? 'ferramentas' : 
-                   library_type === 'courses' ? 'formacoes' :
-                   library_type === 'code_python' ? 'codigos-python' :
-                   library_type === 'code_r' ? 'codigos-r' :
-                   library_type === 'data_sources' ? 'fontes-dados' :
-                   library_type === 'datasets' ? 'bases-dados' : 'unknown'
-    
-    const publicUrl = `${originUrl}/data/${csvPath}.csv`
+        // Determine language for codes
+        let language = null;
+        if (category === 'codes' && attributes.linguagem) {
+          language = String(attributes.linguagem);
+          delete attributes.linguagem;
+        }
 
-    // Fetch CSV content
-    const response = await fetch(publicUrl)
-    if (!response.ok) {
-      throw new Error(`Failed to fetch CSV: ${response.status}`)
-    }
+        const libraryItem = {
+          category,
+          name: item.nome,
+          short_description: item.descrição || null,
+          website_url: cleanUrl(item.website_url),
+          price: mapPrice(item.Preço),
+          tags: parseTags(item.tags),
+          is_featured: parseBoolean(item.destaques),
+          status: item.status?.toLowerCase() === 'ativo' ? 'active' : 'inactive',
+          slug,
+          language,
+          is_open_source: attributes.open_source as boolean || false,
+          attributes,
+        };
 
-    const csvText = await response.text()
-    
-    // Parse CSV manually (simple implementation)
-    const lines = csvText.split('\n').filter(line => line.trim())
-    const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim())
-    
-    const records: LibraryRecord[] = []
-    for (let i = 1; i < lines.length; i++) {
-      const values = []
-      let current = ''
-      let inQuotes = false
-      
-      for (let j = 0; j < lines[i].length; j++) {
-        const char = lines[i][j]
-        if (char === '"') {
-          inQuotes = !inQuotes
-        } else if (char === ',' && !inQuotes) {
-          values.push(current.trim())
-          current = ''
+        // Check if item exists
+        const { data: existing } = await supabase
+          .from('library_items')
+          .select('id')
+          .eq('slug', slug)
+          .single();
+
+        if (existing) {
+          // Update
+          const { error } = await supabase
+            .from('library_items')
+            .update(libraryItem)
+            .eq('id', existing.id);
+
+          if (error) throw error;
+          results.updated++;
         } else {
-          current += char
+          // Insert
+          const { error } = await supabase
+            .from('library_items')
+            .insert(libraryItem);
+
+          if (error) throw error;
+          results.inserted++;
         }
+      } catch (error) {
+        results.errors.push(`Error processing ${item.nome}: ${error.message}`);
       }
-      values.push(current.trim())
-      
-      if (values.length === headers.length) {
-        const record: LibraryRecord = {}
-        headers.forEach((header, index) => {
-          record[header] = values[index] || ''
-        })
-        records.push(record)
-      }
-    }
-
-    // Process and insert records
-    const processedRecords = processor(records.slice(0, 50)) // Limit to 50 records for now
-    
-    // Clear existing data and insert new data
-    const { error: deleteError } = await supabaseClient
-      .from(tableName)
-      .delete()
-      .neq('id', '00000000-0000-0000-0000-000000000000') // Don't delete system records
-      
-    if (deleteError) {
-      console.error('Delete error:', deleteError)
-    }
-
-    const { data, error } = await supabaseClient
-      .from(tableName)
-      .insert(processedRecords)
-
-    if (error) {
-      console.error('Insert error:', error)
-      return new Response(
-        JSON.stringify({ error: error.message }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      )
     }
 
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        imported: processedRecords.length,
-        library_type,
-        table: tableName
-      }),
+      JSON.stringify(results),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-    )
-
+    );
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Import error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
-      { 
-        status: 500, 
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-      }
-    )
+      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+    );
   }
-})
+});

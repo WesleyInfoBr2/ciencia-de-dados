@@ -1,43 +1,27 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Header from "@/components/Header";
-import { LibraryCard } from "@/components/LibraryCard";
-import { LibraryFilters } from "@/components/LibraryFilters";
-import { LibraryImport } from "@/components/LibraryImport";
+import { FeaturedSection } from "@/components/library/FeaturedSection";
+import { LibrarySidebar } from "@/components/library/LibrarySidebar";
+import { LibraryGrid } from "@/components/library/LibraryGrid";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Filter, Upload, X, ChevronLeft, ChevronRight, Wrench, GraduationCap, Code, Database, BarChart3 } from "lucide-react";
+import { Search, Upload, X } from "lucide-react";
+import { LibraryImport } from "@/components/LibraryImport";
 import { updatePageMetadata } from "@/utils/seo";
-import type { Database as DB } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
-type LibraryItem = DB['public']['Tables']['library_items']['Row'];
-type LibraryCategory = DB['public']['Enums']['library_category'];
+type LibraryItem = Database['public']['Tables']['library_items']['Row'];
+type LibraryCategory = 'tools' | 'courses' | 'codes' | 'sources' | 'datasets';
 
 interface LibraryFilters {
   [key: string]: string[];
 }
-
-interface PaginationCursor {
-  hasNext: boolean;
-  hasPrev: boolean;
-  nextCursor?: string;
-  prevCursor?: string;
-}
-
-const CATEGORIES = [
-  { id: 'tools' as LibraryCategory, label: 'Ferramentas Digitais', icon: Wrench },
-  { id: 'courses' as LibraryCategory, label: 'Formações Digitais', icon: GraduationCap },
-  { id: 'codes' as LibraryCategory, label: 'Códigos e Pacotes', icon: Code },
-  { id: 'sources' as LibraryCategory, label: 'Fontes de Dados', icon: Database },
-  { id: 'datasets' as LibraryCategory, label: 'Bases de Dados', icon: BarChart3 }
-];
 
 const SORT_OPTIONS = [
   { value: "relevance", label: "Relevância" },
@@ -45,23 +29,32 @@ const SORT_OPTIONS = [
   { value: "name", label: "Nome A-Z" }
 ];
 
+const PAGE_SIZE = 12;
+
 const Libraries = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   const { toast } = useToast();
-  
+
+  // State
+  const [featuredItems, setFeaturedItems] = useState<LibraryItem[]>([]);
+  const [items, setItems] = useState<LibraryItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [loadingFeatured, setLoadingFeatured] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const [offset, setOffset] = useState(0);
+  const [showImport, setShowImport] = useState(false);
+
   // Parse URL parameters
-  const activeTab = (searchParams.get('tab') as LibraryCategory) || 'tools';
+  const selectedCategory = (searchParams.get('category') as LibraryCategory | 'all') || 'all';
   const searchTerm = searchParams.get('q') || '';
   const sortBy = searchParams.get('sort') || 'relevance';
-  const cursor = searchParams.get('cursor') || '';
-  const direction = searchParams.get('direction') || 'next';
-  
+
   // Parse filters from URL
   const getFiltersFromURL = (): LibraryFilters => {
     const filtersParam = searchParams.get('filters');
     if (!filtersParam) return {};
-    
     try {
       return JSON.parse(atob(filtersParam));
     } catch {
@@ -69,42 +62,25 @@ const Libraries = () => {
     }
   };
 
-  const [items, setItems] = useState<LibraryItem[]>([]);
-  const [itemCounts, setItemCounts] = useState<Record<LibraryCategory, number>>({
-    tools: 0,
-    courses: 0,
-    codes: 0,
-    sources: 0,
-    datasets: 0
-  });
-  const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState<LibraryFilters>(getFiltersFromURL());
-  const [showFilters, setShowFilters] = useState(false);
-  const [showImport, setShowImport] = useState(false);
-  const [pagination, setPagination] = useState<PaginationCursor>({
-    hasNext: false,
-    hasPrev: false
-  });
 
   // Update URL when state changes
-  const updateURL = (updates: Partial<{
-    tab: LibraryCategory;
+  const updateURL = useCallback((updates: Partial<{
+    category: LibraryCategory | 'all';
     q: string;
     sort: string;
-    cursor: string;
-    direction: string;
     filters: LibraryFilters;
   }>) => {
     const newParams = new URLSearchParams(searchParams);
-    
-    if (updates.tab !== undefined) {
-      if (updates.tab === 'tools') {
-        newParams.delete('tab');
+
+    if (updates.category !== undefined) {
+      if (updates.category === 'all') {
+        newParams.delete('category');
       } else {
-        newParams.set('tab', updates.tab);
+        newParams.set('category', updates.category);
       }
     }
-    
+
     if (updates.q !== undefined) {
       if (updates.q === '') {
         newParams.delete('q');
@@ -112,7 +88,7 @@ const Libraries = () => {
         newParams.set('q', updates.q);
       }
     }
-    
+
     if (updates.sort !== undefined) {
       if (updates.sort === 'relevance') {
         newParams.delete('sort');
@@ -120,91 +96,79 @@ const Libraries = () => {
         newParams.set('sort', updates.sort);
       }
     }
-    
-    if (updates.cursor !== undefined) {
-      if (updates.cursor === '') {
-        newParams.delete('cursor');
-        newParams.delete('direction');
-      } else {
-        newParams.set('cursor', updates.cursor);
-        newParams.set('direction', updates.direction || 'next');
-      }
-    }
-    
+
     if (updates.filters !== undefined) {
-      const hasFilters = Object.keys(updates.filters).some(key => updates.filters[key].length > 0);
+      const hasFilters = Object.keys(updates.filters).some(key => updates.filters![key].length > 0);
       if (hasFilters) {
         newParams.set('filters', btoa(JSON.stringify(updates.filters)));
       } else {
         newParams.delete('filters');
       }
     }
-    
-    setSearchParams(newParams);
-  };
 
-  // Load item counts for tabs
+    setSearchParams(newParams);
+  }, [searchParams, setSearchParams]);
+
+  // Fetch featured items
   useEffect(() => {
-    const loadCounts = async () => {
+    const fetchFeatured = async () => {
+      setLoadingFeatured(true);
       try {
-        const promises = CATEGORIES.map(async (category) => {
-          const { count } = await supabase
-            .from('library_items')
-            .select('*', { count: 'exact', head: true })
-            .eq('category', category.id);
-          return { category: category.id, count: count || 0 };
-        });
-        
-        const results = await Promise.all(promises);
-        const counts = results.reduce((acc, { category, count }) => {
-          acc[category as LibraryCategory] = count;
-          return acc;
-        }, {} as Record<LibraryCategory, number>);
-        
-        setItemCounts(counts);
+        const { data, error } = await supabase
+          .from('library_items')
+          .select('*')
+          .eq('is_featured', true)
+          .limit(8);
+
+        if (error) throw error;
+        setFeaturedItems(data || []);
       } catch (error) {
-        console.error('Erro ao carregar contadores:', error);
+        console.error('Error fetching featured items:', error);
+      } finally {
+        setLoadingFeatured(false);
       }
     };
-    
-    loadCounts();
+
+    fetchFeatured();
   }, []);
 
-  // Load items when parameters change
-  useEffect(() => {
-    fetchItems();
-  }, [activeTab, searchTerm, sortBy, filters, cursor, direction]);
+  // Fetch items when parameters change
+  const fetchItems = useCallback(async (reset = true) => {
+    if (reset) {
+      setLoading(true);
+      setOffset(0);
+    } else {
+      setLoadingMore(true);
+    }
 
-  const fetchItems = async () => {
-    setLoading(true);
-    
+    const currentOffset = reset ? 0 : offset;
+
     try {
       let query = supabase
         .from('library_items')
-        .select('*')
-        .eq('category', activeTab);
+        .select('*');
+
+      // Apply category filter
+      if (selectedCategory !== 'all') {
+        query = query.eq('category', selectedCategory);
+      }
 
       // Apply search
       if (searchTerm) {
         query = query.or(`name.ilike.%${searchTerm}%,short_description.ilike.%${searchTerm}%`);
       }
 
-      // Apply filters based on category
+      // Apply filters
       Object.entries(filters).forEach(([key, values]) => {
         if (values.length > 0) {
           if (key === 'is_open_source') {
             query = query.eq('is_open_source', values.includes('true'));
           } else if (key === 'price') {
-            query = query.in('price', values as ('free' | 'paid' | 'freemium' | 'subscription')[]);
+            query = query.in('price', values);
           } else if (key === 'language') {
             query = query.in('language', values);
           } else if (key === 'tags') {
             query = query.overlaps('tags', values);
-          } else {
-            // Handle JSONB attributes filters
-            values.forEach(value => {
-              query = query.contains('attributes', { [key]: value });
-            });
           }
         }
       });
@@ -217,57 +181,32 @@ const Libraries = () => {
         case 'recent':
           query = query.order('created_at', { ascending: false });
           break;
-        default: // relevance
-          if (searchTerm) {
-            // For search relevance, we could implement a more sophisticated scoring
-            query = query.order('name', { ascending: true });
-          } else {
-            query = query.order('created_at', { ascending: false });
-          }
+        default:
+          query = query.order('is_featured', { ascending: false })
+            .order('created_at', { ascending: false });
       }
 
-      // Apply pagination cursor
-      const pageSize = 12;
-      if (cursor) {
-        if (direction === 'next') {
-          query = query.gt('created_at', cursor);
-        } else {
-          query = query.lt('created_at', cursor);
-          query = query.order('created_at', { ascending: true });
-        }
-      }
-      
-      query = query.limit(pageSize + 1); // +1 to check if there are more items
+      // Apply pagination
+      query = query.range(currentOffset, currentOffset + PAGE_SIZE);
 
       const { data, error } = await query;
 
       if (error) throw error;
 
-      // Handle pagination
-      let items = data || [];
-      const hasMore = items.length > pageSize;
-      
-      if (hasMore) {
-        items = items.slice(0, pageSize);
+      const newItems = data || [];
+      setHasMore(newItems.length === PAGE_SIZE + 1);
+
+      if (reset) {
+        setItems(newItems.slice(0, PAGE_SIZE));
+      } else {
+        setItems(prev => [...prev, ...newItems.slice(0, PAGE_SIZE)]);
       }
 
-      // Reverse order if going backwards
-      if (cursor && direction === 'prev') {
-        items.reverse();
+      if (!reset) {
+        setOffset(currentOffset + PAGE_SIZE);
       }
-
-      setItems(items);
-      
-      // Update pagination state
-      setPagination({
-        hasNext: hasMore && direction === 'next',
-        hasPrev: !!cursor,
-        nextCursor: hasMore && items.length > 0 ? items[items.length - 1].created_at : undefined,
-        prevCursor: items.length > 0 ? items[0].created_at : undefined
-      });
-
     } catch (error) {
-      console.error('Erro ao buscar itens:', error);
+      console.error('Error fetching items:', error);
       toast({
         title: "Erro",
         description: "Erro ao carregar itens da biblioteca.",
@@ -275,17 +214,18 @@ const Libraries = () => {
       });
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
-  };
+  }, [selectedCategory, searchTerm, sortBy, filters, offset, toast]);
 
-  const handleTabChange = (tab: LibraryCategory) => {
-    updateURL({ 
-      tab, 
-      cursor: '', 
-      direction: 'next',
-      // Keep filters when switching tabs
-      filters 
-    });
+  useEffect(() => {
+    fetchItems(true);
+  }, [selectedCategory, searchTerm, sortBy, filters]);
+
+  // Handlers
+  const handleCategoryChange = (category: LibraryCategory | 'all') => {
+    updateURL({ category });
+    setOffset(0);
   };
 
   const handleSearch = (e: React.FormEvent) => {
@@ -293,65 +233,51 @@ const Libraries = () => {
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
     const query = formData.get('search') as string;
-    
-    updateURL({ 
-      q: query.trim(), 
-      cursor: '', 
-      direction: 'next' 
-    });
+    updateURL({ q: query.trim() });
+    setOffset(0);
   };
 
-  const handleFilterChange = (newFilters: LibraryFilters) => {
+  const handleFilterChange = (filterType: string, values: string[]) => {
+    const newFilters = { ...filters, [filterType]: values };
     setFilters(newFilters);
-    updateURL({ 
-      filters: newFilters, 
-      cursor: '', 
-      direction: 'next' 
-    });
+    updateURL({ filters: newFilters });
+    setOffset(0);
+  };
+
+  const handleClearFilters = () => {
+    const emptyFilters = {};
+    setFilters(emptyFilters);
+    updateURL({ filters: emptyFilters });
+    setOffset(0);
   };
 
   const handleSortChange = (sort: string) => {
-    updateURL({ 
-      sort, 
-      cursor: '', 
-      direction: 'next' 
-    });
+    updateURL({ sort });
+    setOffset(0);
   };
 
-  const clearFilters = () => {
-    const emptyFilters = {};
-    setFilters(emptyFilters);
-    updateURL({ 
-      filters: emptyFilters, 
-      cursor: '', 
-      direction: 'next' 
-    });
-  };
-
-  const handlePagination = (direction: 'next' | 'prev') => {
-    const cursor = direction === 'next' ? pagination.nextCursor : pagination.prevCursor;
-    if (cursor) {
-      updateURL({ cursor, direction });
-    }
+  const handleLoadMore = () => {
+    setOffset(prev => prev + PAGE_SIZE);
+    fetchItems(false);
   };
 
   // Update page metadata
   useEffect(() => {
-    const categoryLabel = CATEGORIES.find(c => c.id === activeTab)?.label || 'Recursos';
     updatePageMetadata({
-      title: `${categoryLabel} | Bibliotecas | CiênciaDeDados.org`,
-      description: `Explore nossa coleção de ${categoryLabel.toLowerCase()} para ciência de dados. Encontre ferramentas, cursos, códigos e datasets para impulsionar seus projetos.`,
-      canonical: `https://cienciadedados.org/bibliotecas?tab=${activeTab}`,
+      title: 'Bibliotecas | CiênciaDeDados.org',
+      description: 'Explore nossa coleção de ferramentas, cursos, códigos e datasets para ciência de dados.',
+      canonical: 'https://cienciadedados.org/bibliotecas',
     });
-  }, [activeTab]);
+  }, []);
 
-  const hasActiveFilters = Object.values(filters).some(values => Array.isArray(values) && values.length > 0);
+  const hasActiveFilters = Object.values(filters).some(values => values.length > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
       <Header />
-      
+
       <main className="max-w-7xl mx-auto px-4 py-8">
+        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold mb-4">Bibliotecas</h1>
           <p className="text-xl text-muted-foreground">
@@ -359,9 +285,12 @@ const Libraries = () => {
           </p>
         </div>
 
+        {/* Featured Section */}
+        <FeaturedSection items={featuredItems} loading={loadingFeatured} />
+
         {/* Search and Controls */}
-        <div className="bg-card rounded-lg p-6 mb-8 shadow-sm">
-          <div className="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+        <div className="bg-card rounded-lg p-4 mb-6 shadow-sm">
+          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
             <form onSubmit={handleSearch} className="flex-1 max-w-md">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
@@ -373,37 +302,22 @@ const Libraries = () => {
                   onKeyDown={(e) => {
                     if (e.key === 'Escape') {
                       (e.target as HTMLInputElement).value = '';
-                      updateURL({ q: '', cursor: '', direction: 'next' });
+                      updateURL({ q: '' });
                     }
                   }}
                 />
               </div>
             </form>
-            
+
             <div className="flex items-center gap-3">
-              <Button
-                variant={showFilters ? "default" : "outline"}
-                size="sm"
-                onClick={() => setShowFilters(!showFilters)}
-                className="gap-2"
-              >
-                <Filter className="h-4 w-4" />
-                Filtros
-                {hasActiveFilters && (
-                  <Badge variant="secondary" className="h-5 w-5 p-0 text-xs">
-                    !
-                  </Badge>
-                )}
-              </Button>
-              
               <Select value={sortBy} onValueChange={handleSortChange}>
                 <SelectTrigger className="w-[140px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="relevance">Relevância</SelectItem>
-                  <SelectItem value="recent">Recentes</SelectItem>
-                  <SelectItem value="name">Nome</SelectItem>
+                  {SORT_OPTIONS.map(opt => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
 
@@ -426,7 +340,7 @@ const Libraries = () => {
             <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
               <span className="text-sm text-muted-foreground">Filtros ativos:</span>
               {Object.entries(filters).map(([key, values]) =>
-                Array.isArray(values) && values.length > 0 ? (
+                values.length > 0 ? (
                   values.map((value) => (
                     <Badge
                       key={`${key}-${value}`}
@@ -434,12 +348,12 @@ const Libraries = () => {
                       className="gap-1"
                     >
                       {key}: {value}
-                      <X 
-                        className="h-3 w-3 cursor-pointer" 
+                      <X
+                        className="h-3 w-3 cursor-pointer"
                         onClick={() => {
                           const newFilters = { ...filters };
-                          newFilters[key] = newFilters[key].filter((v: string) => v !== value);
-                          handleFilterChange(newFilters);
+                          newFilters[key] = newFilters[key].filter(v => v !== value);
+                          handleFilterChange(key, newFilters[key]);
                         }}
                       />
                     </Badge>
@@ -449,7 +363,7 @@ const Libraries = () => {
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={clearFilters}
+                onClick={handleClearFilters}
                 className="text-xs h-6"
               >
                 Limpar filtros
@@ -458,124 +372,43 @@ const Libraries = () => {
           )}
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={handleTabChange} className="mb-8">
-          <TabsList className="grid w-full grid-cols-5">
-            {CATEGORIES.map((category) => (
-              <TabsTrigger key={category.id} value={category.id} className="gap-2">
-                <category.icon className="h-4 w-4" />
-                {category.label}
-                <Badge variant="secondary" className="text-xs">
-                  {itemCounts[category.id] || 0}
-                </Badge>
-              </TabsTrigger>
-            ))}
-          </TabsList>
+        {/* Import Panel */}
+        {showImport && user && (
+          <div className="mb-6">
+            <LibraryImport
+              onImportComplete={() => {
+                setShowImport(false);
+                fetchItems(true);
+              }}
+              onClose={() => setShowImport(false)}
+            />
+          </div>
+        )}
 
-          {CATEGORIES.map((category) => (
-            <TabsContent key={category.id} value={category.id}>
-              {/* Filters Panel */}
-              {showFilters && (
-                <div className="mb-6">
-                  <LibraryFilters
-                    category={activeTab}
-                    filters={filters}
-                    onFilterChange={(key, values) => {
-                      const newFilters = { ...filters, [key]: values };
-                      handleFilterChange(newFilters);
-                    }}
-                  />
-                </div>
-              )}
+        {/* Two Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          {/* Left Sidebar - Filters */}
+          <aside className="lg:col-span-1">
+            <LibrarySidebar
+              selectedCategory={selectedCategory}
+              onCategoryChange={handleCategoryChange}
+              filters={filters}
+              onFilterChange={handleFilterChange}
+              onClearFilters={handleClearFilters}
+            />
+          </aside>
 
-              {/* Import Panel */}
-              {showImport && user && (
-                <div className="mb-6">
-                  <LibraryImport
-                    onImportComplete={() => {
-                      setShowImport(false);
-                      fetchItems();
-                    }}
-                    onClose={() => setShowImport(false)}
-                  />
-                </div>
-              )}
-
-              {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {[...Array(6)].map((_, i) => (
-                    <div key={i} className="rounded-2xl border p-4 space-y-3">
-                      <Skeleton className="h-6 w-3/4" />
-                      <Skeleton className="h-4 w-full" />
-                      <Skeleton className="h-4 w-2/3" />
-                      <div className="flex gap-2">
-                        <Skeleton className="h-6 w-16" />
-                        <Skeleton className="h-6 w-20" />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : items.length === 0 ? (
-                <div className="text-center py-12">
-                  <div className="max-w-md mx-auto">
-                    <category.icon className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold mb-2">
-                      Nenhum item encontrado
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      {searchTerm || hasActiveFilters
-                        ? "Tente ajustar sua busca ou filtros"
-                        : "Ainda não temos itens nesta categoria"
-                      }
-                    </p>
-                    {hasActiveFilters && (
-                      <Button variant="outline" onClick={clearFilters}>
-                        Limpar filtros
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-                    {items.map((item) => (
-                      <LibraryCard key={item.id} item={item} />
-                    ))}
-                  </div>
-
-                  {/* Pagination */}
-                  {(pagination.hasNext || pagination.hasPrev) && (
-                    <div className="flex justify-center items-center gap-4 mt-8">
-                      <Button
-                        variant="outline"
-                        onClick={() => handlePagination('prev')}
-                        disabled={!pagination.hasPrev}
-                        className="gap-2"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        Anterior
-                      </Button>
-                      
-                      <div className="text-sm text-muted-foreground">
-                        {items.length} itens carregados
-                      </div>
-                      
-                      <Button
-                        variant="outline"
-                        onClick={() => handlePagination('next')}
-                        disabled={!pagination.hasNext}
-                        className="gap-2"
-                      >
-                        Próximo
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              )}
-            </TabsContent>
-          ))}
-        </Tabs>
+          {/* Right Content - Results */}
+          <div className="lg:col-span-3">
+            <LibraryGrid
+              items={items}
+              loading={loading}
+              hasMore={hasMore}
+              onLoadMore={handleLoadMore}
+              loadingMore={loadingMore}
+            />
+          </div>
+        </div>
       </main>
     </div>
   );
