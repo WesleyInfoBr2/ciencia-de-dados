@@ -47,21 +47,20 @@ const CATEGORY_ATTRIBUTES: Record<LibraryCategory, { key: string; label: string;
     { key: 'plataformas', label: 'Plataformas' },
   ],
   courses: [
-    { key: 'instituicao', label: 'Instituição' },
-    { key: 'duracao', label: 'Duração' },
+    { key: 'instituição', label: 'Instituição' },
+    { key: 'duração', label: 'Duração' },
     { key: 'certificado', label: 'Certificado', options: ['true', 'false'] },
   ],
   sources: [
-    { key: 'metodo_acesso', label: 'Método de Acesso' },
-    { key: 'observacoes', label: 'Observações' },
+    { key: 'método_acesso', label: 'Método de Acesso' },
+    { key: 'observações', label: 'Observações' },
     { key: 'tema', label: 'Tema' },
   ],
   datasets: [
     { key: 'tema', label: 'Tema' },
-    { key: 'ano_referencia', label: 'Ano de Referência' },
-    { key: 'licenca', label: 'Licença' },
+    { key: 'ano_referência', label: 'Ano de Referência' },
+    { key: 'licença', label: 'Licença' },
     { key: 'fonte', label: 'Fonte' },
-    { key: 'arquivo', label: 'Arquivo' },
     { key: 'formato', label: 'Formato' },
     { key: 'tamanho_amostra', label: 'Tamanho da Amostra' },
     { key: 'tipo', label: 'Tipo de Variável', options: ['contínua', 'discreta', 'nominal', 'ordinal'] },
@@ -110,9 +109,9 @@ export function LibrarySidebar({
         // All possible attribute keys to extract
         const attributeKeys = [
           'language', 'open_source', 'plataformas',
-          'instituicao', 'duracao', 'certificado',
-          'metodo_acesso', 'observacoes', 'tema',
-          'ano_referencia', 'licenca', 'fonte', 'arquivo', 'formato', 'tamanho_amostra', 'tipo'
+          'instituição', 'duração', 'certificado',
+          'método_acesso', 'observações', 'tema',
+          'ano_referência', 'licença', 'fonte', 'formato', 'tamanho_amostra', 'tipo'
         ];
         
         items.forEach(item => {
