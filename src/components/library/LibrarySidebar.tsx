@@ -35,6 +35,33 @@ const PRICE_OPTIONS = [
   { value: 'subscription', label: 'Assinatura' },
 ];
 
+// Category-specific attribute filters
+const CATEGORY_ATTRIBUTES: Record<LibraryCategory, { key: string; label: string; options?: string[] }[]> = {
+  tools: [
+    { key: 'platforms', label: 'Plataformas', options: ['Windows', 'macOS', 'Linux', 'Web', 'Mobile', 'API'] },
+    { key: 'license', label: 'Licença', options: ['MIT', 'GPL', 'Apache', 'BSD', 'Proprietary', 'Creative Commons'] },
+  ],
+  courses: [
+    { key: 'provider', label: 'Provedor' },
+    { key: 'mode', label: 'Modalidade', options: ['Online', 'Presencial', 'Híbrido'] },
+    { key: 'certificate', label: 'Certificado', options: ['true', 'false'] },
+  ],
+  codes: [
+    { key: 'status', label: 'Status', options: ['Ativo', 'Inativo', 'Experimental', 'Deprecated'] },
+  ],
+  sources: [
+    { key: 'country', label: 'País' },
+    { key: 'sector', label: 'Setor' },
+    { key: 'theme', label: 'Tema' },
+    { key: 'update_frequency', label: 'Frequência', options: ['Contínua', 'Diária', 'Semanal', 'Mensal', 'Trimestral', 'Anual', 'Decenal'] },
+  ],
+  datasets: [
+    { key: 'theme', label: 'Tema' },
+    { key: 'format', label: 'Formato', options: ['CSV', 'JSON', 'XML', 'Excel', 'Parquet', 'SQL', 'API'] },
+    { key: 'year', label: 'Ano' },
+  ],
+};
+
 export function LibrarySidebar({
   selectedCategory,
   onCategoryChange,
@@ -44,6 +71,7 @@ export function LibrarySidebar({
 }: LibrarySidebarProps) {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[]>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     category: true,
     price: true,
@@ -60,7 +88,7 @@ export function LibrarySidebar({
     try {
       let query = supabase
         .from('library_items')
-        .select('tags, language');
+        .select('tags, language, attributes');
 
       if (selectedCategory !== 'all') {
         query = query.eq('category', selectedCategory);
@@ -78,6 +106,40 @@ export function LibrarySidebar({
           .map(item => item.language)
           .filter((lang): lang is string => Boolean(lang));
         setAvailableLanguages([...new Set(allLanguages)].sort());
+
+        // Extract dynamic options from attributes
+        const newDynamicOptions: Record<string, string[]> = {};
+        const attributeKeys = ['provider', 'country', 'sector', 'theme', 'year', 'format', 'platforms', 'license', 'mode'];
+        
+        items.forEach(item => {
+          const attrs = item.attributes as Record<string, any> || {};
+          attributeKeys.forEach(key => {
+            if (attrs[key]) {
+              if (!newDynamicOptions[key]) {
+                newDynamicOptions[key] = [];
+              }
+              if (Array.isArray(attrs[key])) {
+                attrs[key].forEach((val: string) => {
+                  if (val && !newDynamicOptions[key].includes(val)) {
+                    newDynamicOptions[key].push(val);
+                  }
+                });
+              } else {
+                const val = String(attrs[key]);
+                if (val && !newDynamicOptions[key].includes(val)) {
+                  newDynamicOptions[key].push(val);
+                }
+              }
+            }
+          });
+        });
+
+        // Sort each array
+        Object.keys(newDynamicOptions).forEach(key => {
+          newDynamicOptions[key] = newDynamicOptions[key].sort();
+        });
+
+        setDynamicOptions(newDynamicOptions);
       }
     } catch (error) {
       console.error('Error fetching filter options:', error);
@@ -97,6 +159,9 @@ export function LibrarySidebar({
   };
 
   const hasActiveFilters = Object.values(filters).some(values => values.length > 0);
+
+  // Get category-specific attributes
+  const categoryAttributes = selectedCategory !== 'all' ? CATEGORY_ATTRIBUTES[selectedCategory] : [];
 
   return (
     <Card className="sticky top-6">
@@ -209,6 +274,55 @@ export function LibrarySidebar({
                 </CollapsibleContent>
               </Collapsible>
             )}
+
+            {/* Category-specific Attribute Filters */}
+            {categoryAttributes.map(attr => {
+              const options = attr.options || dynamicOptions[attr.key] || [];
+              if (options.length === 0) return null;
+
+              const sectionKey = `attr_${attr.key}`;
+              
+              return (
+                <Collapsible 
+                  key={attr.key} 
+                  open={openSections[sectionKey]} 
+                  onOpenChange={() => toggleSection(sectionKey)}
+                >
+                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
+                    <span className="font-medium">{attr.label}</span>
+                    <ChevronDown className={`h-4 w-4 transition-transform ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
+                  </CollapsibleTrigger>
+                  <CollapsibleContent className="space-y-2 pt-2">
+                    {options.slice(0, 15).map(option => {
+                      const filterKey = `attr_${attr.key}`;
+                      const displayLabel = attr.key === 'certificate' 
+                        ? (option === 'true' ? 'Com certificado' : 'Sem certificado')
+                        : option;
+                      
+                      return (
+                        <div key={option} className="flex items-center space-x-2">
+                          <Checkbox
+                            id={`${filterKey}-${option}`}
+                            checked={(filters[filterKey] || []).includes(option)}
+                            onCheckedChange={(checked) =>
+                              handleCheckboxChange(filterKey, option, checked as boolean)
+                            }
+                          />
+                          <Label htmlFor={`${filterKey}-${option}`} className="text-sm cursor-pointer">
+                            {displayLabel}
+                          </Label>
+                        </div>
+                      );
+                    })}
+                    {options.length > 15 && (
+                      <p className="text-xs text-muted-foreground pl-6">
+                        +{options.length - 15} opções
+                      </p>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
+              );
+            })}
 
             {/* Tags Filter */}
             {availableTags.length > 0 && (

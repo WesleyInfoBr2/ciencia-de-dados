@@ -480,6 +480,189 @@ export function LibraryDetail() {
                       {item.is_open_source ? "Sim" : "Não"}
                     </Badge>
                   </div>
+
+                  {/* Category-specific attributes in Quick Info */}
+                  {item.category === 'tools' && (
+                    <>
+                      {attributes.platforms && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between items-start">
+                            <span className="text-muted-foreground">Plataformas</span>
+                            <div className="flex flex-wrap gap-1 justify-end max-w-[60%]">
+                              {(attributes.platforms as string[]).slice(0, 3).map((p: string, i: number) => (
+                                <Badge key={i} variant="outline" className="text-xs">{p}</Badge>
+                              ))}
+                            </div>
+                          </div>
+                        </>
+                      )}
+                      {attributes.license && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Licença</span>
+                            <span className="font-medium text-sm">{attributes.license}</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'courses' && (
+                    <>
+                      {attributes.provider && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Provedor</span>
+                            <span className="font-medium text-sm">{attributes.provider}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.duration && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Duração</span>
+                            <span className="font-medium text-sm">{attributes.duration}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.mode && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Modalidade</span>
+                            <span className="font-medium text-sm">{attributes.mode}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.certificate !== undefined && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Certificado</span>
+                            <Badge variant={attributes.certificate ? "default" : "secondary"} className="text-xs">
+                              {attributes.certificate ? "Sim" : "Não"}
+                            </Badge>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'codes' && (
+                    <>
+                      {attributes.status && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Status</span>
+                            <Badge variant={attributes.status === 'Ativo' ? "default" : "secondary"} className="text-xs">
+                              {attributes.status}
+                            </Badge>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'sources' && (
+                    <>
+                      {attributes.country && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">País</span>
+                            <span className="font-medium text-sm">{attributes.country}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.sector && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Setor</span>
+                            <span className="font-medium text-sm">{attributes.sector}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.theme && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tema</span>
+                            <span className="font-medium text-sm">{attributes.theme}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.update_frequency && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Atualização</span>
+                            <span className="font-medium text-sm">{attributes.update_frequency}</span>
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
+
+                  {item.category === 'datasets' && (
+                    <>
+                      {attributes.theme && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Tema</span>
+                            <span className="font-medium text-sm">{attributes.theme}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.year && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Ano</span>
+                            <span className="font-medium text-sm">{attributes.year}</span>
+                          </div>
+                        </>
+                      )}
+                      {attributes.format && (
+                        <>
+                          <Separator />
+                          <div className="flex justify-between">
+                            <span className="text-muted-foreground">Formato</span>
+                            <Badge variant="outline" className="text-xs">{attributes.format}</Badge>
+                          </div>
+                        </>
+                      )}
+                      {/* File download for datasets */}
+                      {files.length > 0 && (
+                        <>
+                          <Separator />
+                          <div className="space-y-2">
+                            <span className="text-muted-foreground">Arquivo</span>
+                            {files.map((file) => (
+                              <Button
+                                key={file.id}
+                                asChild
+                                variant="outline"
+                                size="sm"
+                                className="w-full gap-2"
+                              >
+                                <a href={file.file_url} target="_blank" rel="noopener noreferrer">
+                                  <Download className="h-4 w-4" />
+                                  {file.filename}
+                                </a>
+                              </Button>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  )}
                 </CardContent>
               </Card>
             </div>
