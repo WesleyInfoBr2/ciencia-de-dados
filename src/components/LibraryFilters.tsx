@@ -6,10 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ChevronDown } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
 
-type LibraryCategory = Database['public']['Enums']['library_category'];
-type LibraryPrice = Database['public']['Enums']['library_price'];
+type LibraryCategory = 'tools' | 'courses' | 'codes' | 'sources' | 'datasets';
 
 interface LibraryFiltersProps {
   category: LibraryCategory;
@@ -17,9 +15,9 @@ interface LibraryFiltersProps {
   onFilterChange: (filterType: string, values: string[]) => void;
 }
 
-const PRICE_OPTIONS: LibraryPrice[] = ['free', 'paid', 'freemium', 'subscription'];
+const PRICE_OPTIONS = ['free', 'paid', 'freemium', 'subscription'];
 
-const PRICE_LABELS = {
+const PRICE_LABELS: Record<string, string> = {
   free: 'Gratuito',
   paid: 'Pago', 
   freemium: 'Freemium',
@@ -27,42 +25,42 @@ const PRICE_LABELS = {
 };
 
 // Category-specific filter configurations
-const CATEGORY_FILTERS = {
-  tools: {
-    platforms: ['Windows', 'macOS', 'Linux', 'Web', 'Mobile'],
-    license: ['MIT', 'GPL', 'Apache', 'BSD', 'Proprietary'],
-    category: ['Programming Language', 'Framework', 'Library', 'IDE', 'Database']
-  },
-  courses: {
-    provider: ['Coursera', 'edX', 'Udemy', 'FGV', 'USP', 'Alura'],
-    mode: ['online', 'presencial', 'híbrido'],
-    certificate: ['true', 'false']
-  },
-  codes: {
-    status: ['active', 'deprecated', 'experimental'],
-    language: ['Python', 'R', 'JavaScript', 'SQL', 'Java']
-  },
-  sources: {
-    country: ['Brasil', 'Global', 'Estados Unidos', 'Europa'],
-    sector: ['Público', 'Privado', 'Internacional', 'Acadêmico'],
-    theme: ['Demografia', 'Economia', 'Saúde', 'Educação', 'Meio Ambiente'],
-    license: ['Aberta', 'CC-BY', 'CC-BY-SA', 'Restrita'],
-    update_frequency: ['Diária', 'Semanal', 'Mensal', 'Trimestral', 'Anual']
-  },
-  datasets: {
-    theme: ['Demografia', 'Economia', 'Saúde', 'Educação', 'Meio Ambiente', 'Clima'],
-    format: ['CSV', 'JSON', 'XML', 'Excel', 'API'],
-    variables: ['continuous', 'discrete', 'nominal', 'ordinal']
-  }
-} as const;
+const CATEGORY_FILTERS: Record<LibraryCategory, { key: string; label: string; options?: string[] }[]> = {
+  codes: [
+    { key: 'language', label: 'Linguagem' },
+    { key: 'open_source', label: 'Open Source', options: ['true', 'false'] },
+  ],
+  tools: [
+    { key: 'open_source', label: 'Open Source', options: ['true', 'false'] },
+    { key: 'plataformas', label: 'Plataformas' },
+  ],
+  courses: [
+    { key: 'instituicao', label: 'Instituição' },
+    { key: 'duracao', label: 'Duração' },
+    { key: 'certificado', label: 'Certificado', options: ['true', 'false'] },
+  ],
+  sources: [
+    { key: 'metodo_acesso', label: 'Método de Acesso' },
+    { key: 'observacoes', label: 'Observações' },
+    { key: 'tema', label: 'Tema' },
+  ],
+  datasets: [
+    { key: 'tema', label: 'Tema' },
+    { key: 'ano_referencia', label: 'Ano de Referência' },
+    { key: 'licenca', label: 'Licença' },
+    { key: 'fonte', label: 'Fonte' },
+    { key: 'arquivo', label: 'Arquivo' },
+    { key: 'formato', label: 'Formato' },
+    { key: 'tamanho_amostra', label: 'Tamanho da Amostra' },
+    { key: 'tipo', label: 'Tipo de Variável', options: ['contínua', 'discreta', 'nominal', 'ordinal'] },
+  ],
+};
 
 export function LibraryFilters({ category, filters, onFilterChange }: LibraryFiltersProps) {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
+  const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[]>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     price: true,
-    openSource: true,
-    language: true,
     tags: true
   });
 
@@ -82,11 +80,31 @@ export function LibraryFilters({ category, filters, onFilterChange }: LibraryFil
         const allTags = items.flatMap(item => item.tags || []);
         setAvailableTags([...new Set(allTags)].sort());
 
-        // Extract unique languages from attributes
-        const allLanguages = items
-          .map(item => (item.attributes as Record<string, any>)?.language)
-          .filter((lang): lang is string => Boolean(lang));
-        setAvailableLanguages([...new Set(allLanguages)].sort());
+        // Extract dynamic options from attributes
+        const newDynamicOptions: Record<string, string[]> = {};
+        const categoryAttrs = CATEGORY_FILTERS[category] || [];
+        const attrKeys = categoryAttrs.map(a => a.key);
+        
+        items.forEach(item => {
+          const attrs = (item.attributes as Record<string, any>) || {};
+          attrKeys.forEach(key => {
+            if (attrs[key] !== undefined && attrs[key] !== null && attrs[key] !== '') {
+              if (!newDynamicOptions[key]) {
+                newDynamicOptions[key] = [];
+              }
+              const val = String(attrs[key]).trim();
+              if (val && !newDynamicOptions[key].includes(val)) {
+                newDynamicOptions[key].push(val);
+              }
+            }
+          });
+        });
+
+        Object.keys(newDynamicOptions).forEach(key => {
+          newDynamicOptions[key] = newDynamicOptions[key].sort();
+        });
+
+        setDynamicOptions(newDynamicOptions);
       }
     } catch (error) {
       console.error('Error fetching filter options:', error);
@@ -109,7 +127,17 @@ export function LibraryFilters({ category, filters, onFilterChange }: LibraryFil
     }));
   };
 
-  const categoryFilters = CATEGORY_FILTERS[category] || {};
+  const getDisplayLabel = (key: string, value: string) => {
+    if (key === 'open_source') {
+      return value === 'true' ? 'Sim' : 'Não';
+    }
+    if (key === 'certificado') {
+      return value === 'true' ? 'Com certificado' : 'Sem certificado';
+    }
+    return value;
+  };
+
+  const categoryFilters = CATEGORY_FILTERS[category] || [];
 
   return (
     <Card className="sticky top-6">
@@ -144,65 +172,52 @@ export function LibraryFilters({ category, filters, onFilterChange }: LibraryFil
           </CollapsibleContent>
         </Collapsible>
 
-
-        {/* Language Filter */}
-        {availableLanguages.length > 0 && (
-          <Collapsible 
-            open={openSections.language} 
-            onOpenChange={() => toggleSection('language')}
-          >
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
-              <span className="font-medium">Linguagem</span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${openSections.language ? 'rotate-180' : ''}`} />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 pt-2">
-              {availableLanguages.map(language => (
-                <div key={language} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`language-${language}`}
-                    checked={(filters.language || []).includes(language)}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange('language', language, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={`language-${language}`} className="text-sm">
-                    {language}
-                  </Label>
-                </div>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        )}
-
         {/* Category-specific Filters */}
-        {Object.entries(categoryFilters).map(([filterKey, options]) => (
-          <Collapsible key={filterKey} defaultOpen={false}>
-            <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
-              <span className="font-medium capitalize">
-                {filterKey === 'update_frequency' ? 'Frequência' : 
-                 filterKey === 'certificate' ? 'Certificado' :
-                 filterKey}
-              </span>
-              <ChevronDown className="h-4 w-4 transition-transform" />
-            </CollapsibleTrigger>
-            <CollapsibleContent className="space-y-2 pt-2">
-              {(options as string[]).map(option => (
-                <div key={option} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`${filterKey}-${option}`}
-                    checked={(filters[filterKey] || []).includes(option)}
-                    onCheckedChange={(checked) => 
-                      handleCheckboxChange(filterKey, option, checked as boolean)
-                    }
-                  />
-                  <Label htmlFor={`${filterKey}-${option}`} className="text-sm">
-                    {filterKey === 'certificate' ? (option === 'true' ? 'Com certificado' : 'Sem certificado') : option}
-                  </Label>
-                </div>
-              ))}
-            </CollapsibleContent>
-          </Collapsible>
-        ))}
+        {categoryFilters.map(attr => {
+          const options = attr.options || dynamicOptions[attr.key] || [];
+          if (options.length === 0) return null;
+
+          const sectionKey = `attr_${attr.key}`;
+          
+          return (
+            <Collapsible 
+              key={attr.key} 
+              open={openSections[sectionKey]}
+              onOpenChange={() => toggleSection(sectionKey)}
+            >
+              <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
+                <span className="font-medium">{attr.label}</span>
+                <ChevronDown className={`h-4 w-4 transition-transform ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
+              </CollapsibleTrigger>
+              <CollapsibleContent className="space-y-2 pt-2">
+                {options.slice(0, 15).map(option => {
+                  const filterKey = `attr_${attr.key}`;
+                  const displayLabel = getDisplayLabel(attr.key, option);
+                  
+                  return (
+                    <div key={option} className="flex items-center space-x-2">
+                      <Checkbox
+                        id={`${filterKey}-${option}`}
+                        checked={(filters[filterKey] || []).includes(option)}
+                        onCheckedChange={(checked) => 
+                          handleCheckboxChange(filterKey, option, checked as boolean)
+                        }
+                      />
+                      <Label htmlFor={`${filterKey}-${option}`} className="text-sm">
+                        {displayLabel}
+                      </Label>
+                    </div>
+                  );
+                })}
+                {options.length > 15 && (
+                  <p className="text-xs text-muted-foreground pl-6">
+                    +{options.length - 15} opções
+                  </p>
+                )}
+              </CollapsibleContent>
+            </Collapsible>
+          );
+        })}
 
         {/* Tags Filter */}
         {availableTags.length > 0 && (

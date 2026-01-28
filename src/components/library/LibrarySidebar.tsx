@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
 import { ChevronDown, X, Wrench, GraduationCap, Code, Database, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -35,30 +36,35 @@ const PRICE_OPTIONS = [
   { value: 'subscription', label: 'Assinatura' },
 ];
 
-// Category-specific attribute filters
+// Category-specific attribute filters configuration
 const CATEGORY_ATTRIBUTES: Record<LibraryCategory, { key: string; label: string; options?: string[] }[]> = {
+  codes: [
+    { key: 'language', label: 'Linguagem' },
+    { key: 'open_source', label: 'Open Source', options: ['true', 'false'] },
+  ],
   tools: [
-    { key: 'platforms', label: 'Plataformas', options: ['Windows', 'macOS', 'Linux', 'Web', 'Mobile', 'API'] },
-    { key: 'license', label: 'Licença', options: ['MIT', 'GPL', 'Apache', 'BSD', 'Proprietary', 'Creative Commons'] },
+    { key: 'open_source', label: 'Open Source', options: ['true', 'false'] },
+    { key: 'plataformas', label: 'Plataformas' },
   ],
   courses: [
-    { key: 'provider', label: 'Provedor' },
-    { key: 'mode', label: 'Modalidade', options: ['Online', 'Presencial', 'Híbrido'] },
-    { key: 'certificate', label: 'Certificado', options: ['true', 'false'] },
-  ],
-  codes: [
-    { key: 'status', label: 'Status', options: ['Ativo', 'Inativo', 'Experimental', 'Deprecated'] },
+    { key: 'instituicao', label: 'Instituição' },
+    { key: 'duracao', label: 'Duração' },
+    { key: 'certificado', label: 'Certificado', options: ['true', 'false'] },
   ],
   sources: [
-    { key: 'country', label: 'País' },
-    { key: 'sector', label: 'Setor' },
-    { key: 'theme', label: 'Tema' },
-    { key: 'update_frequency', label: 'Frequência', options: ['Contínua', 'Diária', 'Semanal', 'Mensal', 'Trimestral', 'Anual', 'Decenal'] },
+    { key: 'metodo_acesso', label: 'Método de Acesso' },
+    { key: 'observacoes', label: 'Observações' },
+    { key: 'tema', label: 'Tema' },
   ],
   datasets: [
-    { key: 'theme', label: 'Tema' },
-    { key: 'format', label: 'Formato', options: ['CSV', 'JSON', 'XML', 'Excel', 'Parquet', 'SQL', 'API'] },
-    { key: 'year', label: 'Ano' },
+    { key: 'tema', label: 'Tema' },
+    { key: 'ano_referencia', label: 'Ano de Referência' },
+    { key: 'licenca', label: 'Licença' },
+    { key: 'fonte', label: 'Fonte' },
+    { key: 'arquivo', label: 'Arquivo' },
+    { key: 'formato', label: 'Formato' },
+    { key: 'tamanho_amostra', label: 'Tamanho da Amostra' },
+    { key: 'tipo', label: 'Tipo de Variável', options: ['contínua', 'discreta', 'nominal', 'ordinal'] },
   ],
 };
 
@@ -70,13 +76,10 @@ export function LibrarySidebar({
   onClearFilters,
 }: LibrarySidebarProps) {
   const [availableTags, setAvailableTags] = useState<string[]>([]);
-  const [availableLanguages, setAvailableLanguages] = useState<string[]>([]);
   const [dynamicOptions, setDynamicOptions] = useState<Record<string, string[]>>({});
   const [openSections, setOpenSections] = useState<Record<string, boolean>>({
     category: true,
     price: true,
-    openSource: true,
-    language: true,
     tags: false,
   });
 
@@ -101,31 +104,33 @@ export function LibrarySidebar({
         const allTags = items.flatMap(item => item.tags || []);
         setAvailableTags([...new Set(allTags)].sort().slice(0, 30));
 
-        // Extract unique languages from attributes
-        const allLanguages = items
-          .map(item => (item.attributes as Record<string, any>)?.language)
-          .filter((lang): lang is string => Boolean(lang));
-        setAvailableLanguages([...new Set(allLanguages)].sort());
-
         // Extract dynamic options from attributes
         const newDynamicOptions: Record<string, string[]> = {};
-        const attributeKeys = ['provider', 'country', 'sector', 'theme', 'year', 'format', 'platforms', 'license', 'mode'];
+        
+        // All possible attribute keys to extract
+        const attributeKeys = [
+          'language', 'open_source', 'plataformas',
+          'instituicao', 'duracao', 'certificado',
+          'metodo_acesso', 'observacoes', 'tema',
+          'ano_referencia', 'licenca', 'fonte', 'arquivo', 'formato', 'tamanho_amostra', 'tipo'
+        ];
         
         items.forEach(item => {
           const attrs = item.attributes as Record<string, any> || {};
           attributeKeys.forEach(key => {
-            if (attrs[key]) {
+            if (attrs[key] !== undefined && attrs[key] !== null && attrs[key] !== '') {
               if (!newDynamicOptions[key]) {
                 newDynamicOptions[key] = [];
               }
               if (Array.isArray(attrs[key])) {
                 attrs[key].forEach((val: string) => {
-                  if (val && !newDynamicOptions[key].includes(val)) {
-                    newDynamicOptions[key].push(val);
+                  const strVal = String(val).trim();
+                  if (strVal && !newDynamicOptions[key].includes(strVal)) {
+                    newDynamicOptions[key].push(strVal);
                   }
                 });
               } else {
-                const val = String(attrs[key]);
+                const val = String(attrs[key]).trim();
                 if (val && !newDynamicOptions[key].includes(val)) {
                   newDynamicOptions[key].push(val);
                 }
@@ -163,6 +168,64 @@ export function LibrarySidebar({
   // Get category-specific attributes
   const categoryAttributes = selectedCategory !== 'all' ? CATEGORY_ATTRIBUTES[selectedCategory] : [];
 
+  // Helper to get display label for boolean options
+  const getDisplayLabel = (key: string, value: string) => {
+    if (key === 'open_source') {
+      return value === 'true' ? 'Sim' : 'Não';
+    }
+    if (key === 'certificado') {
+      return value === 'true' ? 'Com certificado' : 'Sem certificado';
+    }
+    return value;
+  };
+
+  // Render filter section for an attribute
+  const renderAttributeFilter = (attr: { key: string; label: string; options?: string[] }) => {
+    const options = attr.options || dynamicOptions[attr.key] || [];
+    if (options.length === 0) return null;
+
+    const sectionKey = `attr_${attr.key}`;
+    
+    return (
+      <Collapsible 
+        key={attr.key} 
+        open={openSections[sectionKey]} 
+        onOpenChange={() => toggleSection(sectionKey)}
+      >
+        <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
+          <span className="font-medium text-sm">{attr.label}</span>
+          <ChevronDown className={`h-4 w-4 transition-transform ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
+        </CollapsibleTrigger>
+        <CollapsibleContent className="space-y-2 pt-2">
+          {options.slice(0, 15).map(option => {
+            const filterKey = `attr_${attr.key}`;
+            const displayLabel = getDisplayLabel(attr.key, option);
+            
+            return (
+              <div key={option} className="flex items-center space-x-2">
+                <Checkbox
+                  id={`${filterKey}-${option}`}
+                  checked={(filters[filterKey] || []).includes(option)}
+                  onCheckedChange={(checked) =>
+                    handleCheckboxChange(filterKey, option, checked as boolean)
+                  }
+                />
+                <Label htmlFor={`${filterKey}-${option}`} className="text-sm cursor-pointer">
+                  {displayLabel}
+                </Label>
+              </div>
+            );
+          })}
+          {options.length > 15 && (
+            <p className="text-xs text-muted-foreground pl-6">
+              +{options.length - 15} opções
+            </p>
+          )}
+        </CollapsibleContent>
+      </Collapsible>
+    );
+  };
+
   return (
     <Card className="sticky top-6">
       <CardHeader className="pb-3">
@@ -179,7 +242,9 @@ export function LibrarySidebar({
       <CardContent className="pt-0">
         <ScrollArea className="h-[calc(100vh-16rem)]">
           <div className="space-y-4 pr-4">
-            {/* Category Filter */}
+            {/* ===== GENERAL FILTERS ===== */}
+            
+            {/* Category Filter (Biblioteca) */}
             <Collapsible open={openSections.category} onOpenChange={() => toggleSection('category')}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
                 <span className="font-medium">Biblioteca</span>
@@ -203,7 +268,7 @@ export function LibrarySidebar({
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Price Filter */}
+            {/* Price Filter (Preço) */}
             <Collapsible open={openSections.price} onOpenChange={() => toggleSection('price')}>
               <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
                 <span className="font-medium">Preço</span>
@@ -226,82 +291,6 @@ export function LibrarySidebar({
                 ))}
               </CollapsibleContent>
             </Collapsible>
-
-
-            {/* Language Filter */}
-            {availableLanguages.length > 0 && (
-              <Collapsible open={openSections.language} onOpenChange={() => toggleSection('language')}>
-                <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
-                  <span className="font-medium">Linguagem</span>
-                  <ChevronDown className={`h-4 w-4 transition-transform ${openSections.language ? 'rotate-180' : ''}`} />
-                </CollapsibleTrigger>
-                <CollapsibleContent className="space-y-2 pt-2">
-                  {availableLanguages.map(language => (
-                    <div key={language} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={`language-${language}`}
-                        checked={(filters.language || []).includes(language)}
-                        onCheckedChange={(checked) =>
-                          handleCheckboxChange('language', language, checked as boolean)
-                        }
-                      />
-                      <Label htmlFor={`language-${language}`} className="text-sm cursor-pointer">
-                        {language}
-                      </Label>
-                    </div>
-                  ))}
-                </CollapsibleContent>
-              </Collapsible>
-            )}
-
-            {/* Category-specific Attribute Filters */}
-            {categoryAttributes.map(attr => {
-              const options = attr.options || dynamicOptions[attr.key] || [];
-              if (options.length === 0) return null;
-
-              const sectionKey = `attr_${attr.key}`;
-              
-              return (
-                <Collapsible 
-                  key={attr.key} 
-                  open={openSections[sectionKey]} 
-                  onOpenChange={() => toggleSection(sectionKey)}
-                >
-                  <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
-                    <span className="font-medium">{attr.label}</span>
-                    <ChevronDown className={`h-4 w-4 transition-transform ${openSections[sectionKey] ? 'rotate-180' : ''}`} />
-                  </CollapsibleTrigger>
-                  <CollapsibleContent className="space-y-2 pt-2">
-                    {options.slice(0, 15).map(option => {
-                      const filterKey = `attr_${attr.key}`;
-                      const displayLabel = attr.key === 'certificate' 
-                        ? (option === 'true' ? 'Com certificado' : 'Sem certificado')
-                        : option;
-                      
-                      return (
-                        <div key={option} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`${filterKey}-${option}`}
-                            checked={(filters[filterKey] || []).includes(option)}
-                            onCheckedChange={(checked) =>
-                              handleCheckboxChange(filterKey, option, checked as boolean)
-                            }
-                          />
-                          <Label htmlFor={`${filterKey}-${option}`} className="text-sm cursor-pointer">
-                            {displayLabel}
-                          </Label>
-                        </div>
-                      );
-                    })}
-                    {options.length > 15 && (
-                      <p className="text-xs text-muted-foreground pl-6">
-                        +{options.length - 15} opções
-                      </p>
-                    )}
-                  </CollapsibleContent>
-                </Collapsible>
-              );
-            })}
 
             {/* Tags Filter */}
             {availableTags.length > 0 && (
@@ -328,6 +317,18 @@ export function LibrarySidebar({
                   </div>
                 </CollapsibleContent>
               </Collapsible>
+            )}
+
+            {/* ===== CATEGORY-SPECIFIC FILTERS ===== */}
+            {categoryAttributes.length > 0 && (
+              <>
+                <Separator className="my-4" />
+                <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">
+                  Filtros de {CATEGORIES.find(c => c.id === selectedCategory)?.label}
+                </div>
+                
+                {categoryAttributes.map(attr => renderAttributeFilter(attr))}
+              </>
             )}
           </div>
         </ScrollArea>
