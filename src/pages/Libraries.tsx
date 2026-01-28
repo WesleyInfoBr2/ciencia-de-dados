@@ -16,8 +16,8 @@ import { LibraryImport } from "@/components/LibraryImport";
 import { updatePageMetadata } from "@/utils/seo";
 import type { Database } from "@/integrations/supabase/types";
 
-type LibraryItem = Database['public']['Tables']['library_items']['Row'];
-type LibraryCategory = 'tools' | 'courses' | 'codes' | 'sources' | 'datasets';
+type LibraryItem = Database["public"]["Tables"]["library_items"]["Row"];
+type LibraryCategory = "tools" | "courses" | "codes" | "sources" | "datasets";
 
 interface LibraryFilters {
   [key: string]: string[];
@@ -26,7 +26,7 @@ interface LibraryFilters {
 const SORT_OPTIONS = [
   { value: "relevance", label: "Relevância" },
   { value: "recent", label: "Mais Recentes" },
-  { value: "name", label: "Nome A-Z" }
+  { value: "name", label: "Nome A-Z" },
 ];
 
 const PAGE_SIZE = 12;
@@ -47,13 +47,13 @@ const Libraries = () => {
   const [showImport, setShowImport] = useState(false);
 
   // Parse URL parameters
-  const selectedCategory = (searchParams.get('category') as LibraryCategory | 'all') || 'all';
-  const searchTerm = searchParams.get('q') || '';
-  const sortBy = searchParams.get('sort') || 'relevance';
+  const selectedCategory = (searchParams.get("category") as LibraryCategory | "all") || "all";
+  const searchTerm = searchParams.get("q") || "";
+  const sortBy = searchParams.get("sort") || "name";
 
   // Parse filters from URL
   const getFiltersFromURL = (): LibraryFilters => {
-    const filtersParam = searchParams.get('filters');
+    const filtersParam = searchParams.get("filters");
     if (!filtersParam) return {};
     try {
       return JSON.parse(atob(filtersParam));
@@ -65,65 +65,66 @@ const Libraries = () => {
   const [filters, setFilters] = useState<LibraryFilters>(getFiltersFromURL());
 
   // Update URL when state changes
-  const updateURL = useCallback((updates: Partial<{
-    category: LibraryCategory | 'all';
-    q: string;
-    sort: string;
-    filters: LibraryFilters;
-  }>) => {
-    const newParams = new URLSearchParams(searchParams);
+  const updateURL = useCallback(
+    (
+      updates: Partial<{
+        category: LibraryCategory | "all";
+        q: string;
+        sort: string;
+        filters: LibraryFilters;
+      }>,
+    ) => {
+      const newParams = new URLSearchParams(searchParams);
 
-    if (updates.category !== undefined) {
-      if (updates.category === 'all') {
-        newParams.delete('category');
-      } else {
-        newParams.set('category', updates.category);
+      if (updates.category !== undefined) {
+        if (updates.category === "all") {
+          newParams.delete("category");
+        } else {
+          newParams.set("category", updates.category);
+        }
       }
-    }
 
-    if (updates.q !== undefined) {
-      if (updates.q === '') {
-        newParams.delete('q');
-      } else {
-        newParams.set('q', updates.q);
+      if (updates.q !== undefined) {
+        if (updates.q === "") {
+          newParams.delete("q");
+        } else {
+          newParams.set("q", updates.q);
+        }
       }
-    }
 
-    if (updates.sort !== undefined) {
-      if (updates.sort === 'relevance') {
-        newParams.delete('sort');
-      } else {
-        newParams.set('sort', updates.sort);
+      if (updates.sort !== undefined) {
+        if (updates.sort === "relevance") {
+          newParams.delete("sort");
+        } else {
+          newParams.set("sort", updates.sort);
+        }
       }
-    }
 
-    if (updates.filters !== undefined) {
-      const hasFilters = Object.keys(updates.filters).some(key => updates.filters![key].length > 0);
-      if (hasFilters) {
-        newParams.set('filters', btoa(JSON.stringify(updates.filters)));
-      } else {
-        newParams.delete('filters');
+      if (updates.filters !== undefined) {
+        const hasFilters = Object.keys(updates.filters).some((key) => updates.filters![key].length > 0);
+        if (hasFilters) {
+          newParams.set("filters", btoa(JSON.stringify(updates.filters)));
+        } else {
+          newParams.delete("filters");
+        }
       }
-    }
 
-    setSearchParams(newParams);
-  }, [searchParams, setSearchParams]);
+      setSearchParams(newParams);
+    },
+    [searchParams, setSearchParams],
+  );
 
-  // Fetch ALL featured items (no limit for carousel)
+  // Fetch featured items
   useEffect(() => {
     const fetchFeatured = async () => {
       setLoadingFeatured(true);
       try {
-        const { data, error } = await supabase
-          .from('library_items')
-          .select('*')
-          .eq('is_featured', true)
-          .order('name', { ascending: true });
+        const { data, error } = await supabase.from("library_items").select("*").eq("is_featured", true).limit(8);
 
         if (error) throw error;
         setFeaturedItems(data || []);
       } catch (error) {
-        console.error('Error fetching featured items:', error);
+        console.error("Error fetching featured items:", error);
       } finally {
         setLoadingFeatured(false);
       }
@@ -133,97 +134,97 @@ const Libraries = () => {
   }, []);
 
   // Fetch items when parameters change
-  const fetchItems = useCallback(async (reset = true) => {
-    if (reset) {
-      setLoading(true);
-      setOffset(0);
-    } else {
-      setLoadingMore(true);
-    }
-
-    const currentOffset = reset ? 0 : offset;
-
-    try {
-      let query = supabase
-        .from('library_items')
-        .select('*');
-
-      // Apply category filter
-      if (selectedCategory !== 'all') {
-        query = query.eq('category', selectedCategory);
-      }
-
-      // Apply search
-      if (searchTerm) {
-        query = query.or(`name.ilike.%${searchTerm}%,short_description.ilike.%${searchTerm}%`);
-      }
-
-      // Apply filters
-      Object.entries(filters).forEach(([key, values]) => {
-        if (values.length > 0) {
-          if (key === 'is_open_source') {
-            query = query.eq('is_open_source', values.includes('true'));
-          } else if (key === 'price') {
-            query = query.in('price', values);
-          } else if (key === 'language') {
-            query = query.in('language', values);
-          } else if (key === 'tags') {
-            query = query.overlaps('tags', values);
-          }
-        }
-      });
-
-      // Apply sorting
-      switch (sortBy) {
-        case 'name':
-          query = query.order('name', { ascending: true });
-          break;
-        case 'recent':
-          query = query.order('created_at', { ascending: false });
-          break;
-        default:
-          query = query.order('is_featured', { ascending: false })
-            .order('created_at', { ascending: false });
-      }
-
-      // Apply pagination
-      query = query.range(currentOffset, currentOffset + PAGE_SIZE);
-
-      const { data, error } = await query;
-
-      if (error) throw error;
-
-      const newItems = data || [];
-      setHasMore(newItems.length === PAGE_SIZE + 1);
-
+  const fetchItems = useCallback(
+    async (reset = true) => {
       if (reset) {
-        setItems(newItems.slice(0, PAGE_SIZE));
+        setLoading(true);
+        setOffset(0);
       } else {
-        setItems(prev => [...prev, ...newItems.slice(0, PAGE_SIZE)]);
+        setLoadingMore(true);
       }
 
-      if (!reset) {
-        setOffset(currentOffset + PAGE_SIZE);
+      const currentOffset = reset ? 0 : offset;
+
+      try {
+        let query = supabase.from("library_items").select("*");
+
+        // Apply category filter
+        if (selectedCategory !== "all") {
+          query = query.eq("category", selectedCategory);
+        }
+
+        // Apply search
+        if (searchTerm) {
+          query = query.or(`name.ilike.%${searchTerm}%,short_description.ilike.%${searchTerm}%`);
+        }
+
+        // Apply filters
+        Object.entries(filters).forEach(([key, values]) => {
+          if (values.length > 0) {
+            if (key === "is_open_source") {
+              query = query.eq("is_open_source", values.includes("true"));
+            } else if (key === "price") {
+              query = query.in("price", values);
+            } else if (key === "language") {
+              query = query.in("language", values);
+            } else if (key === "tags") {
+              query = query.overlaps("tags", values);
+            }
+          }
+        });
+
+        // Apply sorting
+        switch (sortBy) {
+          case "name":
+            query = query.order("name", { ascending: true });
+            break;
+          case "recent":
+            query = query.order("created_at", { ascending: false });
+            break;
+          default:
+            query = query.order("is_featured", { ascending: false }).order("created_at", { ascending: false });
+        }
+
+        // Apply pagination
+        query = query.range(currentOffset, currentOffset + PAGE_SIZE);
+
+        const { data, error } = await query;
+
+        if (error) throw error;
+
+        const newItems = data || [];
+        setHasMore(newItems.length === PAGE_SIZE + 1);
+
+        if (reset) {
+          setItems(newItems.slice(0, PAGE_SIZE));
+        } else {
+          setItems((prev) => [...prev, ...newItems.slice(0, PAGE_SIZE)]);
+        }
+
+        if (!reset) {
+          setOffset(currentOffset + PAGE_SIZE);
+        }
+      } catch (error) {
+        console.error("Error fetching items:", error);
+        toast({
+          title: "Erro",
+          description: "Erro ao carregar itens da biblioteca.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+        setLoadingMore(false);
       }
-    } catch (error) {
-      console.error('Error fetching items:', error);
-      toast({
-        title: "Erro",
-        description: "Erro ao carregar itens da biblioteca.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-      setLoadingMore(false);
-    }
-  }, [selectedCategory, searchTerm, sortBy, filters, offset, toast]);
+    },
+    [selectedCategory, searchTerm, sortBy, filters, offset, toast],
+  );
 
   useEffect(() => {
     fetchItems(true);
   }, [selectedCategory, searchTerm, sortBy, filters]);
 
   // Handlers
-  const handleCategoryChange = (category: LibraryCategory | 'all') => {
+  const handleCategoryChange = (category: LibraryCategory | "all") => {
     updateURL({ category });
     setOffset(0);
   };
@@ -232,7 +233,7 @@ const Libraries = () => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    const query = formData.get('search') as string;
+    const query = formData.get("search") as string;
     updateURL({ q: query.trim() });
     setOffset(0);
   };
@@ -257,20 +258,20 @@ const Libraries = () => {
   };
 
   const handleLoadMore = () => {
-    setOffset(prev => prev + PAGE_SIZE);
+    setOffset((prev) => prev + PAGE_SIZE);
     fetchItems(false);
   };
 
   // Update page metadata
   useEffect(() => {
     updatePageMetadata({
-      title: 'Bibliotecas | CiênciaDeDados.org',
-      description: 'Explore nossa coleção de ferramentas, cursos, códigos e datasets para ciência de dados.',
-      canonical: 'https://cienciadedados.org/bibliotecas',
+      title: "Bibliotecas | CiênciaDeDados.org",
+      description: "Explore nossa coleção de ferramentas, cursos, códigos e datasets para ciência de dados.",
+      canonical: "https://cienciadedados.org/bibliotecas",
     });
   }, []);
 
-  const hasActiveFilters = Object.values(filters).some(values => values.length > 0);
+  const hasActiveFilters = Object.values(filters).some((values) => values.length > 0);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary">
@@ -300,9 +301,9 @@ const Libraries = () => {
                   defaultValue={searchTerm}
                   className="pl-10"
                   onKeyDown={(e) => {
-                    if (e.key === 'Escape') {
-                      (e.target as HTMLInputElement).value = '';
-                      updateURL({ q: '' });
+                    if (e.key === "Escape") {
+                      (e.target as HTMLInputElement).value = "";
+                      updateURL({ q: "" });
                     }
                   }}
                 />
@@ -315,19 +316,16 @@ const Libraries = () => {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  {SORT_OPTIONS.map(opt => (
-                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  {SORT_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
 
               {user && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowImport(!showImport)}
-                  className="gap-2"
-                >
+                <Button variant="outline" size="sm" onClick={() => setShowImport(!showImport)} className="gap-2">
                   <Upload className="h-4 w-4" />
                   Importar
                 </Button>
@@ -340,32 +338,23 @@ const Libraries = () => {
             <div className="flex flex-wrap items-center gap-2 mt-4 pt-4 border-t">
               <span className="text-sm text-muted-foreground">Filtros ativos:</span>
               {Object.entries(filters).map(([key, values]) =>
-                values.length > 0 ? (
-                  values.map((value) => (
-                    <Badge
-                      key={`${key}-${value}`}
-                      variant="secondary"
-                      className="gap-1"
-                    >
-                      {key}: {value}
-                      <X
-                        className="h-3 w-3 cursor-pointer"
-                        onClick={() => {
-                          const newFilters = { ...filters };
-                          newFilters[key] = newFilters[key].filter(v => v !== value);
-                          handleFilterChange(key, newFilters[key]);
-                        }}
-                      />
-                    </Badge>
-                  ))
-                ) : null
+                values.length > 0
+                  ? values.map((value) => (
+                      <Badge key={`${key}-${value}`} variant="secondary" className="gap-1">
+                        {key}: {value}
+                        <X
+                          className="h-3 w-3 cursor-pointer"
+                          onClick={() => {
+                            const newFilters = { ...filters };
+                            newFilters[key] = newFilters[key].filter((v) => v !== value);
+                            handleFilterChange(key, newFilters[key]);
+                          }}
+                        />
+                      </Badge>
+                    ))
+                  : null,
               )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleClearFilters}
-                className="text-xs h-6"
-              >
+              <Button variant="ghost" size="sm" onClick={handleClearFilters} className="text-xs h-6">
                 Limpar filtros
               </Button>
             </div>
