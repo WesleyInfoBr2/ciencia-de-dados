@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Info, Globe, Code, BookOpen, Database as DatabaseIcon, BarChart3, Star } from "lucide-react";
+import { ExternalLink, Info, Wrench, Code, GraduationCap, Database as DatabaseIcon, BarChart3, Star } from "lucide-react";
 
 // Interface para o item da biblioteca (compatível com a nova estrutura)
 interface LibraryItem {
@@ -30,12 +30,12 @@ interface LibraryCardProps {
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case 'tools': return Globe;
-    case 'courses': return BookOpen;
+    case 'tools': return Wrench;
+    case 'courses': return GraduationCap;
     case 'codes': return Code;
     case 'sources': return DatabaseIcon;
     case 'datasets': return BarChart3;
-    default: return Globe;
+    default: return Wrench;
   }
 };
 
