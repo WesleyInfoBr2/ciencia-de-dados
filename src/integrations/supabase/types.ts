@@ -566,8 +566,6 @@ export type Database = {
           created_at: string | null
           id: string
           is_featured: boolean | null
-          is_open_source: boolean | null
-          language: string | null
           name: string
           price: string
           short_description: string | null
@@ -583,8 +581,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_featured?: boolean | null
-          is_open_source?: boolean | null
-          language?: string | null
           name: string
           price?: string
           short_description?: string | null
@@ -600,8 +596,6 @@ export type Database = {
           created_at?: string | null
           id?: string
           is_featured?: boolean | null
-          is_open_source?: boolean | null
-          language?: string | null
           name?: string
           price?: string
           short_description?: string | null

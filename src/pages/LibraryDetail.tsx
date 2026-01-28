@@ -186,9 +186,9 @@ export function LibraryDetail() {
                         <Badge variant="outline">
                           {getCategoryLabel(item.category)}
                         </Badge>
-                        {item.language && (
+                        {attributes.language && (
                           <Badge variant="outline">
-                            {item.language}
+                            {attributes.language}
                           </Badge>
                         )}
                       </div>
@@ -210,7 +210,7 @@ export function LibraryDetail() {
                       {getPriceLabel(item.price)}
                     </Badge>
                     
-                    {item.is_open_source && (
+                    {attributes.open_source && (
                       <Badge variant="outline" className="bg-green-500/10 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800">
                         Open Source
                       </Badge>
@@ -465,21 +465,23 @@ export function LibraryDetail() {
                     </Badge>
                   </div>
                   <Separator />
-                  {item.language && (
+                  {attributes.language && (
                     <>
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Linguagem</span>
-                        <span className="font-medium">{item.language}</span>
+                        <span className="font-medium">{attributes.language}</span>
                       </div>
                       <Separator />
                     </>
                   )}
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Open Source</span>
-                    <Badge variant={item.is_open_source ? "default" : "secondary"}>
-                      {item.is_open_source ? "Sim" : "Não"}
-                    </Badge>
-                  </div>
+                  {attributes.open_source !== undefined && (
+                    <div className="flex justify-between">
+                      <span className="text-muted-foreground">Open Source</span>
+                      <Badge variant={attributes.open_source ? "default" : "secondary"}>
+                        {attributes.open_source ? "Sim" : "Não"}
+                      </Badge>
+                    </div>
+                  )}
 
                   {/* Category-specific attributes in Quick Info */}
                   {item.category === 'tools' && (

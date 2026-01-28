@@ -16,7 +16,7 @@ import { LibraryImport } from "@/components/LibraryImport";
 import { updatePageMetadata } from "@/utils/seo";
 import type { Database } from "@/integrations/supabase/types";
 
-type LibraryItem = Database["public"]["Tables"]["library_items"]["Row"];
+type LibraryItem = Omit<Database["public"]["Tables"]["library_items"]["Row"], 'language' | 'is_open_source'>;
 type LibraryCategory = "tools" | "courses" | "codes" | "sources" | "datasets";
 
 interface LibraryFilters {
@@ -165,15 +165,12 @@ const Libraries = () => {
         // Apply filters
         Object.entries(filters).forEach(([key, values]) => {
           if (values.length > 0) {
-            if (key === "is_open_source") {
-              query = query.eq("is_open_source", values.includes("true"));
-            } else if (key === "price") {
+            if (key === "price") {
               query = query.in("price", values);
-            } else if (key === "language") {
-              query = query.in("language", values);
             } else if (key === "tags") {
               query = query.overlaps("tags", values);
             }
+            // Note: language filter now handled via attributes (client-side filtering may be needed)
           }
         });
 

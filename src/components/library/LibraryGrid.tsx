@@ -10,12 +10,10 @@ interface LibraryItem {
   category: string;
   short_description: string | null;
   website_url: string | null;
-  price: string | null;
+  price: string;
   tags: string[] | null;
   is_featured: boolean | null;
   status: string | null;
-  language: string | null;
-  is_open_source: boolean | null;
   attributes: unknown;
   created_at: string | null;
   updated_at: string | null;

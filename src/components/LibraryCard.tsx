@@ -12,13 +12,11 @@ interface LibraryItem {
   name: string;
   short_description: string | null;
   website_url: string | null;
-  price: string | null;
+  price: string;
   tags: string[] | null;
   is_featured: boolean | null;
   status: string | null;
   slug: string;
-  language: string | null;
-  is_open_source: boolean | null;
   attributes: unknown;
   created_at: string | null;
   updated_at: string | null;
@@ -87,9 +85,9 @@ export function LibraryCard({ item }: LibraryCardProps) {
               <CardTitle className="text-lg leading-tight line-clamp-2 group-hover:text-primary transition-colors">
                 {item.name}
               </CardTitle>
-              {item.language && (
+              {(item.attributes as Record<string, any>)?.language && (
                 <Badge variant="outline" className="mt-1 text-xs">
-                  {item.language}
+                  {(item.attributes as Record<string, any>).language}
                 </Badge>
               )}
             </div>
@@ -113,11 +111,11 @@ export function LibraryCard({ item }: LibraryCardProps) {
         )}
 
         <div className="flex flex-wrap gap-2 mb-4">
-          <Badge className={getPriceColor(item.price || 'free')}>
-            {getPriceLabel(item.price || 'free')}
+          <Badge className={getPriceColor(item.price)}>
+            {getPriceLabel(item.price)}
           </Badge>
           
-          {item.is_open_source && (
+          {(item.attributes as Record<string, any>)?.open_source && (
             <Badge variant="outline" className="bg-accent/10 text-accent-foreground border-accent/30">
               Open Source
             </Badge>

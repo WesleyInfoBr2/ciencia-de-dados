@@ -88,7 +88,7 @@ export function LibrarySidebar({
     try {
       let query = supabase
         .from('library_items')
-        .select('tags, language, attributes');
+        .select('tags, attributes');
 
       if (selectedCategory !== 'all') {
         query = query.eq('category', selectedCategory);
@@ -101,9 +101,9 @@ export function LibrarySidebar({
         const allTags = items.flatMap(item => item.tags || []);
         setAvailableTags([...new Set(allTags)].sort().slice(0, 30));
 
-        // Extract unique languages
+        // Extract unique languages from attributes
         const allLanguages = items
-          .map(item => item.language)
+          .map(item => (item.attributes as Record<string, any>)?.language)
           .filter((lang): lang is string => Boolean(lang));
         setAvailableLanguages([...new Set(allLanguages)].sort());
 
@@ -227,27 +227,6 @@ export function LibrarySidebar({
               </CollapsibleContent>
             </Collapsible>
 
-            {/* Open Source Filter */}
-            <Collapsible open={openSections.openSource} onOpenChange={() => toggleSection('openSource')}>
-              <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
-                <span className="font-medium">Código Aberto</span>
-                <ChevronDown className={`h-4 w-4 transition-transform ${openSections.openSource ? 'rotate-180' : ''}`} />
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-2 pt-2">
-                <div className="flex items-center space-x-2">
-                  <Checkbox
-                    id="open-source-true"
-                    checked={(filters.is_open_source || []).includes('true')}
-                    onCheckedChange={(checked) =>
-                      handleCheckboxChange('is_open_source', 'true', checked as boolean)
-                    }
-                  />
-                  <Label htmlFor="open-source-true" className="text-sm cursor-pointer">
-                    Apenas Open Source
-                  </Label>
-                </div>
-              </CollapsibleContent>
-            </Collapsible>
 
             {/* Language Filter */}
             {availableLanguages.length > 0 && (

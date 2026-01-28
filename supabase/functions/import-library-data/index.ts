@@ -108,10 +108,9 @@ Deno.serve(async (req) => {
           }
         }
 
-        // Determine language for codes
-        let language = null;
+        // Determine language for codes - store in attributes
         if (category === 'codes' && attributes.linguagem) {
-          language = String(attributes.linguagem);
+          attributes.language = String(attributes.linguagem);
           delete attributes.linguagem;
         }
 
@@ -125,8 +124,6 @@ Deno.serve(async (req) => {
           is_featured: parseBoolean(item.destaques),
           status: item.status?.toLowerCase() === 'ativo' ? 'active' : 'inactive',
           slug,
-          language,
-          is_open_source: attributes.open_source as boolean || false,
           attributes,
         };
 
