@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { ArrowLeft, ExternalLink, Download, Calendar, Globe, Code, BookOpen, Database as DatabaseIcon, BarChart3 } from "lucide-react";
+import { ArrowLeft, ExternalLink, Download, Calendar, Wrench, Code, GraduationCap, Database as DatabaseIcon, BarChart3 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "@/hooks/use-toast";
 import type { Database } from "@/integrations/supabase/types";
@@ -15,12 +15,12 @@ type LibraryFile = Database['public']['Tables']['library_files']['Row'];
 
 const getCategoryIcon = (category: string) => {
   switch (category) {
-    case 'tools': return Globe;
-    case 'courses': return BookOpen;
+    case 'tools': return Wrench;
+    case 'courses': return GraduationCap;
     case 'codes': return Code;
     case 'sources': return DatabaseIcon;
     case 'datasets': return BarChart3;
-    default: return Globe;
+    default: return Wrench;
   }
 };
 
