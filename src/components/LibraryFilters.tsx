@@ -74,7 +74,7 @@ export function LibraryFilters({ category, filters, onFilterChange }: LibraryFil
     try {
       const { data: items } = await supabase
         .from('library_items')
-        .select('tags, language')
+        .select('tags, attributes')
         .eq('category', category);
 
       if (items) {
@@ -82,9 +82,9 @@ export function LibraryFilters({ category, filters, onFilterChange }: LibraryFil
         const allTags = items.flatMap(item => item.tags || []);
         setAvailableTags([...new Set(allTags)].sort());
 
-        // Extract unique languages
+        // Extract unique languages from attributes
         const allLanguages = items
-          .map(item => item.language)
+          .map(item => (item.attributes as Record<string, any>)?.language)
           .filter((lang): lang is string => Boolean(lang));
         setAvailableLanguages([...new Set(allLanguages)].sort());
       }
@@ -144,30 +144,6 @@ export function LibraryFilters({ category, filters, onFilterChange }: LibraryFil
           </CollapsibleContent>
         </Collapsible>
 
-        {/* Open Source Filter */}
-        <Collapsible 
-          open={openSections.openSource} 
-          onOpenChange={() => toggleSection('openSource')}
-        >
-          <CollapsibleTrigger className="flex items-center justify-between w-full p-2 hover:bg-muted rounded">
-            <span className="font-medium">Código Aberto</span>
-            <ChevronDown className={`h-4 w-4 transition-transform ${openSections.openSource ? 'rotate-180' : ''}`} />
-          </CollapsibleTrigger>
-          <CollapsibleContent className="space-y-2 pt-2">
-            <div className="flex items-center space-x-2">
-              <Checkbox
-                id="open-source-true"
-                checked={(filters.is_open_source || []).includes('true')}
-                onCheckedChange={(checked) => 
-                  handleCheckboxChange('is_open_source', 'true', checked as boolean)
-                }
-              />
-              <Label htmlFor="open-source-true" className="text-sm">
-                Apenas Open Source
-              </Label>
-            </div>
-          </CollapsibleContent>
-        </Collapsible>
 
         {/* Language Filter */}
         {availableLanguages.length > 0 && (
