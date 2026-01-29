@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
+import CalloutComponent from './CalloutComponent'
 
 export interface CalloutOptions {
   HTMLAttributes: Record<string, any>
@@ -21,6 +23,12 @@ export const Callout = Node.create<CalloutOptions>({
   content: 'block+',
 
   defining: true,
+
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    }
+  },
 
   addAttributes() {
     return {
@@ -70,5 +78,9 @@ export const Callout = Node.create<CalloutOptions>({
         return commands.toggleWrap(this.name)
       }
     }
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(CalloutComponent)
   }
 })

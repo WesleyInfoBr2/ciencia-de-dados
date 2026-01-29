@@ -260,6 +260,36 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
                   editor.chain().focus().deleteRange(range).insertInlineMath({ latex: '' }).run()
                 }
               },
+              {
+                title: 'Callout Info',
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setCallout({ variant: 'info', emoji: '💡' }).run()
+                }
+              },
+              {
+                title: 'Callout Aviso',
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setCallout({ variant: 'warning', emoji: '⚠️' }).run()
+                }
+              },
+              {
+                title: 'Callout Sucesso',
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setCallout({ variant: 'success', emoji: '✅' }).run()
+                }
+              },
+              {
+                title: 'Callout Erro',
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setCallout({ variant: 'error', emoji: '❌' }).run()
+                }
+              },
+              {
+                title: 'Toggle / Acordeão',
+                command: ({ editor }: any) => {
+                  editor.chain().focus().setToggle({ summary: 'Clique para expandir' }).run()
+                }
+              },
             ]
 
             return items.filter(item => 

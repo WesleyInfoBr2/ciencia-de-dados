@@ -1,15 +1,16 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
 import { ProductsManagement } from "@/components/admin/ProductsManagement";
 import { UsersManagement } from "@/components/admin/UsersManagement";
 import { SubscriptionsManagement } from "@/components/admin/SubscriptionsManagement";
 import { ProductAccessManagement } from "@/components/admin/ProductAccessManagement";
-import { Loader2 } from "lucide-react";
+import { Loader2, MessageCircle } from "lucide-react";
 
 const Admin = () => {
   const { user } = useAuth();
@@ -42,13 +43,21 @@ const Admin = () => {
       
       <main className="py-20">
         <div className="container mx-auto px-4">
-          <div className="mb-8">
-            <h1 className="font-heading text-4xl font-bold text-foreground mb-2">
-              Administração
-            </h1>
-            <p className="text-muted-foreground">
-              Gerencie produtos, usuários e configurações da plataforma
-            </p>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h1 className="font-heading text-4xl font-bold text-foreground mb-2">
+                Administração
+              </h1>
+              <p className="text-muted-foreground">
+                Gerencie produtos, usuários e configurações da plataforma
+              </p>
+            </div>
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/admin/comments">
+                <MessageCircle className="h-4 w-4" />
+                Moderar Comentários
+              </Link>
+            </Button>
           </div>
 
           <Tabs defaultValue="products" className="space-y-6">

@@ -854,6 +854,126 @@ export type Database = {
         }
         Relationships: []
       }
+      wiki_post_comments: {
+        Row: {
+          author_id: string | null
+          content: string
+          created_at: string | null
+          guest_name: string | null
+          id: string
+          is_approved: boolean | null
+          post_id: string
+          updated_at: string | null
+        }
+        Insert: {
+          author_id?: string | null
+          content: string
+          created_at?: string | null
+          guest_name?: string | null
+          id?: string
+          is_approved?: boolean | null
+          post_id: string
+          updated_at?: string | null
+        }
+        Update: {
+          author_id?: string | null
+          content?: string
+          created_at?: string | null
+          guest_name?: string | null
+          id?: string
+          is_approved?: boolean | null
+          post_id?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_post_likes: {
+        Row: {
+          created_at: string | null
+          guest_fingerprint: string | null
+          id: string
+          post_id: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          guest_fingerprint?: string | null
+          id?: string
+          post_id: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          guest_fingerprint?: string | null
+          id?: string
+          post_id?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_post_likes_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wiki_post_versions: {
+        Row: {
+          content: Json
+          cover_image_url: string | null
+          created_at: string | null
+          edited_by: string | null
+          excerpt: string | null
+          icon: string | null
+          id: string
+          post_id: string
+          tags: string[] | null
+          title: string
+        }
+        Insert: {
+          content: Json
+          cover_image_url?: string | null
+          created_at?: string | null
+          edited_by?: string | null
+          excerpt?: string | null
+          icon?: string | null
+          id?: string
+          post_id: string
+          tags?: string[] | null
+          title: string
+        }
+        Update: {
+          content?: Json
+          cover_image_url?: string | null
+          created_at?: string | null
+          edited_by?: string | null
+          excerpt?: string | null
+          icon?: string | null
+          id?: string
+          post_id?: string
+          tags?: string[] | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wiki_post_versions_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "wiki_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wiki_posts: {
         Row: {
           author_id: string
