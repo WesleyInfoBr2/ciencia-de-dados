@@ -19,6 +19,7 @@ import ProductEstatisticaFacil from "./pages/ProductEstatisticaFacil";
 import ProductRevPrisma from "./pages/ProductRevPrisma";
 import ProductDadosBrasil from "./pages/ProductDadosBrasil";
 import Admin from "./pages/Admin";
+import AdminCommentModeration from "./pages/AdminCommentModeration";
 import Pricing from "./pages/Pricing";
 
 const queryClient = new QueryClient();
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/produtos/dadosbrasil" element={<ProductDadosBrasil />} />
             <Route path="/precos" element={<Pricing />} />
             <Route path="/admin" element={<Admin />} />
+            <Route path="/admin/comments" element={<AdminCommentModeration />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

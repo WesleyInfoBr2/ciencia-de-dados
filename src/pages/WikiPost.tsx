@@ -12,6 +12,7 @@ import { ReadingProgress } from "@/components/ReadingProgress";
 import { TableOfContents } from "@/components/TableOfContents";
 import { updatePageMetadata, generateStructuredData, calculateReadingTime } from "@/utils/seo";
 import Header from "@/components/Header";
+import WikiLikesAndComments from "@/components/WikiLikesAndComments";
 
 interface WikiPostData {
   id: string;
@@ -316,6 +317,9 @@ const WikiPost = () => {
                 publishedAt={post.published_at}
                 tags={post.tags || undefined}
               />
+
+              {/* Likes and Comments */}
+              <WikiLikesAndComments postId={post.id} />
             </article>
 
             {/* Related Posts */}

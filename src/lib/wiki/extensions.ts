@@ -17,7 +17,8 @@ import { Color } from '@tiptap/extension-color'
 import { TextAlign } from '@tiptap/extension-text-align'
 import Placeholder from '@tiptap/extension-placeholder'
 import Mathematics from '@tiptap/extension-mathematics'
-import { nodeInputRule } from '@tiptap/core'
+import { Callout } from '@/components/editor/extensions/Callout'
+import { Toggle } from '@/components/editor/extensions/Toggle'
 import 'katex/dist/katex.min.css'
 
 // Mathematics with input rules for $...$ and $$...$$
@@ -86,5 +87,7 @@ export function wikiBaseExtensions(placeholderText = 'Digite / para comandos…'
     TaskList,
     TaskItem.configure({ nested: true }),
     MathIR.configure({ katexOptions: { throwOnError: false } }),
+    Callout,
+    Toggle,
   ]
 }

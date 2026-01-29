@@ -1,4 +1,6 @@
 import { Node, mergeAttributes } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
+import ToggleComponent from './ToggleComponent'
 
 export interface ToggleOptions {
   HTMLAttributes: Record<string, any>
@@ -7,7 +9,7 @@ export interface ToggleOptions {
 declare module '@tiptap/core' {
   interface Commands<ReturnType> {
     toggle: {
-      setToggle: (options?: { open?: boolean }) => ReturnType
+      setToggle: (options?: { open?: boolean, summary?: string }) => ReturnType
     }
   }
 }
@@ -21,6 +23,12 @@ export const Toggle = Node.create<ToggleOptions>({
 
   defining: true,
 
+  addOptions() {
+    return {
+      HTMLAttributes: {},
+    }
+  },
+
   addAttributes() {
     return {
       open: {
@@ -31,7 +39,7 @@ export const Toggle = Node.create<ToggleOptions>({
         }
       },
       summary: {
-        default: 'Toggle',
+        default: 'Clique para expandir',
         parseHTML: element => element.getAttribute('data-summary'),
         renderHTML: attributes => {
           return { 'data-summary': attributes.summary }
@@ -67,5 +75,9 @@ export const Toggle = Node.create<ToggleOptions>({
         return commands.wrapIn(this.name, options)
       }
     }
+  },
+
+  addNodeView() {
+    return ReactNodeViewRenderer(ToggleComponent)
   }
 })
