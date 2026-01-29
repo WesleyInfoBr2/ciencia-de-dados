@@ -82,6 +82,15 @@ const Header = () => {
           >
             Preços
           </Link>
+          {isAdmin && (
+            <Link
+              to="/admin"
+              className="text-sm font-medium text-muted-foreground hover:text-primary transition-smooth flex items-center gap-1"
+            >
+              <Shield className="w-3 h-3" />
+              Admin
+            </Link>
+          )}
         </nav>
 
         {/* Actions */}
