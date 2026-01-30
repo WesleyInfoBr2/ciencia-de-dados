@@ -853,7 +853,10 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
 
       </div>
 
-      <EditorContent editor={editor} />
+      {/* Editor com scroll interno para manter toolbar visível */}
+      <div className="editor-content-wrapper overflow-y-auto max-h-[60vh] border rounded-b-lg">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   )
 }
