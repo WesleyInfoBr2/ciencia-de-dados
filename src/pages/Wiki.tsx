@@ -12,6 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon, Filter, X, ArrowUpDown, ChevronDown, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
+import { TagFilter } from "@/components/TagFilter";
 import { updatePageMetadata } from "@/utils/seo";
 import { getCategoryEmoji } from "@/lib/categoryIcons";
 import cienciaDadosVenn from "@/assets/ciencia-dados-venn.png";
@@ -617,26 +618,11 @@ const Wiki = () => {
 
                   {/* Tags */}
                   {availableTags.length > 0 && (
-                    <div>
-                      <h3 className="text-sm font-medium mb-2 text-muted-foreground">Tags</h3>
-                      <div className="flex flex-wrap gap-2">
-                        {availableTags.slice(0, 20).map((tag) => (
-                          <Badge
-                            key={tag}
-                            variant={selectedTags.includes(tag) ? "default" : "outline"}
-                            className="cursor-pointer hover:bg-primary/20 text-xs"
-                            onClick={() => handleTagToggle(tag)}
-                          >
-                            {tag}
-                          </Badge>
-                        ))}
-                        {availableTags.length > 20 && (
-                          <span className="text-xs text-muted-foreground self-center">
-                            +{availableTags.length - 20} mais
-                          </span>
-                        )}
-                      </div>
-                    </div>
+                    <TagFilter
+                      availableTags={availableTags}
+                      selectedTags={selectedTags}
+                      onTagToggle={handleTagToggle}
+                    />
                   )}
 
                   {/* Filtros ativos */}
