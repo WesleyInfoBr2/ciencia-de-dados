@@ -56,7 +56,7 @@ const WikiPost = () => {
     if (slug) {
       fetchPost();
     }
-  }, [slug]);
+  }, [slug, user]);
 
   useEffect(() => {
     if (post) {
@@ -70,6 +70,8 @@ const WikiPost = () => {
     if (!slug) return;
 
     setLoading(true);
+    
+    // Primeiro busca o post pelo slug (sem filtro de publicação)
     const { data, error } = await supabase
       .from('wiki_posts')
       .select(`
@@ -99,35 +101,50 @@ const WikiPost = () => {
         )
       `)
       .eq('slug', slug)
-      .eq('is_published', true)
       .single();
 
     if (error) {
       console.error('Error fetching post:', error);
       toast({
         title: "Erro",
-        description: "Post não encontrado ou não publicado.",
+        description: "Post não encontrado.",
         variant: "destructive",
       });
       navigate('/wiki');
-    } else {
-      // Tratar content: pode vir string (erro antigo) ou JSON
-      if (typeof data.content === 'string') {
-        try {
-          data.content = JSON.parse(data.content)
-        } catch {
-          // Se não for JSON válido, criar estrutura básica
-          data.content = {
-            type: 'doc',
-            content: data.content ? [{
-              type: 'paragraph',
-              content: [{ type: 'text', text: data.content }]
-            }] : []
-          }
+      setLoading(false);
+      return;
+    }
+    
+    // Verifica permissão: publicado OU autor do post
+    const canView = data.is_published || (user && user.id === data.author_id);
+    
+    if (!canView) {
+      toast({
+        title: "Acesso negado",
+        description: "Este post ainda não foi publicado.",
+        variant: "destructive",
+      });
+      navigate('/wiki');
+      setLoading(false);
+      return;
+    }
+
+    // Tratar content: pode vir string (erro antigo) ou JSON
+    if (typeof data.content === 'string') {
+      try {
+        data.content = JSON.parse(data.content)
+      } catch {
+        // Se não for JSON válido, criar estrutura básica
+        data.content = {
+          type: 'doc',
+          content: data.content ? [{
+            type: 'paragraph',
+            content: [{ type: 'text', text: data.content }]
+          }] : []
         }
       }
-      setPost(data);
     }
+    setPost(data);
     setLoading(false);
   };
 
