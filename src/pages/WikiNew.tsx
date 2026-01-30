@@ -147,15 +147,15 @@ const WikiNew = () => {
       <Header />
       
       <div className="container mx-auto px-4 py-8">
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-7xl mx-auto">
           <h1 className="text-3xl font-bold mb-6 flex items-center gap-2">
             <FileText className="h-8 w-8" />
             Novo Artigo
           </h1>
           
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 xl:grid-cols-[1fr_320px] lg:grid-cols-[1fr_280px] gap-6">
             {/* Main Content */}
-            <div className="lg:col-span-3 space-y-6">
+            <div className="space-y-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Informações Básicas</CardTitle>
