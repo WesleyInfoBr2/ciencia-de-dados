@@ -1,3 +1,4 @@
+// Wiki page component - updated to use allTags for proper tag counting
 import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
