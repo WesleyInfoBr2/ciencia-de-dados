@@ -26,7 +26,7 @@ import {
   List, ListOrdered, CheckSquare, Heading1, Heading2, Heading3,
   Quote, Code2, Calculator, Table2, Image as ImageIcon, Save,
   Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  ZoomIn, ZoomOut
+  ZoomIn, ZoomOut, MessageSquare
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -691,6 +691,19 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             title="Equação Matemática (ou digite $...$)"
           >
             <Calculator className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant={editor.isActive('callout') ? 'default' : 'ghost'}
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              editor?.chain().focus().setCallout({ variant: 'info', emoji: '💡' }).run()
+            }}
+            title="Inserir Callout"
+          >
+            <MessageSquare className="w-4 h-4" />
           </Button>
         </div>
 
