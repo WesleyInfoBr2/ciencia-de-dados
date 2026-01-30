@@ -366,6 +366,56 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
     editorProps: {
       attributes: {
         class: 'wiki-editor-v2 prose prose-neutral dark:prose-invert max-w-none focus:outline-none min-h-[400px] p-8'
+      },
+      // Interceptar paste de imagens e fazer upload para Supabase
+      handlePaste: (view, event, slice) => {
+        const items = event.clipboardData?.items
+        if (!items) return false
+
+        for (const item of Array.from(items)) {
+          if (item.type.startsWith('image/')) {
+            event.preventDefault()
+            const file = item.getAsFile()
+            if (file) {
+              // Upload assíncrono e inserção da imagem
+              handleImageUpload(file).then(url => {
+                if (url && view.state) {
+                  const { tr } = view.state
+                  const node = view.state.schema.nodes.image.create({ src: url })
+                  const transaction = tr.replaceSelectionWith(node)
+                  view.dispatch(transaction)
+                }
+              })
+            }
+            return true // Impede o comportamento padrão (base64)
+          }
+        }
+        return false // Deixa o comportamento padrão para outros tipos
+      },
+      // Interceptar drop de imagens
+      handleDrop: (view, event, slice, moved) => {
+        if (moved) return false // Se foi movido internamente, não interceptar
+        
+        const files = event.dataTransfer?.files
+        if (!files || files.length === 0) return false
+
+        for (const file of Array.from(files)) {
+          if (file.type.startsWith('image/')) {
+            event.preventDefault()
+            handleImageUpload(file).then(url => {
+              if (url && view.state) {
+                const coordinates = view.posAtCoords({ left: event.clientX, top: event.clientY })
+                if (coordinates) {
+                  const node = view.state.schema.nodes.image.create({ src: url })
+                  const transaction = view.state.tr.insert(coordinates.pos, node)
+                  view.dispatch(transaction)
+                }
+              }
+            })
+            return true
+          }
+        }
+        return false
       }
     },
     onCreate: ({ editor }) => {
