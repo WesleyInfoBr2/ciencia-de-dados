@@ -386,62 +386,6 @@ const Wiki = () => {
           </div>
         </div>
 
-        {/* Filters */}
-        <div className="bg-card rounded-lg p-6 mb-8 shadow-sm">
-          <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-            <div className="flex flex-wrap gap-4">
-              <div>
-                <label className="text-sm font-medium mb-2 block">Categoria</label>
-                <Select value={selectedCategory || 'all'} onValueChange={handleCategoryFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas as categorias</SelectItem>
-                     {categories.map((category) => (
-                       <SelectItem key={category.id} value={category.slug}>
-                         <span className="flex items-center gap-2">
-                           <span>{getCategoryEmoji(category.icon)}</span>
-                           <span>{category.name}</span>
-                         </span>
-                       </SelectItem>
-                     ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-            </div>
-
-            {(searchQuery || selectedCategory) && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => {
-                  updateURL({ q: '', category: '' });
-                }}
-              >
-                Limpar filtros
-              </Button>
-            )}
-          </div>
-
-          {/* Active search/filter indicators */}
-          {(searchQuery || selectedCategory) && (
-            <div className="flex flex-wrap gap-2 mt-4 pt-4 border-t">
-              <span className="text-sm text-muted-foreground">Filtros ativos:</span>
-              {searchQuery && (
-                <Badge variant="secondary">
-                  Busca: "{searchQuery}"
-                </Badge>
-              )}
-              {selectedCategory && (
-                <Badge variant="secondary">
-                  Categoria: {categories.find(c => c.slug === selectedCategory)?.name}
-                </Badge>
-              )}
-            </div>
-          )}
-        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
