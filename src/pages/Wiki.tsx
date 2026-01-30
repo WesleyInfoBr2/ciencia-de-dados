@@ -52,8 +52,10 @@ const Wiki = () => {
   const selectedCategory = searchParams.get('category') || '';
   
   const [posts, setPosts] = useState<WikiPost[]>([]);
+  const [myPosts, setMyPosts] = useState<WikiPost[]>([]);
   const [categories, setCategories] = useState<WikiCategory[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMyPosts, setLoadingMyPosts] = useState(false);
   const [stats, setStats] = useState({ totalPosts: 0, totalCategories: 0 });
 
   // Update URL when filters change
@@ -79,6 +81,15 @@ const Wiki = () => {
     fetchCategories();
     loadStats();
   }, [searchQuery, selectedCategory]);
+
+  // Fetch user's own posts separately
+  useEffect(() => {
+    if (user) {
+      fetchMyPosts();
+    } else {
+      setMyPosts([]);
+    }
+  }, [user]);
 
   useEffect(() => {
     // Update page metadata
@@ -118,15 +129,8 @@ const Wiki = () => {
             icon,
             color
           )
-        `);
-
-      // Se usuário logado, buscar publicados OU próprios posts (incluindo rascunhos)
-      // Senão, apenas publicados
-      if (user) {
-        query = query.or(`is_published.eq.true,author_id.eq.${user.id}`);
-      } else {
-        query = query.eq('is_published', true);
-      }
+        `)
+        .eq('is_published', true); // Apenas publicados na listagem geral
 
       // Apply search filter
       if (searchQuery) {
@@ -139,7 +143,7 @@ const Wiki = () => {
       }
 
       // Order by date (most recent first)
-      query = query.order('created_at', { ascending: false });
+      query = query.order('published_at', { ascending: false });
 
       const { data, error } = await query.limit(30);
 
@@ -150,6 +154,49 @@ const Wiki = () => {
       setPosts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Buscar posts do usuário logado (publicados e rascunhos)
+  const fetchMyPosts = async () => {
+    if (!user) return;
+    
+    setLoadingMyPosts(true);
+    try {
+      const { data, error } = await supabase
+        .from('wiki_posts')
+        .select(`
+          id,
+          title,
+          slug,
+          excerpt,
+          author_id,
+          is_published,
+          published_at,
+          created_at,
+          category_id,
+          profiles!wiki_posts_author_id_fkey (
+            full_name,
+            username
+          ),
+          wiki_categories (
+            name,
+            slug,
+            icon,
+            color
+          )
+        `)
+        .eq('author_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) throw error;
+      setMyPosts(data || []);
+    } catch (error) {
+      console.error('Erro ao buscar meus posts:', error);
+      setMyPosts([]);
+    } finally {
+      setLoadingMyPosts(false);
     }
   };
 
@@ -340,7 +387,63 @@ const Wiki = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className="lg:col-span-3 space-y-8">
+            
+            {/* Seção Meus Artigos - apenas para usuário logado */}
+            {user && myPosts.length > 0 && (
+              <section aria-labelledby="my-articles-heading" className="bg-card rounded-lg p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 id="my-articles-heading" className="text-xl font-bold flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Meus Artigos
+                  </h2>
+                  <div className="flex items-center gap-3 text-xs">
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                      Publicado
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
+                      Rascunho
+                    </span>
+                  </div>
+                </div>
+                
+                {loadingMyPosts ? (
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {[...Array(3)].map((_, i) => (
+                      <Skeleton key={i} className="h-24 w-64 flex-shrink-0 rounded-lg" />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex gap-4 overflow-x-auto pb-2">
+                    {myPosts.map((post) => (
+                      <Link
+                        key={post.id}
+                        to={`/wiki/${post.slug}`}
+                        className={`flex-shrink-0 w-64 p-4 rounded-lg border-l-4 transition-all hover:shadow-md ${
+                          post.is_published 
+                            ? 'bg-green-50 dark:bg-green-950/30 border-green-500 hover:bg-green-100 dark:hover:bg-green-950/50' 
+                            : 'bg-amber-50 dark:bg-amber-950/30 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-2 mb-2">
+                          <h3 className="font-medium text-sm line-clamp-2 flex-1">{post.title}</h3>
+                          <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${
+                            post.is_published ? 'bg-green-500' : 'bg-amber-500'
+                          }`}></span>
+                        </div>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(post.created_at)}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* Artigos Recentes */}
             <section aria-labelledby="articles-heading">
               <h2 id="articles-heading" className="text-2xl font-bold mb-6">
                 {searchQuery ? (
