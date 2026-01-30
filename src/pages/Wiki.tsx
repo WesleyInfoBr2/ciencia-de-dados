@@ -118,8 +118,15 @@ const Wiki = () => {
             icon,
             color
           )
-        `)
-        .eq('is_published', true);
+        `);
+
+      // Se usuário logado, buscar publicados OU próprios posts (incluindo rascunhos)
+      // Senão, apenas publicados
+      if (user) {
+        query = query.or(`is_published.eq.true,author_id.eq.${user.id}`);
+      } else {
+        query = query.eq('is_published', true);
+      }
 
       // Apply search filter
       if (searchQuery) {
@@ -131,14 +138,10 @@ const Wiki = () => {
         query = query.eq('wiki_categories.slug', selectedCategory);
       }
 
-      // Order by relevance for search, otherwise by date
-      if (searchQuery) {
-        query = query.order('title', { ascending: true });
-      } else {
-        query = query.order('published_at', { ascending: false });
-      }
+      // Order by date (most recent first)
+      query = query.order('created_at', { ascending: false });
 
-      const { data, error } = await query.limit(20);
+      const { data, error } = await query.limit(30);
 
       if (error) throw error;
       setPosts(data || []);
@@ -373,6 +376,11 @@ const Wiki = () => {
                       <CardHeader className="pb-3">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex items-center gap-3">
+                            {!post.is_published && post.author_id === user?.id && (
+                              <Badge variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-400">
+                                Rascunho
+                              </Badge>
+                            )}
                             {post.wiki_categories && (
                               <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
                                 <span className="mr-1">{getCategoryEmoji(post.wiki_categories.icon)}</span>
