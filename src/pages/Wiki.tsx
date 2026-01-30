@@ -63,7 +63,7 @@ const Wiki = () => {
   const [posts, setPosts] = useState<WikiPost[]>([]);
   const [myDrafts, setMyDrafts] = useState<WikiPost[]>([]);
   const [categories, setCategories] = useState<WikiCategory[]>([]);
-  const [availableTags, setAvailableTags] = useState<string[]>([]);
+  const [allTags, setAllTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMyDrafts, setLoadingMyDrafts] = useState(false);
   const [stats, setStats] = useState({ totalPosts: 0, totalCategories: 0 });
@@ -231,9 +231,9 @@ const Wiki = () => {
 
       if (error) throw error;
 
-      const allTags = (data || []).flatMap(post => post.tags || []);
-      const uniqueTags = [...new Set(allTags)].sort();
-      setAvailableTags(uniqueTags);
+      // Keep all tags (with duplicates) for accurate counting
+      const rawTags = (data || []).flatMap(post => post.tags || []);
+      setAllTags(rawTags);
     } catch (error) {
       console.error('Erro ao buscar tags:', error);
     }
@@ -617,9 +617,9 @@ const Wiki = () => {
                   </div>
 
                   {/* Tags */}
-                  {availableTags.length > 0 && (
+                  {allTags.length > 0 && (
                     <TagFilter
-                      availableTags={availableTags}
+                      allTags={allTags}
                       selectedTags={selectedTags}
                       onTagToggle={handleTagToggle}
                     />
