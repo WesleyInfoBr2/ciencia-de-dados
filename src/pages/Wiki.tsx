@@ -7,7 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon } from "lucide-react";
+import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon, Filter, X, ArrowUpDown } from "lucide-react";
 import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
 import { updatePageMetadata } from "@/utils/seo";
@@ -51,10 +51,13 @@ const Wiki = () => {
   // Parse URL parameters
   const searchQuery = searchParams.get('q') || '';
   const selectedCategory = searchParams.get('category') || '';
+  const selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
+  const sortOrder = searchParams.get('sort') || 'recent';
   
   const [posts, setPosts] = useState<WikiPost[]>([]);
   const [myPosts, setMyPosts] = useState<WikiPost[]>([]);
   const [categories, setCategories] = useState<WikiCategory[]>([]);
+  const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMyPosts, setLoadingMyPosts] = useState(false);
   const [stats, setStats] = useState({ totalPosts: 0, totalCategories: 0 });
@@ -63,6 +66,8 @@ const Wiki = () => {
   const updateURL = (updates: Partial<{
     q: string;
     category: string;
+    tags: string;
+    sort: string;
   }>) => {
     const newParams = new URLSearchParams(searchParams);
     
@@ -81,7 +86,8 @@ const Wiki = () => {
     fetchPosts();
     fetchCategories();
     loadStats();
-  }, [searchQuery, selectedCategory]);
+    fetchAvailableTags();
+  }, [searchQuery, selectedCategory, selectedTags.join(','), sortOrder]);
 
   // Fetch user's own posts separately
   useEffect(() => {
@@ -120,6 +126,8 @@ const Wiki = () => {
           published_at,
           created_at,
           category_id,
+          tags,
+          reading_time,
           profiles!wiki_posts_author_id_fkey (
             full_name,
             username
@@ -129,6 +137,9 @@ const Wiki = () => {
             slug,
             icon,
             color
+          ),
+          wiki_post_likes (
+            id
           )
         `)
         .eq('is_published', true); // Apenas publicados na listagem geral
@@ -143,18 +154,63 @@ const Wiki = () => {
         query = query.eq('wiki_categories.slug', selectedCategory);
       }
 
-      // Order by date (most recent first)
-      query = query.order('published_at', { ascending: false });
+      // Apply tags filter
+      if (selectedTags.length > 0) {
+        query = query.overlaps('tags', selectedTags);
+      }
 
-      const { data, error } = await query.limit(30);
+      const { data, error } = await query.limit(100);
 
       if (error) throw error;
-      setPosts(data || []);
+      
+      // Sort based on selected order
+      let sortedData = data || [];
+      if (sortOrder === 'recent') {
+        sortedData = sortedData.sort((a, b) => 
+          new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime()
+        );
+      } else if (sortOrder === 'popular') {
+        sortedData = sortedData.sort((a, b) => 
+          ((b as any).wiki_post_likes?.length || 0) - ((a as any).wiki_post_likes?.length || 0)
+        );
+      } else if (sortOrder === 'relevant') {
+        // For relevance, prioritize: has likes > has longer reading time > recent
+        sortedData = sortedData.sort((a, b) => {
+          const aLikes = (a as any).wiki_post_likes?.length || 0;
+          const bLikes = (b as any).wiki_post_likes?.length || 0;
+          const aReading = (a as any).reading_time || 0;
+          const bReading = (b as any).reading_time || 0;
+          
+          // Score: likes * 10 + reading_time
+          const aScore = aLikes * 10 + aReading;
+          const bScore = bLikes * 10 + bReading;
+          return bScore - aScore;
+        });
+      }
+      
+      setPosts(sortedData.slice(0, 30));
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
       setPosts([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchAvailableTags = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('wiki_posts')
+        .select('tags')
+        .eq('is_published', true);
+
+      if (error) throw error;
+
+      const allTags = (data || []).flatMap(post => post.tags || []);
+      const uniqueTags = [...new Set(allTags)].sort();
+      setAvailableTags(uniqueTags);
+    } catch (error) {
+      console.error('Erro ao buscar tags:', error);
     }
   };
 
@@ -261,6 +317,21 @@ const Wiki = () => {
 
   const handleCategoryFilter = (category: string) => {
     updateURL({ category: category === 'all' ? '' : category });
+  };
+
+  const handleTagToggle = (tag: string) => {
+    const newTags = selectedTags.includes(tag)
+      ? selectedTags.filter(t => t !== tag)
+      : [...selectedTags, tag];
+    updateURL({ tags: newTags.join(',') });
+  };
+
+  const handleSortChange = (sort: string) => {
+    updateURL({ sort });
+  };
+
+  const clearFilters = () => {
+    updateURL({ category: '', tags: '' });
   };
 
   const highlightSearchTerms = (text: string, searchTerm: string) => {
@@ -387,9 +458,8 @@ const Wiki = () => {
         </div>
 
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Main Content */}
-          <div className="lg:col-span-3 space-y-8">
+        <div className="space-y-8">
+          {/* Main Content - Full Width */}
             
             {/* Seção Meus Artigos - apenas para usuário logado */}
             {user && myPosts.length > 0 && (
@@ -445,20 +515,119 @@ const Wiki = () => {
               </section>
             )}
 
-            {/* Artigos Recentes */}
-            <section aria-labelledby="articles-heading">
-              <h2 id="articles-heading" className="text-2xl font-bold mb-6">
-                {searchQuery ? (
-                  <>Resultados da busca "{searchQuery}" ({posts.length})</>
-                ) : selectedCategory ? (
-                  <>Artigos filtrados ({posts.length})</>
-                ) : (
-                  <>Artigos recentes</>
+            {/* Filtros por Categoria e Tags */}
+            <section className="bg-card rounded-lg p-6 shadow-sm">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Filter className="h-5 w-5" />
+                  Filtros
+                </h2>
+                {(selectedCategory || selectedTags.length > 0) && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
+                    <X className="h-3 w-3 mr-1" />
+                    Limpar filtros
+                  </Button>
                 )}
-              </h2>
+              </div>
+
+              {/* Categorias */}
+              <div className="mb-4">
+                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Categoria</h3>
+                <div className="flex flex-wrap gap-2">
+                  <Badge
+                    variant={!selectedCategory ? "default" : "outline"}
+                    className="cursor-pointer hover:bg-primary/20"
+                    onClick={() => handleCategoryFilter('all')}
+                  >
+                    Todas
+                  </Badge>
+                  {categories.map((category) => (
+                    <Badge
+                      key={category.id}
+                      variant={selectedCategory === category.slug ? "default" : "outline"}
+                      className="cursor-pointer hover:bg-primary/20"
+                      onClick={() => handleCategoryFilter(category.slug)}
+                    >
+                      <span className="mr-1">{getCategoryEmoji(category.icon)}</span>
+                      {category.name}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              {availableTags.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-medium mb-2 text-muted-foreground">Tags</h3>
+                  <div className="flex flex-wrap gap-2">
+                    {availableTags.slice(0, 20).map((tag) => (
+                      <Badge
+                        key={tag}
+                        variant={selectedTags.includes(tag) ? "default" : "outline"}
+                        className="cursor-pointer hover:bg-primary/20 text-xs"
+                        onClick={() => handleTagToggle(tag)}
+                      >
+                        {tag}
+                      </Badge>
+                    ))}
+                    {availableTags.length > 20 && (
+                      <span className="text-xs text-muted-foreground self-center">
+                        +{availableTags.length - 20} mais
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Filtros ativos */}
+              {(selectedCategory || selectedTags.length > 0) && (
+                <div className="mt-4 pt-4 border-t border-border">
+                  <span className="text-xs text-muted-foreground">Filtros ativos: </span>
+                  {selectedCategory && (
+                    <Badge variant="secondary" className="text-xs mx-1">
+                      {categories.find(c => c.slug === selectedCategory)?.name}
+                    </Badge>
+                  )}
+                  {selectedTags.map(tag => (
+                    <Badge key={tag} variant="secondary" className="text-xs mx-1">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Artigos */}
+            <section aria-labelledby="articles-heading">
+              <div className="flex items-center justify-between mb-6">
+                <h2 id="articles-heading" className="text-2xl font-bold">
+                  {searchQuery ? (
+                    <>Resultados da busca "{searchQuery}" ({posts.length})</>
+                  ) : selectedCategory || selectedTags.length > 0 ? (
+                    <>Artigos filtrados ({posts.length})</>
+                  ) : (
+                    <>Artigos</>
+                  )}
+                </h2>
+
+                {/* Ordenação */}
+                <div className="flex items-center gap-2">
+                  <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
+                  <Select value={sortOrder} onValueChange={handleSortChange}>
+                    <SelectTrigger className="w-[160px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="recent">Mais recentes</SelectItem>
+                      <SelectItem value="relevant">Mais relevantes</SelectItem>
+                      <SelectItem value="popular">Mais curtidos</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
 
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {[...Array(6)].map((_, i) => (
                     <Card key={i} className="p-6">
                       <div className="space-y-3">
@@ -475,7 +644,7 @@ const Wiki = () => {
                   ))}
                 </div>
               ) : posts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {posts.map((post) => (
                     <Card key={post.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${getCategoryColor(post.wiki_categories?.color)} hover:border-l-primary`}>
                       <CardHeader className="pb-3">
@@ -554,74 +723,7 @@ const Wiki = () => {
                 </div>
               )}
             </section>
-          </div>
 
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            {/* Categories Section */}
-            <section aria-labelledby="categories-heading" className="mb-8">
-              <Card>
-                <CardHeader>
-                  <CardTitle id="categories-heading" className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Explorar por Categoria
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {categories.map((category) => (
-                    <button
-                      key={category.id}
-                      onClick={() => handleCategoryFilter(category.slug)}
-                      className={`w-full text-left p-3 rounded-lg transition-colors hover:bg-muted ${
-                        selectedCategory === category.slug ? 'bg-primary/10 border border-primary/20' : ''
-                      }`}
-                    >
-                      <div className="flex items-center gap-3">
-                        <span className="text-xl">{getCategoryEmoji(category.icon)}</span>
-                        <div className="flex-1">
-                          <div className="font-medium text-sm">{category.name}</div>
-                          <div className="text-xs text-muted-foreground line-clamp-2">
-                            {category.description}
-                          </div>
-                        </div>
-                      </div>
-                    </button>
-                  ))}
-                  
-                  {categories.length === 0 && !loading && (
-                    <p className="text-sm text-muted-foreground text-center py-4">
-                      Nenhuma categoria disponível
-                    </p>
-                  )}
-                </CardContent>
-              </Card>
-            </section>
-
-            {/* Quick Actions */}
-            {user && (
-              <section aria-labelledby="actions-heading">
-                <Card>
-                  <CardHeader>
-                    <CardTitle id="actions-heading" className="text-base">Ações Rápidas</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <Link to="/wiki/new" className="block">
-                      <Button variant="outline" className="w-full justify-start gap-2">
-                        <Plus className="h-4 w-4" />
-                        Novo Artigo
-                      </Button>
-                    </Link>
-                    <Link to="/wiki/import" className="block">
-                      <Button variant="outline" className="w-full justify-start gap-2">
-                        <FileText className="h-4 w-4" />
-                        Importar Conteúdo
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </section>
-            )}
-          </div>
         </div>
       </main>
     </div>
