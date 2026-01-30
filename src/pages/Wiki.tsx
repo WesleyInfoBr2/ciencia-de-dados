@@ -97,12 +97,19 @@ const Wiki = () => {
     setSearchParams(newParams);
   };
 
+  // Fetch categories first
   useEffect(() => {
-    fetchPosts();
     fetchCategories();
     loadStats();
     fetchAvailableTags();
-  }, [searchQuery, selectedCategory, selectedTags.join(','), sortOrder, showOnlyMine, user?.id]);
+  }, []);
+
+  // Fetch posts after categories are loaded (needed for category filter)
+  useEffect(() => {
+    if (categories.length > 0 || !selectedCategory) {
+      fetchPosts();
+    }
+  }, [searchQuery, selectedCategory, selectedTags.join(','), sortOrder, showOnlyMine, user?.id, categories]);
 
   // Fetch user's drafts separately
   useEffect(() => {
@@ -169,9 +176,12 @@ const Wiki = () => {
         query = query.or(`title.ilike.%${searchQuery}%,excerpt.ilike.%${searchQuery}%`);
       }
 
-      // Apply category filter
+      // Apply category filter - find category ID first, then filter
       if (selectedCategory) {
-        query = query.eq('wiki_categories.slug', selectedCategory);
+        const targetCategory = categories.find(c => c.slug === selectedCategory);
+        if (targetCategory) {
+          query = query.eq('category_id', targetCategory.id);
+        }
       }
 
       // Apply tags filter
