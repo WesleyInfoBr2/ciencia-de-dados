@@ -858,32 +858,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
           </div>
         )}
 
-        {/* Salvar */}
-        <div className="flex gap-1 ml-auto">
-          <Button
-            type="button"
-            size="sm"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              handleSave()
-            }}
-            disabled={isSaving}
-          >
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? 'Salvando...' : 'Salvar'}
-          </Button>
-        </div>
       </div>
 
       <EditorContent editor={editor} />
-
-      {/* Status de salvamento */}
-      {lastSaved && (
-        <div className="editor-status text-xs text-muted-foreground px-8 py-2">
-          Salvo {lastSaved.toLocaleTimeString()}
-        </div>
-      )}
     </div>
   )
 }
