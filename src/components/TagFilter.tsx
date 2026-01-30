@@ -11,7 +11,7 @@ interface TagWithCount {
 }
 
 interface TagFilterProps {
-  availableTags: string[];
+  allTags: string[]; // Raw tags with duplicates for accurate counting
   selectedTags: string[];
   onTagToggle: (tag: string) => void;
   className?: string;
@@ -20,7 +20,7 @@ interface TagFilterProps {
 const INITIAL_VISIBLE_COUNT = 10;
 
 export const TagFilter = ({ 
-  availableTags, 
+  allTags, 
   selectedTags, 
   onTagToggle,
   className 
@@ -28,18 +28,18 @@ export const TagFilter = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [showAll, setShowAll] = useState(false);
 
-  // Count tag occurrences and sort by usage
+  // Count tag occurrences and sort by usage (most used first)
   const tagsWithCount = useMemo(() => {
     const tagCounts: Record<string, number> = {};
     
-    availableTags.forEach(tag => {
+    allTags.forEach(tag => {
       tagCounts[tag] = (tagCounts[tag] || 0) + 1;
     });
     
     return Object.entries(tagCounts)
       .map(([tag, count]) => ({ tag, count }))
       .sort((a, b) => b.count - a.count);
-  }, [availableTags]);
+  }, [allTags]);
 
   // Filter tags based on search query
   const filteredTags = useMemo(() => {
