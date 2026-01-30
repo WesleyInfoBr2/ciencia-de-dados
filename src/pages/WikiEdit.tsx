@@ -16,6 +16,8 @@ import { WikiDoctor } from "@/components/WikiDoctor";
 import { normalizeWikiContent } from "@/components/normalizeWikiContent";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import type { Editor } from "@tiptap/react";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { getCategoryEmoji } from "@/lib/categoryIcons";
 
 interface WikiCategory {
   id: string;
@@ -327,13 +329,10 @@ const WikiEdit = () => {
 
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="icon">Ícone (Emoji)</Label>
-                      <Input
-                        id="icon"
-                        value={formData.icon}
-                        onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                        placeholder="📝"
-                        maxLength={2}
+                      <Label htmlFor="icon">Ícone</Label>
+                      <EmojiPicker
+                        value={formData.icon || '📝'}
+                        onChange={(emoji) => setFormData(prev => ({ ...prev, icon: emoji }))}
                       />
                     </div>
                     
@@ -413,7 +412,10 @@ const WikiEdit = () => {
                       <SelectContent>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
-                            {category.icon} {category.name}
+                            <span className="flex items-center gap-2">
+                              <span>{getCategoryEmoji(category.icon)}</span>
+                              <span>{category.name}</span>
+                            </span>
                           </SelectItem>
                         ))}
                       </SelectContent>

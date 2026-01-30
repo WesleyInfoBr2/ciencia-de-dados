@@ -363,4 +363,115 @@
     color: hsl(var(--primary));
     font-weight: 500;
   }
+
+  /* Wiki Table Styles - Bordas completas */
+  .wiki-table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1rem 0;
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    overflow: hidden;
+  }
+
+  .wiki-table td,
+  .wiki-table th {
+    border: 1px solid hsl(var(--border));
+    padding: 0.75rem 1rem;
+    min-width: 100px;
+    position: relative;
+    vertical-align: top;
+  }
+
+  .wiki-table-header,
+  .wiki-table th {
+    background: hsl(var(--muted));
+    font-weight: 600;
+    text-align: left;
+  }
+
+  .wiki-table tr:hover td {
+    background: hsl(var(--muted) / 0.5);
+  }
+
+  /* Colunas de cabeçalho (primeira coluna) */
+  .wiki-table td:first-child.is-header,
+  .wiki-table th:first-child {
+    background: hsl(var(--muted));
+    font-weight: 600;
+  }
+
+  /* Resize handles para tabelas */
+  .wiki-table .column-resize-handle {
+    position: absolute;
+    right: -2px;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: hsl(var(--primary));
+    cursor: col-resize;
+    opacity: 0;
+    transition: opacity 0.2s;
+  }
+
+  .wiki-table td:hover .column-resize-handle,
+  .wiki-table th:hover .column-resize-handle {
+    opacity: 1;
+  }
+
+  /* Code Block Styles */
+  .code-block-wrapper {
+    position: relative;
+    margin: 1rem 0;
+  }
+
+  .code-block-wrapper pre {
+    padding: 2.5rem 1rem 1rem 1rem;
+    overflow-x: auto;
+    font-family: 'Fira Code', monospace;
+    font-size: 0.875rem;
+    line-height: 1.6;
+  }
+
+  .code-block-wrapper .code-content {
+    white-space: pre;
+    display: block;
+  }
+
+  /* Syntax Highlighting */
+  .code-block-wrapper .hljs-keyword,
+  .code-block-wrapper .hljs-selector-tag,
+  .code-block-wrapper .hljs-title,
+  .code-block-wrapper .hljs-section,
+  .code-block-wrapper .hljs-doctag,
+  .code-block-wrapper .hljs-name,
+  .code-block-wrapper .hljs-strong {
+    color: hsl(var(--primary));
+  }
+
+  .code-block-wrapper .hljs-comment {
+    color: hsl(var(--muted-foreground));
+    font-style: italic;
+  }
+
+  .code-block-wrapper .hljs-string,
+  .code-block-wrapper .hljs-title.class_,
+  .code-block-wrapper .hljs-regexp,
+  .code-block-wrapper .hljs-symbol,
+  .code-block-wrapper .hljs-bullet,
+  .code-block-wrapper .hljs-link {
+    color: hsl(var(--secondary));
+  }
+
+  .code-block-wrapper .hljs-number,
+  .code-block-wrapper .hljs-literal {
+    color: hsl(172 60% 45%);
+  }
+
+  .code-block-wrapper .hljs-attr,
+  .code-block-wrapper .hljs-variable,
+  .code-block-wrapper .hljs-template-variable,
+  .code-block-wrapper .hljs-attribute {
+    color: hsl(340 65% 55%);
+  }
 }

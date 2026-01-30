@@ -37,6 +37,7 @@ import 'tippy.js/dist/tippy.css'
 import type { Editor as TiptapEditor } from '@tiptap/react'
 import { normalizeWikiContent } from './normalizeWikiContent'
 import { wikiBaseExtensions } from '@/lib/wiki/extensions'
+import { TableMenu } from './editor/TableMenu'
 
 interface WikiEditorV2Props {
   content: any
@@ -355,9 +356,12 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
     ]
   }
 
+  // Memoize extensions para evitar recriação
+  const extensionsRef = useRef(buildExtensions())
+
   const editor = useEditor({
     editable: true,
-    extensions: buildExtensions(),
+    extensions: extensionsRef.current,
     content: normalized,
     editorProps: {
       attributes: {
@@ -377,6 +381,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
       } catch (e) {
         console.warn('[Wiki] migrateMathStrings onUpdate failed', e)
       }
+      // Auto-save com debounce - NÃO chama setFormData aqui para evitar re-render
       if (autoSaveTimeoutRef.current) {
         clearTimeout(autoSaveTimeoutRef.current)
       }
@@ -385,9 +390,9 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
         if (onAutoSave) {
           onAutoSave(editor.getJSON())
         }
-      }, 2000)
+      }, 3000) // Aumentado para 3 segundos para menos interrupções
     }
-  }, [JSON.stringify(normalized)])
+  }, []) // CRÍTICO: Array vazio para NÃO recriar o editor
 
   useEffect(() => { if (editor && onEditorReady) onEditorReady(editor) }, [editor])
 
@@ -760,19 +765,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
           >
             <ImageIcon className="w-4 h-4" />
           </Button>
-          <Button
-            type="button"
-            size="sm"
-            variant="ghost"
-            onClick={(e) => {
-              e.preventDefault()
-              e.stopPropagation()
-              editor?.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run()
-            }}
-            title="Inserir Tabela"
-          >
-            <Table2 className="w-4 h-4" />
-          </Button>
+          <TableMenu editor={editor} />
           <Button
             type="button"
             size="sm"

@@ -11,6 +11,7 @@ import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon }
 import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
 import { updatePageMetadata } from "@/utils/seo";
+import { getCategoryEmoji } from "@/lib/categoryIcons";
 
 interface WikiPost {
   id: string;
@@ -291,7 +292,10 @@ const Wiki = () => {
                     <SelectItem value="all">Todas as categorias</SelectItem>
                      {categories.map((category) => (
                        <SelectItem key={category.id} value={category.slug}>
-                         {category.name}
+                         <span className="flex items-center gap-2">
+                           <span>{getCategoryEmoji(category.icon)}</span>
+                           <span>{category.name}</span>
+                         </span>
                        </SelectItem>
                      ))}
                   </SelectContent>
@@ -371,6 +375,7 @@ const Wiki = () => {
                           <div className="flex items-center gap-3">
                             {post.wiki_categories && (
                               <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
+                                <span className="mr-1">{getCategoryEmoji(post.wiki_categories.icon)}</span>
                                 {post.wiki_categories.name}
                               </Badge>
                             )}
@@ -459,11 +464,7 @@ const Wiki = () => {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <div className={`w-4 h-4 rounded-full ${
-                          category.color === 'green' ? 'bg-green-500' :
-                          category.color === 'yellow' ? 'bg-yellow-500' :
-                          category.color === 'red' ? 'bg-red-500' : 'bg-muted'
-                        }`}></div>
+                        <span className="text-xl">{getCategoryEmoji(category.icon)}</span>
                         <div className="flex-1">
                           <div className="font-medium text-sm">{category.name}</div>
                           <div className="text-xs text-muted-foreground line-clamp-2">
