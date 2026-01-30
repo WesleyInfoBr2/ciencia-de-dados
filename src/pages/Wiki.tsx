@@ -9,13 +9,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { 
-  Carousel, 
-  CarouselContent, 
-  CarouselItem, 
-  CarouselNext, 
-  CarouselPrevious 
-} from "@/components/ui/carousel";
 import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon, Filter, X, ArrowUpDown, ChevronDown, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
@@ -505,7 +498,7 @@ const Wiki = () => {
             {user && myDrafts.length > 0 && (
               <Collapsible open={draftsOpen} onOpenChange={setDraftsOpen}>
                 <section aria-labelledby="my-drafts-heading" className="bg-card rounded-lg p-6 shadow-sm">
-                  <CollapsibleTrigger className="flex items-center justify-between w-full mb-4 cursor-pointer hover:opacity-80">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full cursor-pointer hover:opacity-80">
                     <h2 id="my-drafts-heading" className="text-xl font-bold flex items-center gap-2">
                       <FileText className="h-5 w-5 text-amber-500" />
                       Meus Rascunhos
@@ -520,7 +513,7 @@ const Wiki = () => {
                     )}
                   </CollapsibleTrigger>
                   
-                  <CollapsibleContent>
+                  <CollapsibleContent className="pt-4">
                     {loadingMyDrafts ? (
                       <div className="flex gap-4 overflow-x-auto pb-2">
                         {[...Array(3)].map((_, i) => (
@@ -533,7 +526,7 @@ const Wiki = () => {
                           <Link
                             key={post.id}
                             to={`/wiki/${post.slug}`}
-                            className="flex-shrink-0 w-64 p-4 rounded-lg border-l-4 transition-all hover:shadow-md bg-amber-50 dark:bg-amber-950/30 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50"
+                            className="flex-shrink-0 w-64 p-4 rounded-lg border-2 transition-all hover:shadow-md bg-amber-50 dark:bg-amber-950/30 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50"
                           >
                             <div className="flex items-start justify-between gap-2 mb-2">
                               <h3 className="font-medium text-sm line-clamp-2 flex-1">{post.title}</h3>
@@ -554,7 +547,7 @@ const Wiki = () => {
             {/* Filtros por Categoria e Tags */}
             <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
               <section className="bg-card rounded-lg p-6 shadow-sm">
-                <CollapsibleTrigger className="flex items-center justify-between w-full mb-4 cursor-pointer hover:opacity-80">
+                <CollapsibleTrigger className="flex items-center justify-between w-full cursor-pointer hover:opacity-80">
                   <h2 className="text-lg font-semibold flex items-center gap-2">
                     <Filter className="h-5 w-5" />
                     Filtros
@@ -579,10 +572,10 @@ const Wiki = () => {
                   </div>
                 </CollapsibleTrigger>
 
-                <CollapsibleContent className="space-y-4">
-                  {/* Meus artigos checkbox + Categorias */}
+                <CollapsibleContent className="space-y-4 pt-4">
+                  {/* Categorias + Meus artigos checkbox alinhado à direita */}
                   <div>
-                    <div className="flex items-center gap-6 mb-3">
+                    <div className="flex items-center justify-between mb-3">
                       <h3 className="text-sm font-medium text-muted-foreground">Categoria</h3>
                       {user && (
                         <div className="flex items-center gap-2">
@@ -721,66 +714,56 @@ const Wiki = () => {
                 </div>
               ) : posts.length > 0 ? (
                 <div className="space-y-6">
-                  {/* Carousel */}
-                  <Carousel className="w-full" opts={{ align: "start", loop: false }}>
-                    <CarouselContent className="-ml-4">
-                      {paginatedPosts.map((post) => (
-                        <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
-                          <Card className={`group hover:shadow-lg transition-all duration-200 border-l-4 h-full ${getCategoryColor(post.wiki_categories?.color)} hover:border-l-primary`}>
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between gap-4 mb-3">
-                                <div className="flex items-center gap-3">
-                                  {post.wiki_categories && (
-                                    <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
-                                      <span className="mr-1">{getCategoryEmoji(post.wiki_categories.icon)}</span>
-                                      {post.wiki_categories.name}
-                                    </Badge>
-                                  )}
-                                </div>
-                              </div>
-                              
-                              <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                                <Link 
-                                  to={`/wiki/${post.slug}`}
-                                  className="hover:text-primary transition-colors"
-                                >
-                                  {highlightSearchTerms(post.title, searchQuery)}
-                                </Link>
-                              </h3>
-                              {post.excerpt && (
-                                <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
-                                  {highlightSearchTerms(post.excerpt, searchQuery)}
-                                </p>
+                  {/* Grid de artigos */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {paginatedPosts.map((post) => (
+                      <Card key={post.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 h-full ${getCategoryColor(post.wiki_categories?.color)} hover:border-l-primary`}>
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between gap-4 mb-3">
+                            <div className="flex items-center gap-3">
+                              {post.wiki_categories && (
+                                <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
+                                  <span className="mr-1">{getCategoryEmoji(post.wiki_categories.icon)}</span>
+                                  {post.wiki_categories.name}
+                                </Badge>
                               )}
-                            </CardHeader>
-                            
-                            <CardContent className="pt-0">
-                              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                                <div className="flex items-center gap-4">
-                                  <div className="flex items-center gap-1">
-                                    <User className="h-3 w-3" />
-                                    <span className="truncate max-w-[100px]">{post.profiles?.full_name || post.profiles?.username || 'Autor'}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1">
-                                    <Calendar className="h-3 w-3" />
-                                    <time dateTime={post.published_at || post.created_at}>
-                                      {formatDate(post.published_at || post.created_at)}
-                                    </time>
-                                  </div>
-                                </div>
+                            </div>
+                          </div>
+                          
+                          <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                            <Link 
+                              to={`/wiki/${post.slug}`}
+                              className="hover:text-primary transition-colors"
+                            >
+                              {highlightSearchTerms(post.title, searchQuery)}
+                            </Link>
+                          </h3>
+                          {post.excerpt && (
+                            <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
+                              {highlightSearchTerms(post.excerpt, searchQuery)}
+                            </p>
+                          )}
+                        </CardHeader>
+                        
+                        <CardContent className="pt-0">
+                          <div className="flex items-center justify-between text-sm text-muted-foreground">
+                            <div className="flex items-center gap-4">
+                              <div className="flex items-center gap-1">
+                                <User className="h-3 w-3" />
+                                <span className="truncate max-w-[100px]">{post.profiles?.full_name || post.profiles?.username || 'Autor'}</span>
                               </div>
-                            </CardContent>
-                          </Card>
-                        </CarouselItem>
-                      ))}
-                    </CarouselContent>
-                    {paginatedPosts.length > 3 && (
-                      <>
-                        <CarouselPrevious className="-left-4" />
-                        <CarouselNext className="-right-4" />
-                      </>
-                    )}
-                  </Carousel>
+                              <div className="flex items-center gap-1">
+                                <Calendar className="h-3 w-3" />
+                                <time dateTime={post.published_at || post.created_at}>
+                                  {formatDate(post.published_at || post.created_at)}
+                                </time>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
                   
                   {/* Pagination */}
                   {totalPages > 1 && (
