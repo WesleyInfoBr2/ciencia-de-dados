@@ -14,6 +14,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Save, Eye, FileText } from "lucide-react";
 import { wikiPostSchema, generateSlug, type WikiPostFormData } from "@/lib/validations";
+import { EmojiPicker } from "@/components/ui/emoji-picker";
+import { getCategoryEmoji } from "@/lib/categoryIcons";
 
 interface WikiCategory {
   id: string;
@@ -194,13 +196,10 @@ const WikiNew = () => {
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <Label htmlFor="icon">Ícone (Emoji)</Label>
-                      <Input
-                        id="icon"
-                        value={formData.icon}
-                        onChange={(e) => setFormData(prev => ({ ...prev, icon: e.target.value }))}
-                        placeholder="📝"
-                        maxLength={2}
+                      <Label htmlFor="icon">Ícone</Label>
+                      <EmojiPicker
+                        value={formData.icon || '📝'}
+                        onChange={(emoji) => setFormData(prev => ({ ...prev, icon: emoji }))}
                       />
                     </div>
                     
@@ -250,7 +249,10 @@ const WikiNew = () => {
                       <SelectContent>
                         {categories.map((category) => (
                           <SelectItem key={category.id} value={category.id}>
-                            {category.icon} {category.name}
+                            <span className="flex items-center gap-2">
+                              <span>{getCategoryEmoji(category.icon)}</span>
+                              <span>{category.name}</span>
+                            </span>
                           </SelectItem>
                         ))}
                       </SelectContent>

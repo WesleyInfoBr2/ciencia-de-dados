@@ -13,6 +13,7 @@ import { TableOfContents } from "@/components/TableOfContents";
 import { updatePageMetadata, generateStructuredData, calculateReadingTime } from "@/utils/seo";
 import Header from "@/components/Header";
 import WikiLikesAndComments from "@/components/WikiLikesAndComments";
+import { getCategoryEmoji } from "@/lib/categoryIcons";
 
 interface WikiPostData {
   id: string;
@@ -279,7 +280,10 @@ const WikiPost = () => {
                 <ChevronRight className="h-4 w-4" />
                 {post.wiki_categories && (
                   <>
-                    <li>{post.wiki_categories.name}</li>
+                    <li className="flex items-center gap-1">
+                      <span>{getCategoryEmoji(post.wiki_categories.icon)}</span>
+                      <span>{post.wiki_categories.name}</span>
+                    </li>
                     <ChevronRight className="h-4 w-4" />
                   </>
                 )}
