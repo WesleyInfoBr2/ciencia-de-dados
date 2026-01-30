@@ -18,6 +18,7 @@ import Mathematics from '@tiptap/extension-mathematics'
 import { Callout } from '@/components/editor/extensions/Callout'
 import { Toggle } from '@/components/editor/extensions/Toggle'
 import { CodeBlockWithCopy } from '@/components/editor/extensions/CodeBlockWithCopy'
+import { FileAttachment } from '@/components/editor/extensions/FileAttachment'
 import 'katex/dist/katex.min.css'
 
 // Mathematics with input rules for $...$ and $$...$$
@@ -103,5 +104,6 @@ export function wikiBaseExtensions(placeholderText = 'Digite / para comandos…'
     MathIR.configure({ katexOptions: { throwOnError: false } }),
     Callout,
     Toggle,
+    FileAttachment,
   ]
 }

@@ -26,7 +26,7 @@ import {
   List, ListOrdered, CheckSquare, Heading1, Heading2, Heading3,
   Quote, Code2, Calculator, Table2, Image as ImageIcon, Save,
   Link as LinkIcon, Highlighter, AlignLeft, AlignCenter, AlignRight, AlignJustify,
-  ZoomIn, ZoomOut, MessageSquare
+  ZoomIn, ZoomOut, MessageSquare, Paperclip
 } from 'lucide-react'
 import { Button } from './ui/button'
 import { useCallback, useEffect, useRef, useState } from 'react'
@@ -108,6 +108,7 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
   const [isSaving, setIsSaving] = useState(false)
   const autoSaveTimeoutRef = useRef<NodeJS.Timeout>()
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const attachmentInputRef = useRef<HTMLInputElement>(null)
   // Track image selection to refresh toolbar on selection changes
   const [isImageSelected, setIsImageSelected] = useState(false)
   const [imageAlign, setImageAlign] = useState<string | undefined>(undefined)
@@ -152,8 +153,45 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
     }
   }, [])
 
+  const handleFileUpload = useCallback(async (file: File) => {
+    try {
+      const fileExt = file.name.split('.').pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`
+      const filePath = `attachments/${fileName}`
+
+      const { error: uploadError } = await supabase.storage
+        .from('wiki-files')
+        .upload(filePath, file)
+
+      if (uploadError) throw uploadError
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('wiki-files')
+        .getPublicUrl(filePath)
+
+      return {
+        url: publicUrl,
+        filename: file.name,
+        filesize: file.size,
+        mimetype: file.type
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error)
+      toast({
+        title: 'Erro ao fazer upload',
+        description: 'Não foi possível fazer upload do arquivo.',
+        variant: 'destructive'
+      })
+      return null
+    }
+  }, [])
+
   const insertImage = useCallback(() => {
     fileInputRef.current?.click()
+  }, [])
+
+  const insertAttachment = useCallback(() => {
+    attachmentInputRef.current?.click()
   }, [])
 
   const onImageSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,6 +202,27 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
     if (url) {
       editor.chain().focus().setImage({ src: url }).run()
     }
+  }
+
+  const onAttachmentSelected = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file || !editor) return
+
+    toast({
+      title: 'Enviando arquivo...',
+      description: file.name,
+    })
+
+    const result = await handleFileUpload(file)
+    if (result) {
+      editor.chain().focus().setFileAttachment(result).run()
+      toast({
+        title: 'Arquivo anexado',
+        description: file.name,
+      })
+    }
+    // Reset input
+    e.target.value = ''
   }
 
   // Configuração do slash command ANTES de criar as extensões
@@ -289,6 +348,13 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
                 title: 'Toggle / Acordeão',
                 command: ({ editor }: any) => {
                   editor.chain().focus().setToggle({ summary: 'Clique para expandir' }).run()
+                }
+              },
+              {
+                title: 'Anexar arquivo',
+                command: ({ editor }: any) => {
+                  editor.chain().focus().run()
+                  insertAttachment()
                 }
               },
             ]
@@ -525,6 +591,13 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
         type="file"
         accept="image/*"
         onChange={onImageSelected}
+        className="hidden"
+      />
+      <input
+        ref={attachmentInputRef}
+        type="file"
+        accept="*/*"
+        onChange={onAttachmentSelected}
         className="hidden"
       />
 
@@ -827,6 +900,19 @@ export default function WikiEditorV2({ content, onSave, onAutoSave, placeholder,
             title="Inserir Imagem"
           >
             <ImageIcon className="w-4 h-4" />
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="ghost"
+            onClick={(e) => {
+              e.preventDefault()
+              e.stopPropagation()
+              insertAttachment()
+            }}
+            title="Anexar Arquivo"
+          >
+            <Paperclip className="w-4 h-4" />
           </Button>
           <TableMenu editor={editor} />
           <Button
