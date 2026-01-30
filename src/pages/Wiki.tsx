@@ -12,6 +12,7 @@ import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
 import { updatePageMetadata } from "@/utils/seo";
 import { getCategoryEmoji } from "@/lib/categoryIcons";
+import cienciaDadosVenn from "@/assets/ciencia-dados-venn.png";
 
 interface WikiPost {
   id: string;
@@ -283,12 +284,9 @@ const Wiki = () => {
         {/* Hero Section */}
         <div className="bg-card rounded-lg p-8 mb-12 shadow-sm">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+            <h1 className="text-4xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
               Wiki CiênciaDeDados
             </h1>
-            <p className="text-xl text-muted-foreground mb-6">
-              Base de conhecimento colaborativa em ciência de dados
-            </p>
             
             <div className="flex justify-center items-center gap-8 text-sm text-muted-foreground mb-6">
               <div className="flex items-center gap-2">
@@ -320,11 +318,71 @@ const Wiki = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="max-w-2xl mx-auto">
+          <div className="max-w-2xl mx-auto mb-8">
             <WikiSearch 
               onSearch={handleSearch}
               placeholder="Buscar artigos na wiki..."
             />
+          </div>
+
+          {/* Sobre a Wiki */}
+          <div className="max-w-4xl mx-auto text-left space-y-6">
+            <p className="text-muted-foreground leading-relaxed">
+              A wiki CiênciadeDados.org é um projeto que iniciou de forma solitária, mas com expectativas ambiciosas. A ideia do projeto se baseia no princípio da colaboração, cooperação.
+            </p>
+
+            <div className="grid md:grid-cols-2 gap-4">
+              <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+                <h3 className="font-semibold text-primary mb-2">Missão</h3>
+                <p className="text-sm text-muted-foreground">
+                  Manter um ambiente colaborativo, em formato wiki, para compartilhamento de conhecimentos relacionados ao campo de conhecimento da Ciência de Dados
+                </p>
+              </div>
+              <div className="bg-primary/5 rounded-lg p-4 border border-primary/10">
+                <h3 className="font-semibold text-primary mb-2">Visão</h3>
+                <p className="text-sm text-muted-foreground">
+                  O conhecimento só é válido quando é compartilhado
+                </p>
+              </div>
+            </div>
+
+            <p className="text-muted-foreground leading-relaxed">
+              Estatisticar (liberdade poética para descrever atividades relacionadas ao processo de coletar, organizar, descrever, analisar e interpretar dados com o objetivo de facilitar a tomada de decisão) pode parecer uma atribuição destinada a poucos escolhidos, passado de geração em geração, em rituais repletos de referências ao grande Mago Gauss. Mas não se engane, toda esta cerimônia é apenas uma livre inspiração em sociedades secretas para parecermos mais pomposos do que somos na realidade.
+            </p>
+
+            <p className="text-muted-foreground leading-relaxed">
+              Facilitar a tomada de decisão com base na análise de dados implica no uso de um conjunto de ferramentas que estão à disposição de quase todos os mortais. Na verdade, a parte mais difícil do dia é saber qual ferramenta usar. Para este problema também tem-se uma solução: a informação. Quanto mais informações são compartilhadas e criticadas, mais conhecimento é criado e difundido.
+            </p>
+
+            <p className="text-muted-foreground leading-relaxed font-medium">
+              Conseguir transformar dados em informações facilita o processo de tomar decisão, gerando valor nas organizações e na sociedade.
+            </p>
+
+            {/* Seção Ciência de Dados como área */}
+            <div className="pt-6 border-t border-border">
+              <h2 className="text-xl font-bold mb-4 text-foreground">Ciência de Dados como área de conhecimento</h2>
+              
+              <div className="flex flex-col md:flex-row gap-6 items-start">
+                <div className="flex-1 space-y-4">
+                  <p className="text-muted-foreground leading-relaxed">
+                    O mercado tem demonstrado grande interesse em profissionais que consigam analisar dados com a apropriação de recursos estatísticos e computacionais, além de conseguir transformar em conhecimento estratégico para a organização. Esta relação entre as áreas de Estatística, Computação e Negócios, que evidencia a riqueza do profissional de Ciência de Dados, também causa confusões entre os profissionais das áreas compartilhadas.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Existem vários grupos discutindo ao redor do mundo sobre a função do Cientista de Dados e quem seria o "dono" do conhecimento.
+                  </p>
+                  <p className="text-muted-foreground leading-relaxed">
+                    Independente destas discussões, estatística e computação (como áreas de conhecimento) combinam esforços e dão propósito para o que antes era feito, prioritariamente, pelos estatísticos: levar inteligência de negócio para organizações dos diversos ramos.
+                  </p>
+                </div>
+                <div className="md:w-64 flex-shrink-0">
+                  <img 
+                    src={cienciaDadosVenn} 
+                    alt="Diagrama de Venn mostrando a interseção entre Estatística, Computação e Negócios formando a Ciência de Dados"
+                    className="w-full h-auto rounded-lg"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
