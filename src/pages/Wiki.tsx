@@ -2,12 +2,21 @@ import { useState, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon, Filter, X, ArrowUpDown } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { 
+  Carousel, 
+  CarouselContent, 
+  CarouselItem, 
+  CarouselNext, 
+  CarouselPrevious 
+} from "@/components/ui/carousel";
+import { BookOpen, Calendar, User, Plus, FileText, Users, Search as SearchIcon, Filter, X, ArrowUpDown, ChevronDown, ChevronRight } from "lucide-react";
 import Header from "@/components/Header";
 import { WikiSearch } from "@/components/WikiSearch";
 import { updatePageMetadata } from "@/utils/seo";
@@ -44,6 +53,8 @@ interface WikiCategory {
   color: string;
 }
 
+const ITEMS_PER_PAGE = 15;
+
 const Wiki = () => {
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -52,15 +63,23 @@ const Wiki = () => {
   const searchQuery = searchParams.get('q') || '';
   const selectedCategory = searchParams.get('category') || '';
   const selectedTags = searchParams.get('tags')?.split(',').filter(Boolean) || [];
-  const sortOrder = searchParams.get('sort') || 'recent';
+  const sortOrder = searchParams.get('sort') || 'alpha_asc';
+  const showOnlyMine = searchParams.get('mine') === 'true';
   
   const [posts, setPosts] = useState<WikiPost[]>([]);
-  const [myPosts, setMyPosts] = useState<WikiPost[]>([]);
+  const [myDrafts, setMyDrafts] = useState<WikiPost[]>([]);
   const [categories, setCategories] = useState<WikiCategory[]>([]);
   const [availableTags, setAvailableTags] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMyPosts, setLoadingMyPosts] = useState(false);
+  const [loadingMyDrafts, setLoadingMyDrafts] = useState(false);
   const [stats, setStats] = useState({ totalPosts: 0, totalCategories: 0 });
+  
+  // Collapsible states
+  const [draftsOpen, setDraftsOpen] = useState(true);
+  const [filtersOpen, setFiltersOpen] = useState(true);
+  
+  // Carousel page
+  const [currentPage, setCurrentPage] = useState(0);
 
   // Update URL when filters change
   const updateURL = (updates: Partial<{
@@ -68,6 +87,7 @@ const Wiki = () => {
     category: string;
     tags: string;
     sort: string;
+    mine: string;
   }>) => {
     const newParams = new URLSearchParams(searchParams);
     
@@ -87,16 +107,21 @@ const Wiki = () => {
     fetchCategories();
     loadStats();
     fetchAvailableTags();
-  }, [searchQuery, selectedCategory, selectedTags.join(','), sortOrder]);
+  }, [searchQuery, selectedCategory, selectedTags.join(','), sortOrder, showOnlyMine, user?.id]);
 
-  // Fetch user's own posts separately
+  // Fetch user's drafts separately
   useEffect(() => {
     if (user) {
-      fetchMyPosts();
+      fetchMyDrafts();
     } else {
-      setMyPosts([]);
+      setMyDrafts([]);
     }
   }, [user]);
+  
+  // Reset carousel page when filters change
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchQuery, selectedCategory, selectedTags.join(','), sortOrder, showOnlyMine]);
 
   useEffect(() => {
     // Update page metadata
@@ -142,7 +167,7 @@ const Wiki = () => {
             id
           )
         `)
-        .eq('is_published', true); // Apenas publicados na listagem geral
+        .eq('is_published', true);
 
       // Apply search filter
       if (searchQuery) {
@@ -158,14 +183,23 @@ const Wiki = () => {
       if (selectedTags.length > 0) {
         query = query.overlaps('tags', selectedTags);
       }
+      
+      // Apply "my articles" filter
+      if (showOnlyMine && user) {
+        query = query.eq('author_id', user.id);
+      }
 
-      const { data, error } = await query.limit(100);
+      const { data, error } = await query.limit(200);
 
       if (error) throw error;
       
       // Sort based on selected order
       let sortedData = data || [];
-      if (sortOrder === 'recent') {
+      if (sortOrder === 'alpha_asc') {
+        sortedData = sortedData.sort((a, b) => a.title.localeCompare(b.title, 'pt-BR'));
+      } else if (sortOrder === 'alpha_desc') {
+        sortedData = sortedData.sort((a, b) => b.title.localeCompare(a.title, 'pt-BR'));
+      } else if (sortOrder === 'recent') {
         sortedData = sortedData.sort((a, b) => 
           new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime()
         );
@@ -174,21 +208,18 @@ const Wiki = () => {
           ((b as any).wiki_post_likes?.length || 0) - ((a as any).wiki_post_likes?.length || 0)
         );
       } else if (sortOrder === 'relevant') {
-        // For relevance, prioritize: has likes > has longer reading time > recent
         sortedData = sortedData.sort((a, b) => {
           const aLikes = (a as any).wiki_post_likes?.length || 0;
           const bLikes = (b as any).wiki_post_likes?.length || 0;
           const aReading = (a as any).reading_time || 0;
           const bReading = (b as any).reading_time || 0;
-          
-          // Score: likes * 10 + reading_time
           const aScore = aLikes * 10 + aReading;
           const bScore = bLikes * 10 + bReading;
           return bScore - aScore;
         });
       }
       
-      setPosts(sortedData.slice(0, 30));
+      setPosts(sortedData);
     } catch (error) {
       console.error('Erro ao buscar posts:', error);
       setPosts([]);
@@ -214,11 +245,11 @@ const Wiki = () => {
     }
   };
 
-  // Buscar posts do usuário logado (publicados e rascunhos)
-  const fetchMyPosts = async () => {
+  // Buscar apenas rascunhos do usuário logado
+  const fetchMyDrafts = async () => {
     if (!user) return;
     
-    setLoadingMyPosts(true);
+    setLoadingMyDrafts(true);
     try {
       const { data, error } = await supabase
         .from('wiki_posts')
@@ -244,16 +275,17 @@ const Wiki = () => {
           )
         `)
         .eq('author_id', user.id)
+        .eq('is_published', false)
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(20);
 
       if (error) throw error;
-      setMyPosts(data || []);
+      setMyDrafts(data || []);
     } catch (error) {
-      console.error('Erro ao buscar meus posts:', error);
-      setMyPosts([]);
+      console.error('Erro ao buscar meus rascunhos:', error);
+      setMyDrafts([]);
     } finally {
-      setLoadingMyPosts(false);
+      setLoadingMyDrafts(false);
     }
   };
 
@@ -331,8 +363,16 @@ const Wiki = () => {
   };
 
   const clearFilters = () => {
-    updateURL({ category: '', tags: '' });
+    updateURL({ category: '', tags: '', mine: '' });
   };
+  
+  const handleMyArticlesToggle = (checked: boolean) => {
+    updateURL({ mine: checked ? 'true' : '' });
+  };
+  
+  // Pagination for carousel
+  const totalPages = Math.ceil(posts.length / ITEMS_PER_PAGE);
+  const paginatedPosts = posts.slice(currentPage * ITEMS_PER_PAGE, (currentPage + 1) * ITEMS_PER_PAGE);
 
   const highlightSearchTerms = (text: string, searchTerm: string) => {
     if (!searchTerm || !text) return text;
@@ -461,141 +501,175 @@ const Wiki = () => {
         <div className="space-y-8">
           {/* Main Content - Full Width */}
             
-            {/* Seção Meus Artigos - apenas para usuário logado */}
-            {user && myPosts.length > 0 && (
-              <section aria-labelledby="my-articles-heading" className="bg-card rounded-lg p-6 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h2 id="my-articles-heading" className="text-xl font-bold flex items-center gap-2">
-                    <FileText className="h-5 w-5" />
-                    Meus Artigos
-                  </h2>
-                  <div className="flex items-center gap-3 text-xs">
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                      Publicado
-                    </span>
-                    <span className="flex items-center gap-1">
-                      <span className="w-2 h-2 rounded-full bg-amber-500"></span>
-                      Rascunho
-                    </span>
-                  </div>
-                </div>
-                
-                {loadingMyPosts ? (
-                  <div className="flex gap-4 overflow-x-auto pb-2">
-                    {[...Array(3)].map((_, i) => (
-                      <Skeleton key={i} className="h-24 w-64 flex-shrink-0 rounded-lg" />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex gap-4 overflow-x-auto pb-2">
-                    {myPosts.map((post) => (
-                      <Link
-                        key={post.id}
-                        to={`/wiki/${post.slug}`}
-                        className={`flex-shrink-0 w-64 p-4 rounded-lg border-l-4 transition-all hover:shadow-md ${
-                          post.is_published 
-                            ? 'bg-green-50 dark:bg-green-950/30 border-green-500 hover:bg-green-100 dark:hover:bg-green-950/50' 
-                            : 'bg-amber-50 dark:bg-amber-950/30 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2 mb-2">
-                          <h3 className="font-medium text-sm line-clamp-2 flex-1">{post.title}</h3>
-                          <span className={`w-2 h-2 rounded-full flex-shrink-0 mt-1 ${
-                            post.is_published ? 'bg-green-500' : 'bg-amber-500'
-                          }`}></span>
-                        </div>
-                        <p className="text-xs text-muted-foreground">
-                          {formatDate(post.created_at)}
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                )}
-              </section>
+            {/* Seção Meus Rascunhos - apenas para usuário logado */}
+            {user && myDrafts.length > 0 && (
+              <Collapsible open={draftsOpen} onOpenChange={setDraftsOpen}>
+                <section aria-labelledby="my-drafts-heading" className="bg-card rounded-lg p-6 shadow-sm">
+                  <CollapsibleTrigger className="flex items-center justify-between w-full mb-4 cursor-pointer hover:opacity-80">
+                    <h2 id="my-drafts-heading" className="text-xl font-bold flex items-center gap-2">
+                      <FileText className="h-5 w-5 text-amber-500" />
+                      Meus Rascunhos
+                      <Badge variant="outline" className="ml-2 border-amber-500 text-amber-600">
+                        {myDrafts.length}
+                      </Badge>
+                    </h2>
+                    {draftsOpen ? (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
+                    )}
+                  </CollapsibleTrigger>
+                  
+                  <CollapsibleContent>
+                    {loadingMyDrafts ? (
+                      <div className="flex gap-4 overflow-x-auto pb-2">
+                        {[...Array(3)].map((_, i) => (
+                          <Skeleton key={i} className="h-24 w-64 flex-shrink-0 rounded-lg" />
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="flex gap-4 overflow-x-auto pb-2">
+                        {myDrafts.map((post) => (
+                          <Link
+                            key={post.id}
+                            to={`/wiki/${post.slug}`}
+                            className="flex-shrink-0 w-64 p-4 rounded-lg border-l-4 transition-all hover:shadow-md bg-amber-50 dark:bg-amber-950/30 border-amber-500 hover:bg-amber-100 dark:hover:bg-amber-950/50"
+                          >
+                            <div className="flex items-start justify-between gap-2 mb-2">
+                              <h3 className="font-medium text-sm line-clamp-2 flex-1">{post.title}</h3>
+                              <span className="w-2 h-2 rounded-full flex-shrink-0 mt-1 bg-amber-500"></span>
+                            </div>
+                            <p className="text-xs text-muted-foreground">
+                              {formatDate(post.created_at)}
+                            </p>
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </CollapsibleContent>
+                </section>
+              </Collapsible>
             )}
 
             {/* Filtros por Categoria e Tags */}
-            <section className="bg-card rounded-lg p-6 shadow-sm">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <Filter className="h-5 w-5" />
-                  Filtros
-                </h2>
-                {(selectedCategory || selectedTags.length > 0) && (
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs">
-                    <X className="h-3 w-3 mr-1" />
-                    Limpar filtros
-                  </Button>
-                )}
-              </div>
-
-              {/* Categorias */}
-              <div className="mb-4">
-                <h3 className="text-sm font-medium mb-2 text-muted-foreground">Categoria</h3>
-                <div className="flex flex-wrap gap-2">
-                  <Badge
-                    variant={!selectedCategory ? "default" : "outline"}
-                    className="cursor-pointer hover:bg-primary/20"
-                    onClick={() => handleCategoryFilter('all')}
-                  >
-                    Todas
-                  </Badge>
-                  {categories.map((category) => (
-                    <Badge
-                      key={category.id}
-                      variant={selectedCategory === category.slug ? "default" : "outline"}
-                      className="cursor-pointer hover:bg-primary/20"
-                      onClick={() => handleCategoryFilter(category.slug)}
-                    >
-                      <span className="mr-1">{getCategoryEmoji(category.icon)}</span>
-                      {category.name}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              {/* Tags */}
-              {availableTags.length > 0 && (
-                <div>
-                  <h3 className="text-sm font-medium mb-2 text-muted-foreground">Tags</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {availableTags.slice(0, 20).map((tag) => (
-                      <Badge
-                        key={tag}
-                        variant={selectedTags.includes(tag) ? "default" : "outline"}
-                        className="cursor-pointer hover:bg-primary/20 text-xs"
-                        onClick={() => handleTagToggle(tag)}
+            <Collapsible open={filtersOpen} onOpenChange={setFiltersOpen}>
+              <section className="bg-card rounded-lg p-6 shadow-sm">
+                <CollapsibleTrigger className="flex items-center justify-between w-full mb-4 cursor-pointer hover:opacity-80">
+                  <h2 className="text-lg font-semibold flex items-center gap-2">
+                    <Filter className="h-5 w-5" />
+                    Filtros
+                  </h2>
+                  <div className="flex items-center gap-2">
+                    {(selectedCategory || selectedTags.length > 0 || showOnlyMine) && (
+                      <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        onClick={(e) => { e.stopPropagation(); clearFilters(); }} 
+                        className="text-xs"
                       >
-                        {tag}
-                      </Badge>
-                    ))}
-                    {availableTags.length > 20 && (
-                      <span className="text-xs text-muted-foreground self-center">
-                        +{availableTags.length - 20} mais
-                      </span>
+                        <X className="h-3 w-3 mr-1" />
+                        Limpar
+                      </Button>
+                    )}
+                    {filtersOpen ? (
+                      <ChevronDown className="h-5 w-5 text-muted-foreground" />
+                    ) : (
+                      <ChevronRight className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
-                </div>
-              )}
+                </CollapsibleTrigger>
 
-              {/* Filtros ativos */}
-              {(selectedCategory || selectedTags.length > 0) && (
-                <div className="mt-4 pt-4 border-t border-border">
-                  <span className="text-xs text-muted-foreground">Filtros ativos: </span>
-                  {selectedCategory && (
-                    <Badge variant="secondary" className="text-xs mx-1">
-                      {categories.find(c => c.slug === selectedCategory)?.name}
-                    </Badge>
+                <CollapsibleContent className="space-y-4">
+                  {/* Meus artigos checkbox + Categorias */}
+                  <div>
+                    <div className="flex items-center gap-6 mb-3">
+                      <h3 className="text-sm font-medium text-muted-foreground">Categoria</h3>
+                      {user && (
+                        <div className="flex items-center gap-2">
+                          <Checkbox 
+                            id="my-articles" 
+                            checked={showOnlyMine}
+                            onCheckedChange={(checked) => handleMyArticlesToggle(checked as boolean)}
+                          />
+                          <label 
+                            htmlFor="my-articles" 
+                            className="text-sm font-medium cursor-pointer text-muted-foreground hover:text-foreground"
+                          >
+                            Meus artigos
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge
+                        variant={!selectedCategory ? "default" : "outline"}
+                        className="cursor-pointer hover:bg-primary/20"
+                        onClick={() => handleCategoryFilter('all')}
+                      >
+                        Todas
+                      </Badge>
+                      {categories.map((category) => (
+                        <Badge
+                          key={category.id}
+                          variant={selectedCategory === category.slug ? "default" : "outline"}
+                          className="cursor-pointer hover:bg-primary/20"
+                          onClick={() => handleCategoryFilter(category.slug)}
+                        >
+                          <span className="mr-1">{getCategoryEmoji(category.icon)}</span>
+                          {category.name}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Tags */}
+                  {availableTags.length > 0 && (
+                    <div>
+                      <h3 className="text-sm font-medium mb-2 text-muted-foreground">Tags</h3>
+                      <div className="flex flex-wrap gap-2">
+                        {availableTags.slice(0, 20).map((tag) => (
+                          <Badge
+                            key={tag}
+                            variant={selectedTags.includes(tag) ? "default" : "outline"}
+                            className="cursor-pointer hover:bg-primary/20 text-xs"
+                            onClick={() => handleTagToggle(tag)}
+                          >
+                            {tag}
+                          </Badge>
+                        ))}
+                        {availableTags.length > 20 && (
+                          <span className="text-xs text-muted-foreground self-center">
+                            +{availableTags.length - 20} mais
+                          </span>
+                        )}
+                      </div>
+                    </div>
                   )}
-                  {selectedTags.map(tag => (
-                    <Badge key={tag} variant="secondary" className="text-xs mx-1">
-                      {tag}
-                    </Badge>
-                  ))}
-                </div>
-              )}
-            </section>
+
+                  {/* Filtros ativos */}
+                  {(selectedCategory || selectedTags.length > 0 || showOnlyMine) && (
+                    <div className="pt-4 border-t border-border">
+                      <span className="text-xs text-muted-foreground">Filtros ativos: </span>
+                      {showOnlyMine && (
+                        <Badge variant="secondary" className="text-xs mx-1">
+                          Meus artigos
+                        </Badge>
+                      )}
+                      {selectedCategory && (
+                        <Badge variant="secondary" className="text-xs mx-1">
+                          {categories.find(c => c.slug === selectedCategory)?.name}
+                        </Badge>
+                      )}
+                      {selectedTags.map(tag => (
+                        <Badge key={tag} variant="secondary" className="text-xs mx-1">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                </CollapsibleContent>
+              </section>
+            </Collapsible>
 
             {/* Artigos */}
             <section aria-labelledby="articles-heading">
@@ -603,10 +677,10 @@ const Wiki = () => {
                 <h2 id="articles-heading" className="text-2xl font-bold">
                   {searchQuery ? (
                     <>Resultados da busca "{searchQuery}" ({posts.length})</>
-                  ) : selectedCategory || selectedTags.length > 0 ? (
+                  ) : selectedCategory || selectedTags.length > 0 || showOnlyMine ? (
                     <>Artigos filtrados ({posts.length})</>
                   ) : (
-                    <>Artigos</>
+                    <>Artigos ({posts.length})</>
                   )}
                 </h2>
 
@@ -614,10 +688,12 @@ const Wiki = () => {
                 <div className="flex items-center gap-2">
                   <ArrowUpDown className="h-4 w-4 text-muted-foreground" />
                   <Select value={sortOrder} onValueChange={handleSortChange}>
-                    <SelectTrigger className="w-[160px]">
+                    <SelectTrigger className="w-[200px]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
+                      <SelectItem value="alpha_asc">Ordem alfabética (A-Z)</SelectItem>
+                      <SelectItem value="alpha_desc">Ordem alfabética (Z-A)</SelectItem>
                       <SelectItem value="recent">Mais recentes</SelectItem>
                       <SelectItem value="relevant">Mais relevantes</SelectItem>
                       <SelectItem value="popular">Mais curtidos</SelectItem>
@@ -644,59 +720,108 @@ const Wiki = () => {
                   ))}
                 </div>
               ) : posts.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {posts.map((post) => (
-                    <Card key={post.id} className={`group hover:shadow-lg transition-all duration-200 border-l-4 ${getCategoryColor(post.wiki_categories?.color)} hover:border-l-primary`}>
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between gap-4 mb-3">
-                          <div className="flex items-center gap-3">
-                            {!post.is_published && post.author_id === user?.id && (
-                              <Badge variant="outline" className="border-amber-500 text-amber-600 dark:text-amber-400">
-                                Rascunho
-                              </Badge>
-                            )}
-                            {post.wiki_categories && (
-                              <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
-                                <span className="mr-1">{getCategoryEmoji(post.wiki_categories.icon)}</span>
-                                {post.wiki_categories.name}
-                              </Badge>
-                            )}
-                          </div>
-                        </div>
-                        
-                        <h3 className="text-lg font-semibold mb-2 line-clamp-2">
-                          <Link 
-                            to={`/wiki/${post.slug}`}
-                            className="hover:text-primary transition-colors"
+                <div className="space-y-6">
+                  {/* Carousel */}
+                  <Carousel className="w-full" opts={{ align: "start", loop: false }}>
+                    <CarouselContent className="-ml-4">
+                      {paginatedPosts.map((post) => (
+                        <CarouselItem key={post.id} className="pl-4 md:basis-1/2 lg:basis-1/3">
+                          <Card className={`group hover:shadow-lg transition-all duration-200 border-l-4 h-full ${getCategoryColor(post.wiki_categories?.color)} hover:border-l-primary`}>
+                            <CardHeader className="pb-3">
+                              <div className="flex items-start justify-between gap-4 mb-3">
+                                <div className="flex items-center gap-3">
+                                  {post.wiki_categories && (
+                                    <Badge variant="secondary" className={getCategoryColor(post.wiki_categories.color).replace('border-l-4', '').replace('hover:border-l-primary', '')}>
+                                      <span className="mr-1">{getCategoryEmoji(post.wiki_categories.icon)}</span>
+                                      {post.wiki_categories.name}
+                                    </Badge>
+                                  )}
+                                </div>
+                              </div>
+                              
+                              <h3 className="text-lg font-semibold mb-2 line-clamp-2">
+                                <Link 
+                                  to={`/wiki/${post.slug}`}
+                                  className="hover:text-primary transition-colors"
+                                >
+                                  {highlightSearchTerms(post.title, searchQuery)}
+                                </Link>
+                              </h3>
+                              {post.excerpt && (
+                                <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
+                                  {highlightSearchTerms(post.excerpt, searchQuery)}
+                                </p>
+                              )}
+                            </CardHeader>
+                            
+                            <CardContent className="pt-0">
+                              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                                <div className="flex items-center gap-4">
+                                  <div className="flex items-center gap-1">
+                                    <User className="h-3 w-3" />
+                                    <span className="truncate max-w-[100px]">{post.profiles?.full_name || post.profiles?.username || 'Autor'}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1">
+                                    <Calendar className="h-3 w-3" />
+                                    <time dateTime={post.published_at || post.created_at}>
+                                      {formatDate(post.published_at || post.created_at)}
+                                    </time>
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        </CarouselItem>
+                      ))}
+                    </CarouselContent>
+                    {paginatedPosts.length > 3 && (
+                      <>
+                        <CarouselPrevious className="-left-4" />
+                        <CarouselNext className="-right-4" />
+                      </>
+                    )}
+                  </Carousel>
+                  
+                  {/* Pagination */}
+                  {totalPages > 1 && (
+                    <div className="flex items-center justify-center gap-2 pt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.max(0, p - 1))}
+                        disabled={currentPage === 0}
+                      >
+                        Anterior
+                      </Button>
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => (
+                          <Button
+                            key={i}
+                            variant={currentPage === i ? "default" : "outline"}
+                            size="sm"
+                            className="w-8 h-8 p-0"
+                            onClick={() => setCurrentPage(i)}
                           >
-                            {highlightSearchTerms(post.title, searchQuery)}
-                          </Link>
-                        </h3>
-                        {post.excerpt && (
-                          <p className="text-muted-foreground text-sm mb-3 line-clamp-3">
-                            {highlightSearchTerms(post.excerpt, searchQuery)}
-                          </p>
+                            {i + 1}
+                          </Button>
+                        )).slice(
+                          Math.max(0, currentPage - 2),
+                          Math.min(totalPages, currentPage + 3)
                         )}
-                      </CardHeader>
-                      
-                      <CardContent className="pt-0">
-                        <div className="flex items-center justify-between text-sm text-muted-foreground">
-                          <div className="flex items-center gap-4">
-                            <div className="flex items-center gap-1">
-                              <User className="h-3 w-3" />
-                              <span>{post.profiles?.full_name || post.profiles?.username || 'Autor'}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              <time dateTime={post.published_at || post.created_at}>
-                                {formatDate(post.published_at || post.created_at)}
-                              </time>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages - 1, p + 1))}
+                        disabled={currentPage === totalPages - 1}
+                      >
+                        Próxima
+                      </Button>
+                      <span className="text-sm text-muted-foreground ml-2">
+                        {currentPage * ITEMS_PER_PAGE + 1}-{Math.min((currentPage + 1) * ITEMS_PER_PAGE, posts.length)} de {posts.length}
+                      </span>
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-12">
