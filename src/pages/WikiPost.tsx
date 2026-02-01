@@ -334,7 +334,7 @@ const WikiPost = () => {
                 icon={post.icon || undefined}
                 coverImage={post.cover_image_url || undefined}
                 title={post.title}
-                author={post.profiles.full_name}
+                author={post.profiles?.full_name || post.profiles?.username || 'Autor'}
                 publishedAt={post.published_at}
                 tags={post.tags || undefined}
               />
