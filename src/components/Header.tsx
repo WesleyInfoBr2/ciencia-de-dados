@@ -1,6 +1,6 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Menu, User, LogIn, LogOut, ChevronDown, Shield } from "lucide-react";
+import { Menu, User, LogIn, LogOut, ChevronDown, Shield, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -11,15 +11,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 
 const Header = () => {
   const { user, signOut } = useAuth();
   const { isAdmin } = useAdmin();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleAuthAction = async () => {
     if (user) {
       await signOut();
     }
+    setMobileMenuOpen(false);
+  };
+
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -149,10 +162,138 @@ const Header = () => {
             </>
           )}
           
-          {/* Mobile menu button */}
-          <Button variant="ghost" size="icon" className="md:hidden">
-            <Menu className="w-4 h-4" />
-          </Button>
+          {/* Mobile menu */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="w-5 h-5" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[280px] sm:w-[320px]">
+              <SheetHeader>
+                <SheetTitle className="flex items-center gap-2">
+                  <img src={logoCD} alt="CiênciaDeDados.org" className="w-6 h-6" />
+                  Menu
+                </SheetTitle>
+              </SheetHeader>
+              <nav className="flex flex-col gap-4 mt-8">
+                <Link
+                  to="/"
+                  className="text-base font-medium text-foreground hover:text-primary transition-smooth py-2"
+                  onClick={closeMobileMenu}
+                >
+                  Início
+                </Link>
+                <Link
+                  to="/wiki"
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-smooth py-2"
+                  onClick={closeMobileMenu}
+                >
+                  Wiki
+                </Link>
+                <Link
+                  to="/libraries"
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-smooth py-2"
+                  onClick={closeMobileMenu}
+                >
+                  Bibliotecas
+                </Link>
+                
+                {/* Produtos submenu */}
+                <div className="py-2">
+                  <span className="text-base font-medium text-muted-foreground mb-2 block">
+                    Produtos
+                  </span>
+                  <div className="pl-4 flex flex-col gap-2 mt-2">
+                    <Link
+                      to="/produtos/estatisticafacil"
+                      className="text-sm text-muted-foreground hover:text-primary transition-smooth py-1"
+                      onClick={closeMobileMenu}
+                    >
+                      EstatísticaFácil
+                    </Link>
+                    <Link
+                      to="/produtos/revprisma"
+                      className="text-sm text-muted-foreground hover:text-primary transition-smooth py-1"
+                      onClick={closeMobileMenu}
+                    >
+                      RevPrisma
+                    </Link>
+                    <Link
+                      to="/produtos/dadosbrasil"
+                      className="text-sm text-muted-foreground hover:text-primary transition-smooth py-1"
+                      onClick={closeMobileMenu}
+                    >
+                      DadosBrasil
+                    </Link>
+                  </div>
+                </div>
+
+                <Link
+                  to="/precos"
+                  className="text-base font-medium text-muted-foreground hover:text-primary transition-smooth py-2"
+                  onClick={closeMobileMenu}
+                >
+                  Preços
+                </Link>
+
+                {isAdmin && (
+                  <Link
+                    to="/admin"
+                    className="text-base font-medium text-muted-foreground hover:text-primary transition-smooth py-2 flex items-center gap-2"
+                    onClick={closeMobileMenu}
+                  >
+                    <Shield className="w-4 h-4" />
+                    Admin
+                  </Link>
+                )}
+
+                {/* Auth section */}
+                <div className="border-t border-border pt-4 mt-4">
+                  {user ? (
+                    <div className="flex flex-col gap-3">
+                      <span className="text-sm text-muted-foreground">
+                        {user.email}
+                      </span>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleAuthAction}
+                        className="w-full justify-start"
+                      >
+                        <LogOut className="w-4 h-4 mr-2" />
+                        Sair
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col gap-3">
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        asChild
+                        className="w-full justify-start"
+                      >
+                        <Link to="/auth" onClick={closeMobileMenu}>
+                          <User className="w-4 h-4 mr-2" />
+                          Entrar
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="cta" 
+                        size="sm" 
+                        asChild
+                        className="w-full"
+                      >
+                        <Link to="/auth" onClick={closeMobileMenu}>
+                          Começar Grátis
+                        </Link>
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              </nav>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </header>
