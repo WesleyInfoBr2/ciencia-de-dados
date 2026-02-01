@@ -191,12 +191,9 @@ const ProductsSection = () => {
             Nossa equipe está constantemente trabalhando em novas ferramentas. 
             Junte-se à nossa comunidade para ser o primeiro a saber sobre novos lançamentos.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button variant="cta" size="lg">
+          <div className="flex justify-center">
+            <Button variant="cta" size="lg" onClick={() => navigate('/contato?motivo=sugerir-produto')}>
               Sugerir Produto
-            </Button>
-            <Button variant="outline" size="lg">
-              Roadmap Público
             </Button>
           </div>
         </div>
