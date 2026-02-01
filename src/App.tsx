@@ -18,6 +18,7 @@ import DevTiptap from "./pages/DevTiptap";
 import ProductEstatisticaFacil from "./pages/ProductEstatisticaFacil";
 import ProductRevPrisma from "./pages/ProductRevPrisma";
 import ProductDadosBrasil from "./pages/ProductDadosBrasil";
+import Products from "./pages/Products";
 import Admin from "./pages/Admin";
 import AdminCommentModeration from "./pages/AdminCommentModeration";
 import Pricing from "./pages/Pricing";
@@ -47,6 +48,7 @@ const App = () => (
             <Route path="/wiki/import" element={<WikiImport />} />
             <Route path="/wiki/:slug" element={<WikiPost />} />
             <Route path="/dev/tiptap" element={<DevTiptap />} />
+            <Route path="/produtos" element={<Products />} />
             <Route path="/produtos/estatisticafacil" element={<ProductEstatisticaFacil />} />
             <Route path="/produtos/revprisma" element={<ProductRevPrisma />} />
             <Route path="/produtos/dadosbrasil" element={<ProductDadosBrasil />} />

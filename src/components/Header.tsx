@@ -73,6 +73,11 @@ const Header = () => {
             </DropdownMenuTrigger>
             <DropdownMenuContent>
               <DropdownMenuItem asChild>
+                <Link to="/produtos" className="cursor-pointer font-medium">
+                  Todos os Produtos
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild>
                 <Link to="/produtos/estatisticafacil" className="cursor-pointer">
                   EstatísticaFácil
                 </Link>
@@ -201,9 +206,13 @@ const Header = () => {
                 
                 {/* Produtos submenu */}
                 <div className="py-2">
-                  <span className="text-base font-medium text-muted-foreground mb-2 block">
+                  <Link
+                    to="/produtos"
+                    className="text-base font-medium text-muted-foreground hover:text-primary transition-smooth mb-2 block"
+                    onClick={closeMobileMenu}
+                  >
                     Produtos
-                  </span>
+                  </Link>
                   <div className="pl-4 flex flex-col gap-2 mt-2">
                     <Link
                       to="/produtos/estatisticafacil"
