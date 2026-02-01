@@ -39,8 +39,7 @@ const Footer = () => {
       links: [
         { name: "Documentação", href: "#docs" },
         { name: "FAQ", href: "#faq" },
-        { name: "Contato", href: "#contato" },
-        { name: "Status", href: "#status" },
+        { name: "Contato", href: "/contato" },
       ]
     }
   ];
