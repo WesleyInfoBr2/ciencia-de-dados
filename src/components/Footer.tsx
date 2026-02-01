@@ -28,10 +28,10 @@ const Footer = () => {
     {
       title: "Produtos",
       links: [
-        { name: "EstatísticaFácil", href: "#estatisticafacil" },
-        { name: "RevPrisma", href: "#revprisma" },
-        { name: "DadosBrasil", href: "#dadosbrasil" },
-        { name: "Roadmap", href: "#roadmap" },
+        { name: "Todos os Produtos", href: "/produtos" },
+        { name: "EstatísticaFácil", href: "/produtos/estatisticafacil" },
+        { name: "RevPrisma", href: "/produtos/revprisma" },
+        { name: "DadosBrasil", href: "/produtos/dadosbrasil" },
       ]
     },
     {
