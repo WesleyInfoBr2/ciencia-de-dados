@@ -258,9 +258,52 @@ INSERT INTO product_access (user_id, product_id, access_type, is_active)
 VALUES (
   'uuid-do-usuario',
   (SELECT id FROM products WHERE slug = 'dadosbrasil'),
-  'unlimited',
+  'limited',
   true
 );
+```
+
+---
+
+## 🎫 Modelo de Acesso
+
+O acesso é baseado em **assinaturas por produto**, não em roles globais.
+
+### Tipos de Acesso
+
+| Nível | Condição | Acesso |
+|-------|----------|--------|
+| **Gratuito** | Usuário autenticado sem assinatura | Básico (free tier) em todos os produtos |
+| **Limitado** | Assinatura ativa em 1+ produtos | Completo nos assinados, básico nos demais |
+| **Ilimitado** | Assinatura em TODOS os produtos | Completo em todos (condição calculada) |
+
+### Verificação de Acesso no Produto
+
+Use a função `check_product_access` para verificar o nível de acesso:
+
+```typescript
+import { supabase } from "@/integrations/supabase/client";
+
+async function checkUserAccess(productSlug: string) {
+  const { data: { user } } = await supabase.auth.getUser();
+  
+  if (!user) {
+    return { hasAccess: false, level: 'none' };
+  }
+  
+  const { data } = await supabase.rpc('check_product_access', {
+    _user_id: user.id,
+    _product_slug: productSlug
+  });
+  
+  const access = data?.[0];
+  return {
+    hasAccess: access?.has_access ?? false,
+    level: access?.access_level ?? 'gratuito',
+    usageLimit: access?.usage_limit,
+    usageCount: access?.usage_count
+  };
+}
 ```
 
 ---
@@ -272,12 +315,14 @@ VALUES (
 - [ ] `handleSSOLogin` integrado no `App.tsx`
 - [ ] Loading state implementado
 - [ ] Supabase client configurado corretamente
+- [ ] Verificação de acesso implementada
 
 ### Testes
 - [ ] Login via Central funciona
 - [ ] Tokens removidos da URL após auth
 - [ ] Refresh de página mantém autenticação
 - [ ] Logout na Central desloga do produto
+- [ ] Níveis de acesso funcionam corretamente
 
 ### Produção
 - [ ] HTTPS configurado e funcionando
@@ -305,7 +350,9 @@ sequenceDiagram
     P->>S: setSession(tokens)
     S-->>P: Confirma autenticação
     P->>P: Remove tokens da URL
-    P->>U: Exibe app autenticado
+    P->>S: checkProductAccess()
+    S-->>P: Retorna nível de acesso
+    P->>U: Exibe app com features conforme acesso
 ```
 
 ---
@@ -313,10 +360,10 @@ sequenceDiagram
 ## 📚 Referências
 
 - [Supabase Auth](https://supabase.com/docs/guides/auth)
-- [Supabase Sessions](https://supabase.com/docs/reference/javascript/auth-session)
+- [Modelo de Acesso](./ACCESS-MODEL.md) - Documentação completa do modelo
 - [React Router Protected Routes](https://reactrouter.com/en/main/start/tutorial#protected-routes)
 
 ---
 
-**Última atualização**: 2025-01-20
-**Versão**: 1.0
+**Última atualização**: 2026-02-01
+**Versão**: 2.0

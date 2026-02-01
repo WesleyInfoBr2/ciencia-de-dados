@@ -1,51 +1,22 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowRight, BarChart3, FileSpreadsheet, Globe, Star, Zap, Lock } from "lucide-react";
+import { ArrowRight, Lock, Star, Zap } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { redirectToProduct } from "@/lib/sso";
 import { useToast } from "@/hooks/use-toast";
+import { PRODUCTS } from "@/pages/Products";
 
 const ProductsSection = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   
-  const products = [
-    {
-      name: "EstatísticaFácil",
-      slug: "estatisticafacil",
-      description: "Plataforma completa para análises estatísticas intuitivas e relatórios automatizados",
-      status: "development",
-      features: ["Análises Descritivas", "Testes Estatísticos", "Visualizações", "Relatórios PDF"],
-      icon: BarChart3,
-      color: "from-blue-500 to-cyan-500",
-      baseUrl: "estatisticafacil.cienciadedados.org"
-    },
-    {
-      name: "RevPrisma",
-      slug: "revprisma",
-      description: "Sistema avançado de revisão sistemática e meta-análise para pesquisadores",
-      status: "development",
-      features: ["Screening Automático", "Extração de Dados", "Meta-análise", "Colaboração"],
-      icon: FileSpreadsheet,
-      color: "from-purple-500 to-pink-500",
-      baseUrl: "revprisma.cienciadedados.org"
-    },
-    {
-      name: "DadosBrasil",
-      slug: "dadosbrasil",
-      description: "Acesso centralizado aos principais datasets e indicadores públicos brasileiros",
-      status: "development",
-      features: ["APIs Unificadas", "Dados IBGE", "Indicadores Sociais", "Séries Temporais"],
-      icon: Globe,
-      color: "from-green-500 to-emerald-500",
-      baseUrl: "dadosbrasil.cienciadedados.org"
-    }
-  ];
+  // Mostrar apenas os 3 primeiros produtos na home
+  const featuredProducts = PRODUCTS.slice(0, 3);
 
-  const handleAccessProduct = async (product: typeof products[0]) => {
+  const handleAccessProduct = async (product: typeof PRODUCTS[0]) => {
     if (!user) {
       toast({
         title: "Login necessário",
@@ -122,7 +93,7 @@ const ProductsSection = () => {
 
         {/* Products Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
-          {products.map((product, index) => (
+          {featuredProducts.map((product, index) => (
             <Card key={index} className="shadow-card hover:shadow-elegant transition-smooth group cursor-pointer overflow-hidden">
               <div className={`h-2 bg-gradient-to-r ${product.color}`} />
               
@@ -159,7 +130,7 @@ const ProductsSection = () => {
                     variant="outline" 
                     size="sm" 
                     className="flex-1" 
-                    onClick={() => navigate(`/produtos/${product.slug}`)}
+                    onClick={() => navigate(`/produtos`)}
                   >
                     Saiba Mais
                     <ArrowRight className="w-4 h-4" />
@@ -180,6 +151,14 @@ const ProductsSection = () => {
               </CardContent>
             </Card>
           ))}
+        </div>
+
+        {/* View All Products Button */}
+        <div className="text-center mb-12">
+          <Button variant="outline" size="lg" onClick={() => navigate('/produtos')}>
+            Ver Todos os Produtos ({PRODUCTS.length})
+            <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
         </div>
 
         {/* Call to Action for More Products */}
