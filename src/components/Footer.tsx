@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Github, Twitter, Linkedin, Mail, Heart } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -109,13 +110,13 @@ const Footer = () => {
           <div className="flex items-center space-x-4 text-sm text-muted-foreground">
             <span>© {currentYear} CiênciaDeDados.org</span>
             <Separator orientation="vertical" className="h-4" />
-            <a href="#privacidade" className="hover:text-primary transition-smooth">
+            <Link to="/privacidade" className="hover:text-primary transition-smooth">
               Privacidade
-            </a>
+            </Link>
             <Separator orientation="vertical" className="h-4" />
-            <a href="#termos" className="hover:text-primary transition-smooth">
+            <Link to="/termos" className="hover:text-primary transition-smooth">
               Termos de Uso
-            </a>
+            </Link>
           </div>
 
           <div className="flex items-center space-x-2 text-sm text-muted-foreground">

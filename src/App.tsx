@@ -21,6 +21,8 @@ import ProductDadosBrasil from "./pages/ProductDadosBrasil";
 import Admin from "./pages/Admin";
 import AdminCommentModeration from "./pages/AdminCommentModeration";
 import Pricing from "./pages/Pricing";
+import TermsOfUse from "./pages/TermsOfUse";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +49,8 @@ const App = () => (
             <Route path="/produtos/revprisma" element={<ProductRevPrisma />} />
             <Route path="/produtos/dadosbrasil" element={<ProductDadosBrasil />} />
             <Route path="/precos" element={<Pricing />} />
+            <Route path="/termos" element={<TermsOfUse />} />
+            <Route path="/privacidade" element={<PrivacyPolicy />} />
             <Route path="/admin" element={<Admin />} />
             <Route path="/admin/comments" element={<AdminCommentModeration />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
