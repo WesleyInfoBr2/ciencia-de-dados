@@ -8,14 +8,16 @@ import { useNavigate } from "react-router-dom";
 const HeroSection = () => {
   const navigate = useNavigate();
   
-  // Buscar contagem de usuários
+  // Buscar contagem de usuários usando função pública
   const { data: usersCount } = useQuery({
     queryKey: ['users-count'],
     queryFn: async () => {
-      const { count } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
-      return count || 0;
+      const { data, error } = await supabase.rpc('get_public_profiles');
+      if (error) {
+        console.error('Error fetching users count:', error);
+        return 0;
+      }
+      return data?.length || 0;
     }
   });
 
