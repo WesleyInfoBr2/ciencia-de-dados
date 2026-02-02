@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Github, Twitter, Linkedin, Mail, Heart } from "lucide-react";
+import { Github, Linkedin, Mail, Heart, Youtube } from "lucide-react";
 import { Link } from "react-router-dom";
 
 const Footer = () => {
@@ -64,17 +64,25 @@ const Footer = () => {
               análise de dados no Brasil.
             </p>
             <div className="flex space-x-3">
-              <Button variant="ghost" size="icon" className="w-9 h-9">
-                <Github className="w-4 h-4" />
+              <Button variant="ghost" size="icon" className="w-9 h-9" asChild>
+                <a href="https://github.com/WesleyInfoBr2" target="_blank" rel="noopener noreferrer">
+                  <Github className="w-4 h-4" />
+                </a>
               </Button>
-              <Button variant="ghost" size="icon" className="w-9 h-9">
-                <Twitter className="w-4 h-4" />
+              <Button variant="ghost" size="icon" className="w-9 h-9" asChild>
+                <a href="https://www.linkedin.com/company/estatisticafacil/" target="_blank" rel="noopener noreferrer">
+                  <Linkedin className="w-4 h-4" />
+                </a>
               </Button>
-              <Button variant="ghost" size="icon" className="w-9 h-9">
-                <Linkedin className="w-4 h-4" />
+              <Button variant="ghost" size="icon" className="w-9 h-9" asChild>
+                <a href="https://www.youtube.com/@cienciadedadosorg" target="_blank" rel="noopener noreferrer">
+                  <Youtube className="w-4 h-4" />
+                </a>
               </Button>
-              <Button variant="ghost" size="icon" className="w-9 h-9">
-                <Mail className="w-4 h-4" />
+              <Button variant="ghost" size="icon" className="w-9 h-9" asChild>
+                <Link to="/contato">
+                  <Mail className="w-4 h-4" />
+                </Link>
               </Button>
             </div>
           </div>
