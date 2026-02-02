@@ -3,11 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { Camera, Save, X, Loader2 } from "lucide-react";
+import { Save, X, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { AvatarUpload } from "./AvatarUpload";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProfileData {
   id: string;
@@ -30,9 +31,11 @@ export const ProfileSection = ({
   isLoading,
   onUpdateProfile,
 }: ProfileSectionProps) => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [formData, setFormData] = useState<Partial<ProfileData>>({});
+  const [avatarUrl, setAvatarUrl] = useState(profile?.avatarUrl || "");
   const { toast } = useToast();
 
   const handleEdit = () => {
@@ -42,11 +45,13 @@ export const ProfileSection = ({
       institution: profile?.institution || "",
       bio: profile?.bio || "",
     });
+    setAvatarUrl(profile?.avatarUrl || "");
     setIsEditing(true);
   };
 
   const handleCancel = () => {
     setFormData({});
+    setAvatarUrl(profile?.avatarUrl || "");
     setIsEditing(false);
   };
 
@@ -70,14 +75,6 @@ export const ProfileSection = ({
     }
   };
 
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
 
   if (isLoading) {
     return (
@@ -121,23 +118,13 @@ export const ProfileSection = ({
         <CardContent className="space-y-6">
           {/* Avatar Section */}
           <div className="flex items-center gap-6">
-            <div className="relative">
-              <Avatar className="h-24 w-24">
-                <AvatarImage src={profile?.avatarUrl} alt={profile?.fullName} />
-                <AvatarFallback className="bg-primary text-primary-foreground text-2xl">
-                  {profile?.fullName ? getInitials(profile.fullName) : "?"}
-                </AvatarFallback>
-              </Avatar>
-              {isEditing && (
-                <Button
-                  size="icon"
-                  variant="secondary"
-                  className="absolute bottom-0 right-0 h-8 w-8 rounded-full"
-                >
-                  <Camera className="h-4 w-4" />
-                </Button>
-              )}
-            </div>
+            <AvatarUpload
+              userId={user?.id || ""}
+              currentAvatarUrl={isEditing ? avatarUrl : profile?.avatarUrl}
+              fullName={profile?.fullName}
+              onAvatarUpdate={(newUrl) => setAvatarUrl(newUrl)}
+              isEditing={isEditing}
+            />
             <div>
               <h3 className="text-lg font-semibold">{profile?.fullName || "Nome não definido"}</h3>
               <p className="text-muted-foreground">{profile?.email}</p>

@@ -128,18 +128,27 @@ const Header = () => {
                   </Link>
                 </Button>
               )}
-              <span className="hidden md:block text-sm text-muted-foreground">
-                Olá, {user.email}
-              </span>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                className="hidden md:flex"
-                onClick={handleAuthAction}
-              >
-                <LogOut className="w-4 h-4 mr-2" />
-                Sair
-              </Button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-2">
+                    <User className="w-4 h-4" />
+                    <span className="max-w-32 truncate">{user.email?.split("@")[0]}</span>
+                    <ChevronDown className="w-3 h-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/minha-conta" className="cursor-pointer">
+                      <User className="w-4 h-4 mr-2" />
+                      Minha Conta
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleAuthAction} className="cursor-pointer text-destructive">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sair
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -267,8 +276,19 @@ const Header = () => {
                       <Button 
                         variant="outline" 
                         size="sm" 
-                        onClick={handleAuthAction}
+                        asChild
                         className="w-full justify-start"
+                      >
+                        <Link to="/minha-conta" onClick={closeMobileMenu}>
+                          <User className="w-4 h-4 mr-2" />
+                          Minha Conta
+                        </Link>
+                      </Button>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={handleAuthAction}
+                        className="w-full justify-start text-destructive"
                       >
                         <LogOut className="w-4 h-4 mr-2" />
                         Sair
