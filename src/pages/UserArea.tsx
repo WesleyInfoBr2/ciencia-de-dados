@@ -11,6 +11,7 @@ import { SubscriptionsSection } from "@/components/user-area/SubscriptionsSectio
 import { ProductsQuickAccess } from "@/components/user-area/ProductsQuickAccess";
 import { SecuritySection } from "@/components/user-area/SecuritySection";
 import { SettingsSection } from "@/components/user-area/SettingsSection";
+import { NotificationPreferencesSection } from "@/components/user-area/NotificationPreferencesSection";
 
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
@@ -61,6 +62,7 @@ const sectionTitles: Record<string, string> = {
   profile: "Meu Perfil",
   subscriptions: "Assinaturas e Permissões",
   products: "Meus Produtos",
+  notifications: "Notificações",
   security: "Segurança",
   settings: "Configurações",
 };
@@ -328,6 +330,8 @@ const UserArea = () => {
             onRevokeAllSessions={handleRevokeAllSessions}
           />
         );
+      case "notifications":
+        return <NotificationPreferencesSection />;
       case "settings":
         return (
           <SettingsSection
