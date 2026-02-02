@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -8,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { redirectToProduct } from "@/lib/sso";
 import { useToast } from "@/hooks/use-toast";
+import { updatePageMetadata, generateStructuredData } from "@/utils/seo";
 
 // Definição centralizada dos produtos - sincronizada com o banco de dados
 export const PRODUCTS = [
@@ -72,6 +74,18 @@ const Products = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
+
+  // SEO Metadata
+  useEffect(() => {
+    updatePageMetadata({
+      title: "Produtos para Ciência de Dados | CiênciaDeDados.org",
+      description: "Ferramentas especializadas para análise estatística, revisão sistemática e acesso a dados públicos brasileiros. Produtos desenvolvidos para profissionais de dados.",
+      canonical: "https://cienciadedados.org/produtos",
+      ogTitle: "Produtos CiênciaDeDados.org",
+      ogDescription: "EstatísticaFácil, RevPrisma, DadosBrasil e mais ferramentas para impulsionar sua análise de dados.",
+      ogImage: "https://cienciadedados.org/og-image.jpg",
+    });
+  }, []);
 
   const handleAccessProduct = async (product: typeof PRODUCTS[0]) => {
     if (!user) {

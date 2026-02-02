@@ -1,11 +1,71 @@
+import { useEffect } from "react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { HelpCircle, BookOpen, Library, CreditCard } from "lucide-react";
 import { Link } from "react-router-dom";
+import { updatePageMetadata, generateStructuredData } from "@/utils/seo";
 
 const FAQ = () => {
+  // SEO Metadata with FAQPage structured data
+  useEffect(() => {
+    updatePageMetadata({
+      title: "Perguntas Frequentes | CiênciaDeDados.org",
+      description: "Tire suas dúvidas sobre a comunidade, publicação na Wiki, bibliotecas de recursos e planos de assinatura dos produtos.",
+      canonical: "https://cienciadedados.org/faq",
+      ogTitle: "FAQ - CiênciaDeDados.org",
+      ogDescription: "Encontre respostas para as dúvidas mais comuns sobre a plataforma brasileira de ciência de dados.",
+      ogImage: "https://cienciadedados.org/og-image.jpg",
+    });
+
+    // Generate FAQPage structured data for rich snippets
+    const faqStructuredData = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "Quem pode publicar conteúdo na Wiki?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Qualquer membro cadastrado na comunidade pode criar e publicar artigos na Wiki."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Os recursos das bibliotecas são gratuitos?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "A consulta ao catálogo é gratuita. Cada item indica seu modelo de preço."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Quais são os planos disponíveis?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Oferecemos três níveis: Gratuito, Limitado e Ilimitado (R$ 149/mês)."
+          }
+        }
+      ]
+    };
+
+    const existingScript = document.querySelector('script[type="application/ld+json"]#faq-structured-data');
+    if (existingScript) existingScript.remove();
+
+    const script = document.createElement('script');
+    script.type = 'application/ld+json';
+    script.id = 'faq-structured-data';
+    script.textContent = JSON.stringify(faqStructuredData);
+    document.head.appendChild(script);
+
+    return () => {
+      const cleanupScript = document.querySelector('script#faq-structured-data');
+      if (cleanupScript) cleanupScript.remove();
+    };
+  }, []);
+
   const faqSections = [
     {
       title: "Publicação na Wiki",
