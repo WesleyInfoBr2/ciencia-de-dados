@@ -342,6 +342,165 @@ export type Database = {
           },
         ]
       }
+      notification_preferences: {
+        Row: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at: string | null
+          frequency:
+            | Database["public"]["Enums"]["notification_frequency"]
+            | null
+          id: string
+          is_enabled: boolean | null
+          notification_type: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          channel: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string | null
+          frequency?:
+            | Database["public"]["Enums"]["notification_frequency"]
+            | null
+          id?: string
+          is_enabled?: boolean | null
+          notification_type: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          channel?: Database["public"]["Enums"]["notification_channel"]
+          created_at?: string | null
+          frequency?:
+            | Database["public"]["Enums"]["notification_frequency"]
+            | null
+          id?: string
+          is_enabled?: boolean | null
+          notification_type?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_preferences_notification_type_fkey"
+            columns: ["notification_type"]
+            isOneToOne: false
+            referencedRelation: "notification_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notification_preferences_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_types: {
+        Row: {
+          category: string
+          created_at: string | null
+          default_channels:
+            | Database["public"]["Enums"]["notification_channel"][]
+            | null
+          description: string | null
+          icon: string | null
+          id: string
+          label: string
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          default_channels?:
+            | Database["public"]["Enums"]["notification_channel"][]
+            | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          label: string
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          default_channels?:
+            | Database["public"]["Enums"]["notification_channel"][]
+            | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          label?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          body: string | null
+          channels_sent:
+            | Database["public"]["Enums"]["notification_channel"][]
+            | null
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          link: string | null
+          metadata: Json | null
+          notification_type: string
+          read_at: string | null
+          scheduled_for: string | null
+          sent_at: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          body?: string | null
+          channels_sent?:
+            | Database["public"]["Enums"]["notification_channel"][]
+            | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          metadata?: Json | null
+          notification_type: string
+          read_at?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          body?: string | null
+          channels_sent?:
+            | Database["public"]["Enums"]["notification_channel"][]
+            | null
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          link?: string | null
+          metadata?: Json | null
+          notification_type?: string
+          read_at?: string | null
+          scheduled_for?: string | null
+          sent_at?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_notification_type_fkey"
+            columns: ["notification_type"]
+            isOneToOne: false
+            referencedRelation: "notification_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "notifications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       organizations: {
         Row: {
           created_at: string | null
@@ -671,6 +830,116 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      task_types: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          default_assignee_role: Database["public"]["Enums"]["app_role"] | null
+          description: string | null
+          icon: string | null
+          id: string
+          label: string
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          default_assignee_role?: Database["public"]["Enums"]["app_role"] | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          label: string
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          default_assignee_role?: Database["public"]["Enums"]["app_role"] | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          label?: string
+        }
+        Relationships: []
+      }
+      tasks: {
+        Row: {
+          assigned_to: string | null
+          completed_at: string | null
+          completed_by: string | null
+          created_at: string | null
+          description: string | null
+          due_date: string | null
+          id: string
+          metadata: Json | null
+          priority: number | null
+          status: Database["public"]["Enums"]["task_status"] | null
+          task_type: string
+          title: string
+          updated_at: string | null
+          workflow_id: string | null
+        }
+        Insert: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: number | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          task_type: string
+          title: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Update: {
+          assigned_to?: string | null
+          completed_at?: string | null
+          completed_by?: string | null
+          created_at?: string | null
+          description?: string | null
+          due_date?: string | null
+          id?: string
+          metadata?: Json | null
+          priority?: number | null
+          status?: Database["public"]["Enums"]["task_status"] | null
+          task_type?: string
+          title?: string
+          updated_at?: string | null
+          workflow_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tasks_assigned_to_fkey"
+            columns: ["assigned_to"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_completed_by_fkey"
+            columns: ["completed_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_task_type_fkey"
+            columns: ["task_type"]
+            isOneToOne: false
+            referencedRelation: "task_types"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tasks_workflow_id_fkey"
+            columns: ["workflow_id"]
+            isOneToOne: false
+            referencedRelation: "workflows"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       technologies: {
         Row: {
@@ -1081,6 +1350,56 @@ export type Database = {
           },
         ]
       }
+      workflows: {
+        Row: {
+          actions: Json
+          conditions: Json | null
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          priority: number | null
+          trigger_event: string
+          updated_at: string | null
+        }
+        Insert: {
+          actions?: Json
+          conditions?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          priority?: number | null
+          trigger_event: string
+          updated_at?: string | null
+        }
+        Update: {
+          actions?: Json
+          conditions?: Json | null
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          priority?: number | null
+          trigger_event?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workflows_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -1104,6 +1423,7 @@ export type Database = {
           username: string
         }[]
       }
+      get_unread_notification_count: { Args: never; Returns: number }
       get_user_role_in_org: {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1127,6 +1447,11 @@ export type Database = {
         Args: { _org_id: string; _user_id: string }
         Returns: boolean
       }
+      mark_all_notifications_read: { Args: never; Returns: number }
+      mark_notification_read: {
+        Args: { notification_id: string }
+        Returns: boolean
+      }
       show_limit: { Args: never; Returns: number }
       show_trgm: { Args: { "": string }; Returns: string[] }
     }
@@ -1146,10 +1471,13 @@ export type Database = {
         | "livros"
         | "codigos"
         | "bancos_dados"
+      notification_channel: "email" | "push" | "in_app"
+      notification_frequency: "each" | "daily" | "weekly" | "monthly" | "never"
       organization_plan: "free" | "basic" | "premium" | "enterprise"
       project_status: "planning" | "in_progress" | "completed" | "on_hold"
       subscription_plan: "gratuito" | "limitado" | "ilimitado"
       subscription_status: "active" | "expired" | "cancelled" | "pending"
+      task_status: "pending" | "in_progress" | "completed" | "cancelled"
       wiki_post_type: "conteudo" | "como_fazer" | "aplicacao_pratica"
     }
     CompositeTypes: {
@@ -1294,10 +1622,13 @@ export const Constants = {
         "codigos",
         "bancos_dados",
       ],
+      notification_channel: ["email", "push", "in_app"],
+      notification_frequency: ["each", "daily", "weekly", "monthly", "never"],
       organization_plan: ["free", "basic", "premium", "enterprise"],
       project_status: ["planning", "in_progress", "completed", "on_hold"],
       subscription_plan: ["gratuito", "limitado", "ilimitado"],
       subscription_status: ["active", "expired", "cancelled", "pending"],
+      task_status: ["pending", "in_progress", "completed", "cancelled"],
       wiki_post_type: ["conteudo", "como_fazer", "aplicacao_pratica"],
     },
   },
