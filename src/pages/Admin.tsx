@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useAuth } from "@/hooks/useAuth";
 import Header from "@/components/Header";
@@ -10,12 +10,15 @@ import { ProductsManagement } from "@/components/admin/ProductsManagement";
 import { UsersManagement } from "@/components/admin/UsersManagement";
 import { SubscriptionsManagement } from "@/components/admin/SubscriptionsManagement";
 import { ProductAccessManagement } from "@/components/admin/ProductAccessManagement";
+import { TasksManagement } from "@/components/admin/TasksManagement";
 import { Loader2, MessageCircle } from "lucide-react";
 
 const Admin = () => {
   const { user } = useAuth();
   const { isAdmin, loading } = useAdmin();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const defaultTab = searchParams.get("tab") || "products";
 
   useEffect(() => {
     if (!loading && !user) {
@@ -60,12 +63,13 @@ const Admin = () => {
             </Button>
           </div>
 
-          <Tabs defaultValue="products" className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4">
+          <Tabs defaultValue={defaultTab} className="space-y-6">
+            <TabsList className="grid w-full grid-cols-5">
               <TabsTrigger value="products">Produtos</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
               <TabsTrigger value="access">Acessos</TabsTrigger>
+              <TabsTrigger value="tasks">Tarefas</TabsTrigger>
             </TabsList>
 
             <TabsContent value="products" className="space-y-6">
@@ -82,6 +86,10 @@ const Admin = () => {
 
             <TabsContent value="access" className="space-y-6">
               <ProductAccessManagement />
+            </TabsContent>
+
+            <TabsContent value="tasks" className="space-y-6">
+              <TasksManagement />
             </TabsContent>
           </Tabs>
         </div>

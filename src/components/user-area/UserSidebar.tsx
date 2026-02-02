@@ -5,6 +5,7 @@ import {
   User, 
   CreditCard, 
   Package, 
+  Bell,
   Shield, 
   Settings, 
   ChevronLeft,
@@ -28,6 +29,7 @@ const menuItems = [
   { id: "profile", label: "Perfil", icon: User },
   { id: "subscriptions", label: "Assinaturas", icon: CreditCard },
   { id: "products", label: "Produtos", icon: Package },
+  { id: "notifications", label: "Notificações", icon: Bell },
   { id: "security", label: "Segurança", icon: Shield },
   { id: "settings", label: "Configurações", icon: Settings },
 ];
