@@ -17,7 +17,14 @@ import { useNavigate } from "react-router-dom";
 const CommunitySection = () => {
   const navigate = useNavigate();
   
-  // Buscar contagens por tipo de post
+  // IDs das categorias da tabela wiki_categories
+  const CATEGORY_IDS = {
+    conteudos: '873cf439-428c-423a-948c-777176a379bb',
+    comoFazer: '5713839b-67ca-4b14-bc91-c4c264e9ff68',
+    aplicacaoPratica: 'bd44e5b6-b5f1-4cf0-9510-c11b4a26d30d'
+  };
+
+  // Buscar contagens por category_id (vinculado a wiki_categories)
   const { data: conteudoCount } = useQuery({
     queryKey: ['wiki-posts-conteudo'],
     queryFn: async () => {
@@ -25,7 +32,7 @@ const CommunitySection = () => {
         .from('wiki_posts')
         .select('*', { count: 'exact', head: true })
         .eq('is_published', true)
-        .eq('post_type', 'conteudo');
+        .eq('category_id', CATEGORY_IDS.conteudos);
       return count || 0;
     }
   });
@@ -37,7 +44,7 @@ const CommunitySection = () => {
         .from('wiki_posts')
         .select('*', { count: 'exact', head: true })
         .eq('is_published', true)
-        .eq('post_type', 'como_fazer');
+        .eq('category_id', CATEGORY_IDS.comoFazer);
       return count || 0;
     }
   });
@@ -49,7 +56,7 @@ const CommunitySection = () => {
         .from('wiki_posts')
         .select('*', { count: 'exact', head: true })
         .eq('is_published', true)
-        .eq('post_type', 'aplicacao_pratica');
+        .eq('category_id', CATEGORY_IDS.aplicacaoPratica);
       return count || 0;
     }
   });
@@ -117,7 +124,7 @@ const CommunitySection = () => {
       icon: FileText,
       count: conteudoCount,
       color: "text-blue-600",
-      filterType: "conteudo"
+      categorySlug: "conteudos"
     },
     {
       title: "Como Fazer",
@@ -125,7 +132,7 @@ const CommunitySection = () => {
       icon: Lightbulb,
       count: comoFazerCount,
       color: "text-green-600",
-      filterType: "como_fazer"
+      categorySlug: "como-fazer"
     },
     {
       title: "Aplicação Prática",
@@ -133,7 +140,7 @@ const CommunitySection = () => {
       icon: Settings,
       count: aplicacaoPraticaCount,
       color: "text-purple-600",
-      filterType: "aplicacao_pratica"
+      categorySlug: "aplicacao-pratica"
     }
   ];
 
@@ -205,7 +212,7 @@ const CommunitySection = () => {
               <Card 
                 key={index} 
                 className="shadow-card hover:shadow-elegant transition-smooth group cursor-pointer"
-                onClick={() => navigate(`/wiki?type=${type.filterType}`)}
+                onClick={() => navigate(`/wiki?category=${type.categorySlug}`)}
               >
                 <CardHeader className="text-center pb-4">
                   <div className="w-12 h-12 mx-auto mb-4 rounded-lg bg-muted flex items-center justify-center group-hover:scale-110 transition-bounce">
