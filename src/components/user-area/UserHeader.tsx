@@ -1,11 +1,7 @@
 import { Button } from "@/components/ui/button";
-import { 
-  Menu, 
-  Bell, 
-  Home
-} from "lucide-react";
+import { Menu, Home } from "lucide-react";
 import { Link } from "react-router-dom";
-import { Badge } from "@/components/ui/badge";
+import { NotificationsPopover } from "./NotificationsPopover";
 
 interface UserHeaderProps {
   title: string;
@@ -40,15 +36,7 @@ export const UserHeader = ({
 
       <div className="flex items-center gap-2">
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <Badge 
-            variant="destructive" 
-            className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
-          >
-            2
-          </Badge>
-        </Button>
+        <NotificationsPopover />
 
         {/* Back to home */}
         <Button variant="outline" size="sm" asChild>
