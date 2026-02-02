@@ -8,18 +8,16 @@ import { useNavigate } from "react-router-dom";
 const HeroSection = () => {
   const navigate = useNavigate();
   
-  // Buscar contagem de usuários cadastrados
+  // Buscar contagem de todos os membros (usando função que ignora RLS)
   const { data: usersCount } = useQuery({
-    queryKey: ['users-count'],
+    queryKey: ['members-count'],
     queryFn: async () => {
-      const { count, error } = await supabase
-        .from('profiles')
-        .select('*', { count: 'exact', head: true });
+      const { data, error } = await supabase.rpc('get_members_count');
       if (error) {
-        console.error('Error fetching users count:', error);
+        console.error('Error fetching members count:', error);
         return 0;
       }
-      return count || 0;
+      return data || 0;
     }
   });
 

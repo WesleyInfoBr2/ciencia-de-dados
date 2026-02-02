@@ -1414,6 +1414,7 @@ export type Database = {
           usage_limit: number
         }[]
       }
+      get_members_count: { Args: never; Returns: number }
       get_public_profiles: {
         Args: never
         Returns: {
