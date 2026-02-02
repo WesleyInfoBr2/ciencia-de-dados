@@ -292,9 +292,12 @@ const Libraries = () => {
   // Update page metadata
   useEffect(() => {
     updatePageMetadata({
-      title: "Bibliotecas | CiênciaDeDados.org",
-      description: "Explore nossa coleção de ferramentas, cursos, códigos e datasets para ciência de dados.",
+      title: "Bibliotecas de Recursos | CiênciaDeDados.org",
+      description: "Explore nossa coleção curada de ferramentas, cursos, códigos e datasets para ciência de dados. Recursos gratuitos e premium para profissionais e estudantes.",
       canonical: "https://cienciadedados.org/bibliotecas",
+      ogTitle: "Bibliotecas de Recursos para Ciência de Dados",
+      ogDescription: "Descubra ferramentas, cursos, códigos e datasets selecionados para impulsionar sua carreira em ciência de dados.",
+      ogImage: "https://cienciadedados.org/og-image.jpg",
     });
   }, []);
 

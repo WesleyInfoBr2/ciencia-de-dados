@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -5,9 +6,22 @@ import { Check, X } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { useNavigate } from "react-router-dom";
+import { updatePageMetadata } from "@/utils/seo";
 
 const Pricing = () => {
   const navigate = useNavigate();
+
+  // SEO Metadata
+  useEffect(() => {
+    updatePageMetadata({
+      title: "Preços e Planos | CiênciaDeDados.org",
+      description: "Conheça os planos Gratuito, Limitado e Ilimitado. Acesse ferramentas de análise estatística, revisão sistemática e dados públicos a partir de R$ 0.",
+      canonical: "https://cienciadedados.org/precos",
+      ogTitle: "Planos e Preços - CiênciaDeDados.org",
+      ogDescription: "Do plano gratuito ao acesso ilimitado por R$ 149/mês. Escolha o plano ideal para suas necessidades em ciência de dados.",
+      ogImage: "https://cienciadedados.org/og-image.jpg",
+    });
+  }, []);
 
   const plans = [
     {

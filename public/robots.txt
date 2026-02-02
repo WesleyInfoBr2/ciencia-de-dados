@@ -3,9 +3,10 @@ Allow: /
 Disallow: /admin
 Disallow: /api
 Disallow: /auth
+Disallow: /area-do-usuario
 
 # Sitemaps
-Sitemap: https://cienciadedados.org/sitemap.xml
+Sitemap: https://cdniklunhzcbwcxlsxfl.supabase.co/functions/v1/sitemap
 
 # Crawl-delay for bots
 Crawl-delay: 1
