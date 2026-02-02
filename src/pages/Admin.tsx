@@ -11,6 +11,7 @@ import { UsersManagement } from "@/components/admin/UsersManagement";
 import { SubscriptionsManagement } from "@/components/admin/SubscriptionsManagement";
 import { ProductAccessManagement } from "@/components/admin/ProductAccessManagement";
 import { TasksManagement } from "@/components/admin/TasksManagement";
+import { WorkflowsManagement } from "@/components/admin/WorkflowsManagement";
 import { Loader2, MessageCircle } from "lucide-react";
 
 const Admin = () => {
@@ -64,12 +65,13 @@ const Admin = () => {
           </div>
 
           <Tabs defaultValue={defaultTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="products">Produtos</TabsTrigger>
               <TabsTrigger value="users">Usuários</TabsTrigger>
               <TabsTrigger value="subscriptions">Assinaturas</TabsTrigger>
               <TabsTrigger value="access">Acessos</TabsTrigger>
               <TabsTrigger value="tasks">Tarefas</TabsTrigger>
+              <TabsTrigger value="workflows">Workflows</TabsTrigger>
             </TabsList>
 
             <TabsContent value="products" className="space-y-6">
@@ -90,6 +92,10 @@ const Admin = () => {
 
             <TabsContent value="tasks" className="space-y-6">
               <TasksManagement />
+            </TabsContent>
+
+            <TabsContent value="workflows" className="space-y-6">
+              <WorkflowsManagement />
             </TabsContent>
           </Tabs>
         </div>
