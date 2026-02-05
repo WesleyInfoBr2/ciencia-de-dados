@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      ai_prompts: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          product_slug: string
+          prompt_content: string
+          prompt_key: string
+          prompt_name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          product_slug?: string
+          prompt_content: string
+          prompt_key: string
+          prompt_name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          product_slug?: string
+          prompt_content?: string
+          prompt_key?: string
+          prompt_name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      analysis_history: {
+        Row: {
+          analysis_type: string | null
+          created_at: string | null
+          dataset_name: string | null
+          generated_code: string | null
+          id: string
+          product_slug: string
+          question: string
+          result_summary: string | null
+          session_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          analysis_type?: string | null
+          created_at?: string | null
+          dataset_name?: string | null
+          generated_code?: string | null
+          id?: string
+          product_slug?: string
+          question: string
+          result_summary?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          analysis_type?: string | null
+          created_at?: string | null
+          dataset_name?: string | null
+          generated_code?: string | null
+          id?: string
+          product_slug?: string
+          question?: string
+          result_summary?: string | null
+          session_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      daily_usage: {
+        Row: {
+          created_at: string | null
+          id: string
+          product_slug: string
+          prompt_count: number
+          session_id: string | null
+          updated_at: string | null
+          usage_date: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          product_slug?: string
+          prompt_count?: number
+          session_id?: string | null
+          updated_at?: string | null
+          usage_date?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          product_slug?: string
+          prompt_count?: number
+          session_id?: string | null
+          updated_at?: string | null
+          usage_date?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       entitlements: {
         Row: {
           created_at: string | null
@@ -174,6 +282,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      historico_buscas: {
+        Row: {
+          created_at: string | null
+          filtros_aplicados: Json | null
+          id: string
+          resultados_count: number | null
+          termo_busca: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          filtros_aplicados?: Json | null
+          id?: string
+          resultados_count?: number | null
+          termo_busca: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          filtros_aplicados?: Json | null
+          id?: string
+          resultados_count?: number | null
+          termo_busca?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       libraries: {
         Row: {
@@ -592,6 +727,60 @@ export type Database = {
           },
         ]
       }
+      product_plan_config: {
+        Row: {
+          allowed_export_formats: string[]
+          allowed_file_formats: string[]
+          analysis_types: string[]
+          created_at: string | null
+          daily_prompt_limit: number | null
+          has_api_access: boolean | null
+          has_custom_reports: boolean | null
+          has_visualization_advanced: boolean | null
+          history_retention_days: number | null
+          id: string
+          max_dataset_rows: number | null
+          plan: string
+          product_slug: string
+          support_level: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          allowed_export_formats?: string[]
+          allowed_file_formats?: string[]
+          analysis_types?: string[]
+          created_at?: string | null
+          daily_prompt_limit?: number | null
+          has_api_access?: boolean | null
+          has_custom_reports?: boolean | null
+          has_visualization_advanced?: boolean | null
+          history_retention_days?: number | null
+          id?: string
+          max_dataset_rows?: number | null
+          plan: string
+          product_slug: string
+          support_level?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          allowed_export_formats?: string[]
+          allowed_file_formats?: string[]
+          analysis_types?: string[]
+          created_at?: string | null
+          daily_prompt_limit?: number | null
+          has_api_access?: boolean | null
+          has_custom_reports?: boolean | null
+          has_visualization_advanced?: boolean | null
+          history_retention_days?: number | null
+          id?: string
+          max_dataset_rows?: number | null
+          plan?: string
+          product_slug?: string
+          support_level?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       products: {
         Row: {
           base_url: string | null
@@ -797,6 +986,161 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      revista_favoritos: {
+        Row: {
+          created_at: string | null
+          id: string
+          revista_id: number
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          revista_id: number
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          revista_id?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "revista_favoritos_revista_id_fkey"
+            columns: ["revista_id"]
+            isOneToOne: false
+            referencedRelation: "revistas"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      revistas: {
+        Row: {
+          acesso_aberto: boolean | null
+          acesso_aberto_diamante: boolean | null
+          area_qualis: string | null
+          area_sjr: string | null
+          cobertura: string | null
+          created_at: string | null
+          editora: string | null
+          id: number
+          id_revista: number | null
+          id_sjr: string | null
+          issn: string | null
+          issn_formatado: string | null
+          pais: string | null
+          qualis: string | null
+          rank_sjr: number | null
+          região: string | null
+          sjr: string | null
+          sjr_categorias: string | null
+          sjr_continuo: number | null
+          tipo: string | null
+          title: string | null
+          titulo: string
+          updated_at: string | null
+          url: string | null
+        }
+        Insert: {
+          acesso_aberto?: boolean | null
+          acesso_aberto_diamante?: boolean | null
+          area_qualis?: string | null
+          area_sjr?: string | null
+          cobertura?: string | null
+          created_at?: string | null
+          editora?: string | null
+          id?: number
+          id_revista?: number | null
+          id_sjr?: string | null
+          issn?: string | null
+          issn_formatado?: string | null
+          pais?: string | null
+          qualis?: string | null
+          rank_sjr?: number | null
+          região?: string | null
+          sjr?: string | null
+          sjr_categorias?: string | null
+          sjr_continuo?: number | null
+          tipo?: string | null
+          title?: string | null
+          titulo: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Update: {
+          acesso_aberto?: boolean | null
+          acesso_aberto_diamante?: boolean | null
+          area_qualis?: string | null
+          area_sjr?: string | null
+          cobertura?: string | null
+          created_at?: string | null
+          editora?: string | null
+          id?: number
+          id_revista?: number | null
+          id_sjr?: string | null
+          issn?: string | null
+          issn_formatado?: string | null
+          pais?: string | null
+          qualis?: string | null
+          rank_sjr?: number | null
+          região?: string | null
+          sjr?: string | null
+          sjr_categorias?: string | null
+          sjr_continuo?: number | null
+          tipo?: string | null
+          title?: string | null
+          titulo?: string
+          updated_at?: string | null
+          url?: string | null
+        }
+        Relationships: []
+      }
+      revistas_gestao: {
+        Row: {
+          created_at: string
+          custo: string | null
+          editora: string | null
+          escopo: string | null
+          id: number
+          idiomas: string[] | null
+          issn: string[] | null
+          link: string | null
+          periodicidade: string | null
+          qualis: string | null
+          sjr: string | null
+          titulo: string | null
+        }
+        Insert: {
+          created_at?: string
+          custo?: string | null
+          editora?: string | null
+          escopo?: string | null
+          id?: number
+          idiomas?: string[] | null
+          issn?: string[] | null
+          link?: string | null
+          periodicidade?: string | null
+          qualis?: string | null
+          sjr?: string | null
+          titulo?: string | null
+        }
+        Update: {
+          created_at?: string
+          custo?: string | null
+          editora?: string | null
+          escopo?: string | null
+          id?: number
+          idiomas?: string[] | null
+          issn?: string[] | null
+          link?: string | null
+          periodicidade?: string | null
+          qualis?: string | null
+          sjr?: string | null
+          titulo?: string | null
+        }
+        Relationships: []
       }
       subscriptions: {
         Row: {
@@ -1405,6 +1749,36 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      buscar_revistas: {
+        Args: {
+          apenas_open_access?: boolean
+          filtro_area_qualis?: string
+          filtro_area_sjr?: string
+          filtro_qualis?: string[]
+          limite?: number
+          offset_val?: number
+          sjr_max?: number
+          sjr_min?: number
+          termo_busca?: string
+        }
+        Returns: {
+          area_qualis: string
+          area_sjr: string
+          editora: string
+          h_index: number
+          id: number
+          id_revista: number
+          issn: string
+          issn_online: string
+          open_access: boolean
+          pais: string
+          qualis: string
+          sjr: number
+          title: string
+          titulo: string
+          url: string
+        }[]
+      }
       check_product_access: {
         Args: { _product_slug: string; _user_id: string }
         Returns: {
@@ -1413,6 +1787,14 @@ export type Database = {
           usage_count: number
           usage_limit: number
         }[]
+      }
+      get_daily_usage: {
+        Args: {
+          _product_slug?: string
+          _session_id?: string
+          _user_id?: string
+        }
+        Returns: number
       }
       get_members_count: { Args: never; Returns: number }
       get_public_profiles: {
@@ -1425,6 +1807,22 @@ export type Database = {
         }[]
       }
       get_unread_notification_count: { Args: never; Returns: number }
+      get_user_plan_config: {
+        Args: { _product_slug?: string; _user_id?: string }
+        Returns: {
+          allowed_export_formats: string[]
+          allowed_file_formats: string[]
+          analysis_types: string[]
+          daily_prompt_limit: number
+          has_api_access: boolean
+          has_custom_reports: boolean
+          has_visualization_advanced: boolean
+          history_retention_days: number
+          max_dataset_rows: number
+          plan: string
+          support_level: string
+        }[]
+      }
       get_user_role_in_org: {
         Args: { _org_id: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
@@ -1443,6 +1841,14 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      increment_daily_usage: {
+        Args: {
+          _product_slug?: string
+          _session_id?: string
+          _user_id?: string
+        }
+        Returns: number
       }
       is_org_member: {
         Args: { _org_id: string; _user_id: string }
