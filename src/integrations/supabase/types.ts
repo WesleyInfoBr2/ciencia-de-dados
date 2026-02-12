@@ -1285,6 +1285,707 @@ export type Database = {
           },
         ]
       }
+      tcc_courses: {
+        Row: {
+          created_at: string
+          id: string
+          institution_id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          institution_id: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          institution_id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_courses_institution_id_fkey"
+            columns: ["institution_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_institutions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_declarations: {
+        Row: {
+          content: string | null
+          created_at: string
+          declaration_type: string
+          id: string
+          pdf_url: string | null
+          professor_id: string
+          semester_id: string
+          sent_at: string | null
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          declaration_type: string
+          id?: string
+          pdf_url?: string | null
+          professor_id: string
+          semester_id: string
+          sent_at?: string | null
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          declaration_type?: string
+          id?: string
+          pdf_url?: string | null
+          professor_id?: string
+          semester_id?: string
+          sent_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_declarations_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_professors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_declarations_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_evaluation_scores: {
+        Row: {
+          comment: string | null
+          created_at: string
+          criterion_id: string
+          evaluation_id: string
+          id: string
+          score: number | null
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          criterion_id: string
+          evaluation_id: string
+          id?: string
+          score?: number | null
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          criterion_id?: string
+          evaluation_id?: string
+          id?: string
+          score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_evaluation_scores_criterion_id_fkey"
+            columns: ["criterion_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_rubric_criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_evaluation_scores_evaluation_id_fkey"
+            columns: ["evaluation_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_evaluations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_evaluation_tokens: {
+        Row: {
+          access_code: string | null
+          created_at: string
+          expires_at: string | null
+          id: string
+          is_used: boolean
+          professor_id: string
+          rubric_id: string
+          team_id: string
+          token: string
+        }
+        Insert: {
+          access_code?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          professor_id: string
+          rubric_id: string
+          team_id: string
+          token: string
+        }
+        Update: {
+          access_code?: string | null
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          is_used?: boolean
+          professor_id?: string
+          rubric_id?: string
+          team_id?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_evaluation_tokens_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_professors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_evaluation_tokens_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_rubrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_evaluation_tokens_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_evaluations: {
+        Row: {
+          comments: string | null
+          created_at: string
+          id: string
+          professor_id: string
+          rubric_id: string
+          submitted_at: string | null
+          team_id: string
+          token_id: string | null
+          total_score: number | null
+          updated_at: string
+        }
+        Insert: {
+          comments?: string | null
+          created_at?: string
+          id?: string
+          professor_id: string
+          rubric_id: string
+          submitted_at?: string | null
+          team_id: string
+          token_id?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Update: {
+          comments?: string | null
+          created_at?: string
+          id?: string
+          professor_id?: string
+          rubric_id?: string
+          submitted_at?: string | null
+          team_id?: string
+          token_id?: string | null
+          total_score?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_evaluations_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_professors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_evaluations_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_rubrics"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_evaluations_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_teams"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_evaluations_token_id_fkey"
+            columns: ["token_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_evaluation_tokens"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_institutions: {
+        Row: {
+          abbreviation: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          abbreviation?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tcc_panel_members: {
+        Row: {
+          created_at: string
+          id: string
+          panel_id: string
+          professor_id: string
+          role: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          panel_id: string
+          professor_id: string
+          role?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          panel_id?: string
+          professor_id?: string
+          role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_panel_members_panel_id_fkey"
+            columns: ["panel_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_panels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_panel_members_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_professors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_panels: {
+        Row: {
+          created_at: string
+          end_time: string | null
+          id: string
+          location: string | null
+          panel_date: string
+          semester_id: string
+          session_label: string | null
+          start_time: string
+          team_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          panel_date: string
+          semester_id: string
+          session_label?: string | null
+          start_time: string
+          team_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string | null
+          id?: string
+          location?: string | null
+          panel_date?: string
+          semester_id?: string
+          session_label?: string | null
+          start_time?: string
+          team_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_panels_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_semesters"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_panels_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_professors: {
+        Row: {
+          created_at: string
+          email: string | null
+          hours_allocated: number
+          hours_total: number
+          id: string
+          name: string
+          roles: string[]
+          semester_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          hours_allocated?: number
+          hours_total?: number
+          id?: string
+          name: string
+          roles?: string[]
+          semester_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          hours_allocated?: number
+          hours_total?: number
+          id?: string
+          name?: string
+          roles?: string[]
+          semester_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_professors_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_rubric_criteria: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          label: string
+          max_score: number
+          rubric_id: string
+          sort_order: number
+          weight: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label: string
+          max_score?: number
+          rubric_id: string
+          sort_order?: number
+          weight?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          label?: string
+          max_score?: number
+          rubric_id?: string
+          sort_order?: number
+          weight?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_rubric_criteria_rubric_id_fkey"
+            columns: ["rubric_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_rubrics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_rubrics: {
+        Row: {
+          created_at: string
+          evaluation_type: string
+          id: string
+          max_score: number
+          name: string
+          project_type: string
+          semester_id: string
+          tcc_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          evaluation_type: string
+          id?: string
+          max_score?: number
+          name: string
+          project_type: string
+          semester_id: string
+          tcc_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          evaluation_type?: string
+          id?: string
+          max_score?: number
+          name?: string
+          project_type?: string
+          semester_id?: string
+          tcc_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_rubrics_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_semesters: {
+        Row: {
+          coordinator_name: string | null
+          course_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          label: string
+          period: number
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          coordinator_name?: string | null
+          course_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+          period: number
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          coordinator_name?: string | null
+          course_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
+          period?: number
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_semesters_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_courses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_students: {
+        Row: {
+          created_at: string
+          email: string | null
+          id: string
+          matricula: string | null
+          name: string
+          semester_id: string
+          tcc_type: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          matricula?: string | null
+          name: string
+          semester_id: string
+          tcc_type: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          id?: string
+          matricula?: string | null
+          name?: string
+          semester_id?: string
+          tcc_type?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_students_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_team_advisors: {
+        Row: {
+          created_at: string
+          id: string
+          professor_id: string
+          role: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          professor_id: string
+          role: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          professor_id?: string
+          role?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_team_advisors_professor_id_fkey"
+            columns: ["professor_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_professors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_team_advisors_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_team_members: {
+        Row: {
+          created_at: string
+          id: string
+          student_id: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          student_id: string
+          team_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          student_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_team_members_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "tcc_team_members_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tcc_teams: {
+        Row: {
+          average_grade: number | null
+          created_at: string
+          id: string
+          name: string
+          project_type: string
+          semester_id: string
+          status: string
+          tcc_type: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          average_grade?: number | null
+          created_at?: string
+          id?: string
+          name: string
+          project_type: string
+          semester_id: string
+          status?: string
+          tcc_type: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          average_grade?: number | null
+          created_at?: string
+          id?: string
+          name?: string
+          project_type?: string
+          semester_id?: string
+          status?: string
+          tcc_type?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tcc_teams_semester_id_fkey"
+            columns: ["semester_id"]
+            isOneToOne: false
+            referencedRelation: "tcc_semesters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       technologies: {
         Row: {
           category: string
